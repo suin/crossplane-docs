@@ -22,7 +22,7 @@ cat config.yaml
 
 # For production set the baseURL to be the docs URL
 if [ "$CONTEXT" = "production" ]; then
-hugo --minify --baseURL https://docs.crossplane.io/
+hugo --minify --baseURL https://crossplaneja.netlify.app/
 
 # For any other context use the Netlify deploy URL.
 elif [ "$CONTEXT" = "branch-deploy" ]; then
