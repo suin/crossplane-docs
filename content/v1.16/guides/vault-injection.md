@@ -1,40 +1,27 @@
 ---
-title: Vault Credential Injection
+title: Vault 認証情報の注入
 weight: 230
 ---
 
 
-> This guide is adapted from the [Vault on Minikube] and [Vault Kubernetes
-> Sidecar] guides.
+> このガイドは、[Minikube 上の Vault] および [Vault Kubernetes サイドカー] ガイドから適応されています。
 
-Most Crossplane providers support supplying credentials from at least the
-following sources:
+ほとんどの Crossplane プロバイダーは、少なくとも以下のソースから認証情報を提供することをサポートしています：
 - Kubernetes Secret
-- Environment Variable
-- Filesystem
+- 環境変数
+- ファイルシステム
 
-A provider may optionally support additional credentials sources, but the common
-sources cover a wide variety of use cases. One specific use case that is popular
-among organizations that use [Vault] for secrets management is using a sidecar
-to inject credentials into the filesystem. This guide will demonstrate how to
-use the [Vault Kubernetes Sidecar] to provide credentials for [provider-gcp] 
-and [provider-aws].
+プロバイダーは追加の認証情報ソースをオプションでサポートすることがありますが、一般的なソースはさまざまなユースケースをカバーしています。[Vault] を秘密管理に使用する組織の間で人気のある特定のユースケースは、サイドカーを使用してファイルシステムに認証情報を注入することです。このガイドでは、[Vault Kubernetes サイドカー] を使用して [provider-gcp] および [provider-aws] のために認証情報を提供する方法を示します。
 
-> Note: in this guide we will copy GCP credentials and AWS access keys 
-> into Vault's KV secrets engine. This is a simple generic approach to 
-> managing secrets with Vault, but is not as robust as using Vault's 
-> dedicated cloud provider secrets engines for [AWS], [Azure], and [GCP]. 
+> 注：このガイドでは、GCP 認証情報と AWS アクセスキーを Vault の KV シークレットエンジンにコピーします。これは Vault を使用したシークレット管理のシンプルで一般的なアプローチですが、[AWS]、[Azure]、および [GCP] のための Vault の専用クラウドプロバイダーシークレットエンジンを使用するほど堅牢ではありません。
 
-## Setup
+## セットアップ
 
-> Note: this guide walks through setting up Vault running in the same cluster as
-> Crossplane. You may also choose to use an existing Vault instance that runs
-> outside the cluster but has Kubernetes authentication enabled.
+> 注：このガイドでは、Crossplane と同じクラスターで実行されている Vault のセットアップ手順を説明します。クラスター外で実行されている既存の Vault インスタンスを使用することもできますが、その場合は Kubernetes 認証が有効になっている必要があります。
 
-Before getting started, you must ensure that you have installed Crossplane and
-Vault and that they are running in your cluster.
+始める前に、Crossplane と Vault がインストールされており、クラスター内で実行されていることを確認する必要があります。
 
-1. Install Crossplane
+1. Crossplane をインストール
 
 ```console
 kubectl create namespace crossplane-system
@@ -45,17 +32,16 @@ helm repo update
 helm install crossplane --namespace crossplane-system crossplane-stable/crossplane
 ```
 
-2. Install Vault Helm Chart
+2. Vault Helm チャートをインストール
 
 ```console
 helm repo add hashicorp https://helm.releases.hashicorp.com
 helm install vault hashicorp/vault
 ```
 
-3. Unseal Vault Instance
+3. Vault インスタンスのアンシール
 
-In order for Vault to access encrypted data from physical storage, it must be
-[unsealed].
+Vault が物理ストレージから暗号化データにアクセスするためには、[アンシール] されている必要があります。
 
 ```console
 kubectl exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
@@ -63,14 +49,9 @@ VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
 kubectl exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 ```
 
-4. Enable Kubernetes Authentication Method
+4. Kubernetes 認証メソッドを有効にする
 
-In order for Vault to be able to authenticate requests based on Kubernetes
-service accounts, the [Kubernetes authentication backend] must be enabled. This
-requires logging in to Vault and configuring it with a service account token,
-API server address, and certificate. Because we are running Vault in Kubernetes,
-these values are already available via the container filesystem and environment
-variables.
+Vault が Kubernetes サービスアカウントに基づいてリクエストを認証できるようにするためには、[Kubernetes 認証バックエンド] を有効にする必要があります。これには、Vault にログインし、サービスアカウントトークン、API サーバーアドレス、および証明書で構成する必要があります。Vault を Kubernetes で実行しているため、これらの値はすでにコンテナのファイルシステムと環境変数を介して利用可能です。
 
 ```console
 cat cluster-keys.json | jq -r ".root_token" # get root token
@@ -85,9 +66,9 @@ vault write auth/kubernetes/config \
         kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 ```
 
-5. Exit Vault Container
+5. Vaultコンテナから退出
 
-The next steps will be executed in your local environment.
+次のステップは、あなたのローカル環境で実行されます。
 
 ```console
 exit
@@ -96,14 +77,9 @@ exit
 {{< tabs >}}
 {{< tab "GCP" >}}
 
-## Create GCP Service Account
+## GCPサービスアカウントの作成
 
-In order to provision infrastructure on GCP, you will need to create a service
-account with appropriate permissions. In this guide we will only provision a
-CloudSQL instance, so the service account will be bound to the `cloudsql.admin`
-role. The following steps will setup a GCP service account, give it the
-necessary permissions for Crossplane to be able to manage CloudSQL instances,
-and emit the service account credentials in a JSON file.
+GCP上でインフラをプロビジョニングするためには、適切な権限を持つサービスアカウントを作成する必要があります。このガイドでは、CloudSQLインスタンスのみをプロビジョニングするため、サービスアカウントは`cloudsql.admin`ロールにバインドされます。以下のステップでは、GCPサービスアカウントを設定し、CrossplaneがCloudSQLインスタンスを管理できるように必要な権限を付与し、サービスアカウントの資格情報をJSONファイルに出力します。
 
 ```console
 # replace this with your own gcp project id and the name of the service account
@@ -127,31 +103,26 @@ gcloud projects add-iam-policy-binding --role="$ROLE" $PROJECT_ID --member "serv
 gcloud iam service-accounts keys create creds.json --project $PROJECT_ID --iam-account $SA
 ```
 
-You should now have valid service account credentials in `creds.json`.
+現在、`creds.json`に有効なサービスアカウントの資格情報があるはずです。
 
-## Store Credentials in Vault
+## Vaultに資格情報を保存
 
-After setting up Vault, you will need to store your credentials in the [kv
-secrets engine].
+Vaultを設定した後、[kvシークレットエンジン]に資格情報を保存する必要があります。
 
-> Note: the steps below involve copying credentials into the container
-> filesystem before storing them in Vault. You may also choose to use Vault's
-> HTTP API or UI by port-forwarding the container to your local environment
-> (`kubectl port-forward vault-0 8200:8200`).
+> 注: 以下のステップでは、Vaultに保存する前に資格情報をコンテナのファイルシステムにコピーすることが含まれています。また、コンテナをローカル環境にポートフォワードして、VaultのHTTP APIまたはUIを使用することもできます
+> （`kubectl port-forward vault-0 8200:8200`）。
 
-1. Copy Credentials File into Vault Container
+1. 資格情報ファイルをVaultコンテナにコピー
 
-Copy your credentials into the container filesystem so that your can store them
-in Vault.
+資格情報をコンテナのファイルシステムにコピーして、Vaultに保存できるようにします。
 
 ```console
 kubectl cp creds.json vault-0:/tmp/creds.json
 ```
 
-2. Enable KV Secrets Engine
+2. KVシークレットエンジンを有効にする
 
-Secrets engines must be enabled before they can be used. Enable the `kv-v2`
-secrets engine at the `secret` path.
+シークレットエンジンは使用する前に有効にする必要があります。`secret`パスで`kv-v2`シークレットエンジンを有効にします。
 
 ```console
 kubectl exec -it vault-0 -- /bin/sh
@@ -159,19 +130,17 @@ kubectl exec -it vault-0 -- /bin/sh
 vault secrets enable -path=secret kv-v2
 ```
 
-3. Store GCP Credentials in KV Engine
+3. KVエンジンにGCP資格情報を保存
 
-The path of your GCP credentials is how the secret will be referenced when
-injecting it into the `provider-gcp` controller `Pod`.
+GCP資格情報のパスは、`provider-gcp`コントローラーの`Pod`に注入する際にシークレットが参照される方法です。
 
 ```console
 vault kv put secret/provider-creds/gcp-default @tmp/creds.json
 ```
 
-4. Clean Up Credentials File
+4. 資格情報ファイルをクリーンアップ
 
-You no longer need our GCP credentials file in the container filesystem, so go
-ahead and clean it up.
+コンテナのファイルシステムにGCP資格情報ファイルはもう必要ないので、クリーンアップしてください。
 
 ```console
 rm tmp/creds.json
@@ -180,14 +149,11 @@ rm tmp/creds.json
 {{< /tab >}}
 {{< tab "AWS" >}}
 
-## Create AWS IAM User
+## AWS IAMユーザーの作成
 
-In order to provision infrastructure on AWS, you will need to use an existing or create a new IAM
-user with appropriate permissions. The following steps will create an AWS IAM user and give it the necessary
-permissions.
+AWS上でインフラをプロビジョニングするためには、既存のIAMユーザーを使用するか、新しいIAMユーザーを適切な権限で作成する必要があります。以下の手順でAWS IAMユーザーを作成し、必要な権限を付与します。
 
-> Note: if you have an existing IAM user with appropriate permissions, you can skip this step but you will 
-> still need to provide the values for the `ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables.
+> 注: 既存の適切な権限を持つIAMユーザーがいる場合は、このステップをスキップできますが、`ACCESS_KEY_ID`および`AWS_SECRET_ACCESS_KEY`環境変数の値を提供する必要があります。
 
 ```console
 # create a new IAM user
@@ -204,15 +170,13 @@ ACCESS_KEY_ID=$(jq -r .AccessKey.AccessKeyId creds.json)
 AWS_SECRET_ACCESS_KEY=$(jq -r .AccessKey.SecretAccessKey creds.json)
 ```
 
-## Store Credentials in Vault
+## Vaultに資格情報を保存
 
-After setting up Vault, you will need to store your credentials in the [kv
-secrets engine].
+Vaultを設定した後、[kvシークレットエンジン]に資格情報を保存する必要があります。
 
-1. Enable KV Secrets Engine
+1. KVシークレットエンジンを有効にする
 
-Secrets engines must be enabled before they can be used. Enable the `kv-v2`
-secrets engine at the `secret` path.
+シークレットエンジンは使用する前に有効にする必要があります。`secret`パスで`kv-v2`シークレットエンジンを有効にします。
 
 ```console
 kubectl exec -it vault-0 -- env \
@@ -223,10 +187,9 @@ kubectl exec -it vault-0 -- env \
 vault secrets enable -path=secret kv-v2
 ```
 
-2. Store AWS Credentials in KV Engine
+2. KVエンジンにAWS資格情報を保存
 
-The path of your AWS credentials is how the secret will be referenced when
-injecting it into the `provider-aws` controller `Pod`.
+AWS資格情報のパスは、`provider-aws`コントローラーの`Pod`に注入する際にシークレットが参照される方法です。
 
 ```
 vault kv put secret/provider-creds/aws-default access_key="$ACCESS_KEY_ID" secret_key="$AWS_SECRET_ACCESS_KEY"
@@ -235,12 +198,9 @@ vault kv put secret/provider-creds/aws-default access_key="$ACCESS_KEY_ID" secre
 {{< /tab >}}
 {{< /tabs >}}
 
-## Create a Vault Policy for Reading Provider Credentials
+## プロバイダー資格情報を読み取るためのVaultポリシーを作成
 
-In order for our controllers to have the Vault sidecar inject the credentials
-into their filesystem, you must associate the `Pod` with a [policy]. This policy
-will allow for reading and listing all secrets on the `provider-creds` path in
-the `kv-v2` secrets engine.
+コントローラーがVaultサイドカーに資格情報をファイルシステムに注入させるためには、`Pod`を[ポリシー]に関連付ける必要があります。このポリシーは、`kv-v2`シークレットエンジンの`provider-creds`パスにあるすべてのシークレットを読み取り、リストすることを許可します。
 
 ```console
 vault policy write provider-creds - <<EOF
@@ -250,13 +210,11 @@ path "secret/data/provider-creds/*" {
 EOF
 ```
 
-## Create a Role for Crossplane Provider Pods
+## CrossplaneプロバイダーPodのためのロールを作成
 
-1. Create Role
+1. ロールを作成
 
-The last step is to create a role that is bound to the policy you created and
-associate it with a group of Kubernetes service accounts. This role can be
-assumed by any (`*`) service account in the `crossplane-system` namespace.
+最後のステップは、作成したポリシーにバインドされたロールを作成し、Kubernetesサービスアカウントのグループに関連付けることです。このロールは、`crossplane-system`ネームスペース内の任意の（`*`）サービスアカウントによって引き受けることができます。
 
 ```console
 vault write auth/kubernetes/role/crossplane-providers \
@@ -266,9 +224,9 @@ vault write auth/kubernetes/role/crossplane-providers \
         ttl=24h
 ```
 
-2. Exit Vault Container
+2. Vaultコンテナから退出
 
-The next steps will be executed in your local environment.
+次のステップは、ローカル環境で実行されます。
 
 ```console
 exit
@@ -277,19 +235,10 @@ exit
 {{< tabs >}}
 {{< tab "GCP" >}}
 
-## Install provider-gcp
+## provider-gcpのインストール
 
-You are now ready to install `provider-gcp`. Crossplane provides a
-`ControllerConfig` type that allows you to customize the deployment of a
-provider's controller `Pod`. A `ControllerConfig` can be created and referenced
-by any number of `Provider` objects that wish to use its configuration. In the
-example below, the `Pod` annotations indicate to the Vault mutating webhook that
-we want for the secret stored at `secret/provider-creds/gcp-default` to be
-injected into the container filesystem by assuming role `crossplane-providers`.
-There is also so template formatting added to make sure the secret data is
-presented in a form that `provider-gcp` is expecting.
+これで`provider-gcp`をインストールする準備が整いました。Crossplaneは、プロバイダーのコントローラー`Pod`のデプロイをカスタマイズするための`ControllerConfig`タイプを提供します。`ControllerConfig`は、その設定を使用したい任意の数の`Provider`オブジェクトによって作成され、参照されることができます。以下の例では、`Pod`のアノテーションは、`secret/provider-creds/gcp-default`に保存されたシークレットを`crossplane-providers`ロールを引き受けることによってコンテナのファイルシステムに注入することをVaultのミューテイティングWebhookに示しています。また、シークレットデータが`provider-gcp`が期待する形式で提示されるように、テンプレートフォーマットも追加されています。
 
-{% raw  %}
 ```console
 echo "apiVersion: pkg.crossplane.io/v1alpha1
 kind: ControllerConfig
@@ -315,18 +264,12 @@ spec:
   controllerConfigRef:
     name: vault-config" | kubectl apply -f -
 ```
-{% endraw %}
 
-## Configure provider-gcp
+## プロバイダー-gcpの設定
 
-One `provider-gcp` is installed and running, you will want to create a
-`ProviderConfig` that specifies the credentials in the filesystem that should be
-used to provision managed resources that reference this `ProviderConfig`.
-Because the name of this `ProviderConfig` is `default` it will be used by any
-managed resources that do not explicitly reference a `ProviderConfig`.
+`provider-gcp`がインストールされて実行中の場合、ファイルシステム内の資格情報を指定する`ProviderConfig`を作成する必要があります。この`ProviderConfig`を参照する管理リソースをプロビジョニングするために使用されます。この`ProviderConfig`の名前は`default`であるため、明示的に`ProviderConfig`を参照しない管理リソースによって使用されます。
 
-> Note: make sure that the `PROJECT_ID` environment variable that was defined
-> earlier is still set correctly.
+> 注: 以前に定義された`PROJECT_ID`環境変数が正しく設定されていることを確認してください。
 
 ```console
 echo "apiVersion: gcp.crossplane.io/v1beta1
@@ -341,19 +284,16 @@ spec:
       path: /vault/secrets/creds.txt" | kubectl apply -f -
 ```
 
-To verify that the GCP credentials are being injected into the container run the 
-following command:
+GCPの資格情報がコンテナに注入されていることを確認するには、次のコマンドを実行します。
 
 ```console
 PROVIDER_CONTROLLER_POD=$(kubectl -n crossplane-system get pod -l pkg.crossplane.io/provider=provider-gcp -o name --no-headers=true)
 kubectl -n crossplane-system exec -it $PROVIDER_CONTROLLER_POD -c provider-gcp -- cat /vault/secrets/creds.txt
 ```
 
-## Provision Infrastructure
+## インフラストラクチャのプロビジョニング
 
-The final step is to actually provision a `CloudSQLInstance`. Creating the
-object below will result in the creation of a Cloud SQL Postgres database on
-GCP.
+最終ステップは、実際に`CloudSQLInstance`をプロビジョニングすることです。以下のオブジェクトを作成すると、GCP上にCloud SQL Postgresデータベースが作成されます。
 
 ```console
 echo "apiVersion: database.gcp.crossplane.io/v1beta1
@@ -373,8 +313,7 @@ spec:
     name: cloudsqlpostgresql-conn" | kubectl apply -f -
 ```
 
-You can monitor the progress of the database provisioning with the following
-command:
+データベースのプロビジョニングの進行状況を監視するには、次のコマンドを使用します。
 
 ```console
 kubectl get cloudsqlinstance -w
@@ -383,17 +322,9 @@ kubectl get cloudsqlinstance -w
 {{< /tab >}}
 {{< tab "AWS" >}}
 
-## Install provider-aws
+## プロバイダー-awsのインストール
 
-You are now ready to install `provider-aws`. Crossplane provides a
-`ControllerConfig` type that allows you to customize the deployment of a
-provider's controller `Pod`. A `ControllerConfig` can be created and referenced
-by any number of `Provider` objects that wish to use its configuration. In the
-example below, the `Pod` annotations indicate to the Vault mutating webhook that
-we want for the secret stored at `secret/provider-creds/aws-default` to be
-injected into the container filesystem by assuming role `crossplane-providers`.
-There is also some template formatting added to make sure the secret data is
-presented in a form that `provider-aws` is expecting.
+`provider-aws`をインストールする準備が整いました。Crossplaneは、プロバイダーのコントローラー`Pod`のデプロイをカスタマイズするための`ControllerConfig`タイプを提供します。`ControllerConfig`は、その設定を使用したい任意の数の`Provider`オブジェクトによって作成および参照できます。以下の例では、`Pod`のアノテーションは、`secret/provider-creds/aws-default`に保存されたシークレットを`crossplane-providers`ロールを引き受けることによってコンテナのファイルシステムに注入することをVaultのミューテイティングWebhookに示しています。また、シークレットデータが`provider-aws`が期待する形式で表示されるように、いくつかのテンプレートフォーマットが追加されています。
 
 {% raw  %}
 ```console
@@ -427,13 +358,9 @@ spec:
 ```
 {% endraw %}
 
-## Configure provider-aws
+## provider-awsの設定
 
-Once `provider-aws` is installed and running, you will want to create a
-`ProviderConfig` that specifies the credentials in the filesystem that should be
-used to provision managed resources that reference this `ProviderConfig`.
-Because the name of this `ProviderConfig` is `default` it will be used by any
-managed resources that do not explicitly reference a `ProviderConfig`.
+`provider-aws`がインストールされ、実行されている状態になったら、ファイルシステム内の資格情報を指定する`ProviderConfig`を作成する必要があります。この`ProviderConfig`を参照する管理リソースをプロビジョニングするために使用されます。この`ProviderConfig`の名前は`default`であるため、明示的に`ProviderConfig`を参照しない管理リソースによって使用されます。
 
 ```console
 echo "apiVersion: aws.crossplane.io/v1beta1
@@ -447,18 +374,16 @@ spec:
       path: /vault/secrets/creds.txt" | kubectl apply -f -
 ```
 
-To verify that the AWS credentials are being injected into the container run the 
-following command:
+AWSの資格情報がコンテナに注入されていることを確認するには、次のコマンドを実行します。
 
 ```console
 PROVIDER_CONTROLLER_POD=$(kubectl -n crossplane-system get pod -l pkg.crossplane.io/provider=provider-aws -o name --no-headers=true)
 kubectl -n crossplane-system exec -it $PROVIDER_CONTROLLER_POD -c provider-aws -- cat /vault/secrets/creds.txt
 ```
 
-## Provision Infrastructure
+## インフラストラクチャのプロビジョニング
 
-The final step is to actually provision a `Bucket`. Creating the
-object below will result in the creation of a S3 bucket on AWS.
+最後のステップは、実際に`Bucket`をプロビジョニングすることです。以下のオブジェクトを作成すると、AWS上にS3バケットが作成されます。
 
 ```console
 echo "apiVersion: s3.aws.crossplane.io/v1beta1
@@ -479,8 +404,7 @@ spec:
     name: default" | kubectl apply -f -
 ```
 
-You can monitor the progress of the bucket provisioning with the following
-command:
+バケットのプロビジョニングの進行状況を監視するには、次のコマンドを使用します。
 
 ```console
 kubectl get bucket -w
@@ -504,3 +428,5 @@ kubectl get bucket -w
 [Kubernetes authentication backend]: https://www.vaultproject.io/docs/auth/kubernetes
 [kv secrets engine]: https://www.vaultproject.io/docs/secrets/kv/kv-v2
 [policy]: https://www.vaultproject.io/docs/concepts/policies
+
+It seems that there is no content provided for translation. Please paste the Markdown content you'd like me to translate into Japanese.

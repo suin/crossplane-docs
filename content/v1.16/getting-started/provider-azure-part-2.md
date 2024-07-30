@@ -1,29 +1,28 @@
 ---
-title: Azure Quickstart Part 2
+title: Azure クイックスタート パート 2
 weight: 120
 tocHidden: true
 aliases:
   - /master/getting-started/provider-azure-part-3
 ---
 
-{{< hint "important" >}}
-This guide is part 2 of a series.  
+{{< hint "重要" >}}
+このガイドはシリーズのパート2です。  
 
-[**Part 1**]({{<ref "provider-azure" >}}) covers
-to installing Crossplane and connect your Kubernetes cluster to Azure.
+[**パート 1**]({{<ref "provider-azure" >}}) では
+CrossplaneのインストールとKubernetesクラスターをAzureに接続する方法について説明します。
 
 {{< /hint >}}
 
-This guide walks you through building and accessing a custom API with Crossplane.
+このガイドでは、Crossplaneを使用してカスタムAPIを構築し、アクセスする方法を説明します。
 
-## Prerequisites
-* Complete [quickstart part 1]({{<ref "provider-azure" >}}) connecting Kubernetes
-  to Azure.
-* an Azure account with permissions to create an Azure Virtual Machine, Resource
- Group and Virtual Networking.
+## 前提条件
+* [クイックスタート パート 1]({{<ref "provider-azure" >}})を完了し、Kubernetesを
+  Azureに接続します。
+* Azure仮想マシン、リソースグループ、仮想ネットワークを作成する権限を持つAzureアカウント。
 
-{{<expand "Skip part 1 and just get started" >}}
-1. Add the Crossplane Helm repository and install Crossplane
+{{<expand "パート 1をスキップして始める" >}}
+1. Crossplane Helmリポジトリを追加し、Crossplaneをインストールします。
 ```shell
 helm repo add \
 crossplane-stable https://charts.crossplane.io/stable
@@ -35,8 +34,8 @@ crossplane-stable/crossplane \
 --create-namespace
 ```
 
-2. When the Crossplane pods finish installing and are ready, apply the Azure 
-   Provider
+2. Crossplaneポッドのインストールが完了し、準備が整ったら、Azure 
+   プロバイダーを適用します。
    
 ```yaml {label="provider",copy-lines="all"}
 cat <<EOF | kubectl apply -f -
@@ -49,8 +48,8 @@ spec:
 EOF
 ```
 
-3. Use the Azure CLI to create a service principal and save the JSON output as 
-   `azure-crednetials.json`
+3. Azure CLIを使用してサービスプリンシパルを作成し、JSON出力を 
+   `azure-crednetials.json`として保存します。
 {{< editCode >}}
 ```console
 az ad sp create-for-rbac \
@@ -60,7 +59,7 @@ az ad sp create-for-rbac \
 ```
 {{</ editCode >}}
 
-4. Create a Kubernetes secret from the Azure JSON file.
+4. Azure JSONファイルからKubernetesシークレットを作成します。
 ```shell {label="kube-create-secret",copy-lines="all"}
 kubectl create secret \
 generic azure-secret \
@@ -68,7 +67,7 @@ generic azure-secret \
 --from-file=creds=./azure-credentials.json
 ```
 
-5. Create a _ProviderConfig_
+5. _ProviderConfig_を作成します。
 ```yaml {label="providerconfig",copy-lines="all"}
 cat <<EOF | kubectl apply -f -
 apiVersion: azure.upbound.io/v1beta1
@@ -86,16 +85,14 @@ EOF
 ```
 {{</expand >}}
 
-## Create a custom API
+## カスタムAPIの作成
 
 <!-- vale alex.Condescending = NO -->
-Crossplane allows you to build your own custom APIs for your users, abstracting
-away details about the cloud provider and their resources. You can make your API
-as complex or simple as you wish. 
+Crossplaneを使用すると、ユーザー向けに独自のカスタムAPIを構築でき、クラウドプロバイダーやそのリソースに関する詳細を抽象化できます。APIは、複雑でもシンプルでも自由に設計できます。 
 <!-- vale alex.Condescending = YES -->
 
-The custom API is a Kubernetes object.  
-Here is an example custom API.
+カスタムAPIはKubernetesオブジェクトです。  
+以下はカスタムAPIの例です。
 
 ```yaml {label="exAPI"}
 apiVersion: compute.example.com/v1alpha1
@@ -106,74 +103,64 @@ spec:
   location: "US"
 ```
 
-Like any Kubernetes object the API has a 
+他のKubernetesオブジェクトと同様に、APIには 
 {{<hover label="exAPI" line="1">}}version{{</hover>}}, 
-{{<hover label="exAPI" line="2">}}kind{{</hover>}} and 
-{{<hover label="exAPI" line="5">}}spec{{</hover>}}.
+{{<hover label="exAPI" line="2">}}kind{{</hover>}} および 
+{{<hover label="exAPI" line="5">}}spec{{</hover>}}があります。
 
-### Define a group and version
-To create your own API start by defining an 
-[API group](https://kubernetes.io/docs/reference/using-api/#api-groups) and 
-[version](https://kubernetes.io/docs/reference/using-api/#api-versioning).  
+### グループとバージョンの定義
+独自のAPIを作成するには、まず 
+[APIグループ](https://kubernetes.io/docs/reference/using-api/#api-groups) と 
+[バージョン](https://kubernetes.io/docs/reference/using-api/#api-versioning)を定義します。  
 
-The _group_ can be any value, but common convention is to map to a fully
-qualified domain name. 
+_group_ は任意の値を指定できますが、一般的な慣習として完全修飾ドメイン名にマッピングされます。
 
 <!-- vale gitlab.SentenceLength = NO -->
-The version shows how mature or stable the API is and increments when changing,
-adding or removing fields in the API.
+バージョンはAPIの成熟度や安定性を示し、API内のフィールドを変更、追加、または削除する際にインクリメントされます。
 <!-- vale gitlab.SentenceLength = YES -->
 
-Crossplane doesn't require specific versions or a specific version naming 
-convention, but following 
-[Kubernetes API versioning guidelines](https://kubernetes.io/docs/reference/using-api/#api-versioning)
-is strongly recommended. 
+Crossplaneは特定のバージョンや特定のバージョン命名規則を必要としませんが、 
+[Kubernetes APIバージョニングガイドライン](https://kubernetes.io/docs/reference/using-api/#api-versioning)に従うことを強く推奨します。
 
-* `v1alpha1` - A new API that may change at any time.
-* `v1beta1` - An existing API that's considered stable. Breaking changes are
-  strongly discouraged.
-* `v1` - A stable API that doesn't have breaking changes. 
+* `v1alpha1` - いつでも変更される可能性のある新しいAPIです。
+* `v1beta1` - 安定と見なされる既存のAPIです。破壊的変更は強く推奨されません。
+* `v1` - 破壊的変更がない安定したAPIです。
 
-This guide uses the group 
-{{<hover label="version" line="1">}}compute.example.com{{</hover>}}.
+このガイドではグループ 
+{{<hover label="version" line="1">}}compute.example.com{{</hover>}}を使用します。
 
-Because this is the first version of the API, this guide uses the version
-{{<hover label="version" line="1">}}v1alpha1{{</hover>}}.
+これはAPIの最初のバージョンであるため、このガイドではバージョン
+{{<hover label="version" line="1">}}v1alpha1{{</hover>}}を使用します。
 
 ```yaml {label="version",copy-lines="none"}
 apiVersion: compute.example.com/v1alpha1
 ```
 
-### Define a kind
+### 種類を定義する
 
-The API group is a logical collection of related APIs. In a group are
-individual kinds representing different resources.
+APIグループは関連するAPIの論理的なコレクションです。グループ内には異なるリソースを表す個々の種類があります。
 
-For example a `compute` group may have a `VirtualMachine` and `BareMetal` kinds.
+例えば、`compute`グループには`VirtualMachine`と`BareMetal`の種類があるかもしれません。
 
-The `kind` can be anything, but it must be 
-[UpperCamelCased](https://kubernetes.io/docs/contribute/style/style-guide/#use-upper-camel-case-for-api-objects).
+`kind`は何でも構いませんが、 
+[UpperCamelCased](https://kubernetes.io/docs/contribute/style/style-guide/#use-upper-camel-case-for-api-objects)である必要があります。
 
-This API's kind is 
-{{<hover label="kind" line="2">}}VirtualMachine{{</hover>}}
+このAPIの種類は 
+{{<hover label="kind" line="2">}}VirtualMachine{{</hover>}}です。
 
 ```yaml {label="kind",copy-lines="none"}
 apiVersion: compute.example.com/v1alpha1
 kind: VirtualMachine
 ```
 
-### Define a spec
+### スペックを定義する
 
-The most important part of an API is the schema. The schema defines the inputs
-accepted from users. 
+APIの最も重要な部分はスキーマです。スキーマはユーザーから受け入れられる入力を定義します。
 
-This API allows users to provide a 
-{{<hover label="spec" line="4">}}location{{</hover>}} of where to run their 
-cloud resources.
+このAPIでは、ユーザーがクラウドリソースを実行する場所の 
+{{<hover label="spec" line="4">}}location{{</hover>}}を提供することを許可しています。
 
-All other resource settings can't be configurable by the users. This allows
-Crossplane to enforce any policies and standards without worrying about
-user errors. 
+他のすべてのリソース設定はユーザーによって構成できません。これにより、Crossplaneはユーザーエラーを心配することなく、ポリシーや基準を強制することができます。
 
 ```yaml {label="spec",copy-lines="none"}
 apiVersion: compute.example.com/v1alpha1
@@ -182,34 +169,29 @@ spec:
   location: "US"
 ```
 
-### Apply the API
+### APIの適用
 
-Crossplane uses 
+Crossplaneは 
 {{<hover label="xrd" line="3">}}Composite Resource Definitions{{</hover>}} 
-(also called an `XRD`) to install your custom API in
-Kubernetes. 
+（`XRD`とも呼ばれます）を使用して、KubernetesにカスタムAPIをインストールします。
 
-The XRD {{<hover label="xrd" line="6">}}spec{{</hover>}} contains all the
-information about the API including the 
+XRDの{{<hover label="xrd" line="6">}}spec{{</hover>}}には、APIに関するすべての情報が含まれています。これには 
 {{<hover label="xrd" line="7">}}group{{</hover>}},
 {{<hover label="xrd" line="12">}}version{{</hover>}},
-{{<hover label="xrd" line="9">}}kind{{</hover>}} and 
-{{<hover label="xrd" line="13">}}schema{{</hover>}}.
+{{<hover label="xrd" line="9">}}kind{{</hover>}}および 
+{{<hover label="xrd" line="13">}}schema{{</hover>}}が含まれます。
 
-The XRD's {{<hover label="xrd" line="5">}}name{{</hover>}} must be the
-combination of the {{<hover label="xrd" line="10">}}plural{{</hover>}} and 
-{{<hover label="xrd" line="7">}}group{{</hover>}}.
+XRDの{{<hover label="xrd" line="5">}}name{{</hover>}}は、{{<hover label="xrd" line="10">}}plural{{</hover>}}と 
+{{<hover label="xrd" line="7">}}group{{</hover>}}の組み合わせでなければなりません。
 
-The {{<hover label="xrd" line="13">}}schema{{</hover>}} uses the
-{{<hover label="xrd" line="14">}}OpenAPIv3{{</hover>}} specification to define
-the API {{<hover label="xrd" line="17">}}spec{{</hover>}}.  
+{{<hover label="xrd" line="13">}}schema{{</hover>}}は、APIの{{<hover label="xrd" line="17">}}spec{{</hover>}}を定義するために
+{{<hover label="xrd" line="14">}}OpenAPIv3{{</hover>}}仕様を使用します。  
 
-The API defines a {{<hover label="xrd" line="20">}}location{{</hover>}} that
-must be {{<hover label="xrd" line="22">}}oneOf{{</hover>}} either 
-{{<hover label="xrd" line="23">}}EU{{</hover>}} or 
-{{<hover label="xrd" line="24">}}US{{</hover>}}.
+APIは、{{<hover label="xrd" line="20">}}location{{</hover>}}を定義し、それは{{<hover label="xrd" line="22">}}oneOf{{</hover>}}で
+{{<hover label="xrd" line="23">}}EU{{</hover>}}または 
+{{<hover label="xrd" line="24">}}US{{</hover>}}のいずれかでなければなりません。
 
-Apply this XRD to create the custom API in your Kubernetes cluster. 
+このXRDを適用して、KubernetesクラスターにカスタムAPIを作成します。
 
 ```yaml {label="xrd",copy-lines="all"}
 cat <<EOF | kubectl apply -f -
@@ -246,21 +228,18 @@ spec:
 EOF
 ```
 
-Adding the {{<hover label="xrd" line="29">}}claimNames{{</hover>}} allows users
-to access this API either at the cluster level with the 
-{{<hover label="xrd" line="9">}}VirtualMachine{{</hover>}} endpoint or in a namespace
-with the 
-{{<hover label="xrd" line="30">}}VirtualMachineClaim{{</hover>}} endpoint. 
+{{<hover label="xrd" line="29">}}claimNames{{</hover>}}を追加することで、ユーザーはこのAPIにアクセスできます。
+クラスター全体で{{<hover label="xrd" line="9">}}VirtualMachine{{</hover>}}エンドポイントを使用するか、名前空間で
+{{<hover label="xrd" line="30">}}VirtualMachineClaim{{</hover>}}エンドポイントを使用します。
 
-The namespace scoped API is a Crossplane _Claim_.
+名前空間スコープのAPIは、Crossplaneの_Claim_です。
 
 {{<hint "tip" >}}
-For more details on the fields and options of Composite Resource Definitions
-read the 
-[XRD documentation]({{<ref "../concepts/composite-resource-definitions">}}). 
+Composite Resource Definitionsのフィールドとオプションの詳細については、
+[XRDドキュメント]({{<ref "../concepts/composite-resource-definitions">}})をお読みください。 
 {{< /hint >}}
 
-View the installed XRD with `kubectl get xrd`.  
+インストールされたXRDを表示するには、`kubectl get xrd`を実行します。
 
 ```shell {copy-lines="1"}
 kubectl get xrd
@@ -268,7 +247,8 @@ NAME                                  ESTABLISHED   OFFERED   AGE
 virtualmachines.compute.example.com   True          True      43s
 ```
 
-View the new custom API endpoints with `kubectl api-resources | grep VirtualMachine`
+
+新しいカスタムAPIエンドポイントを表示するには、次のコマンドを実行します `kubectl api-resources | grep VirtualMachine`
 
 ```shell {copy-lines="1",label="apiRes"}
 kubectl api-resources | grep VirtualMachine
@@ -276,33 +256,27 @@ virtualmachineclaims              compute.example.com/v1alpha1           true   
 virtualmachines                   compute.example.com/v1alpha1           false        VirtualMachine
 ```
 
-## Create a deployment template
+## デプロイメントテンプレートの作成
 
-When users access the custom API Crossplane takes their inputs and combines them
-with a template describing what infrastructure to deploy. Crossplane calls this
-template a _Composition_.
+ユーザーがカスタムAPIにアクセスすると、Crossplaneはその入力を取得し、デプロイするインフラストラクチャを説明するテンプレートと組み合わせます。Crossplaneはこのテンプレートを _Composition_ と呼びます。
 
-The {{<hover label="comp" line="3">}}Composition{{</hover>}} defines all the 
-cloud resources to deploy.
-Each entry in the template
-is a full resource definitions, defining all the resource settings and metadata
-like labels and annotations. 
+{{<hover label="comp" line="3">}}Composition{{</hover>}} は、デプロイするすべてのクラウドリソースを定義します。
+テンプレート内の各エントリは、リソース設定やメタデータ（ラベルやアノテーションなど）を定義する完全なリソース定義です。
 
-This template creates an Azure
+このテンプレートは、Azureの
 {{<hover label="comp" line="11">}}LinuxVirtualMachine{{</hover>}}
 {{<hover label="comp" line="46">}}NetworkInterface{{</hover>}}, 
 {{<hover label="comp" line="69">}}Subnet{{</hover>}}
-{{<hover label="comp" line="90">}}VirtualNetwork{{</hover>}} and
-{{<hover label="comp" line="110">}}ResourceGroup{{</hover>}}.
+{{<hover label="comp" line="90">}}VirtualNetwork{{</hover>}} および
+{{<hover label="comp" line="110">}}ResourceGroup{{</hover>}} を作成します。
 
-Crossplane uses {{<hover label="comp" line="34">}}patches{{</hover>}} to apply
-the user's input to the resource template.  
-This Composition takes the user's 
-{{<hover label="comp" line="36">}}location{{</hover>}} input and uses it as the 
-{{<hover label="comp" line="37">}}location{{</hover>}} used in the individual 
-resource.
+Crossplaneは、{{<hover label="comp" line="34">}}patches{{</hover>}}を使用して
+ユーザーの入力をリソーステンプレートに適用します。  
+このCompositionは、ユーザーの
+{{<hover label="comp" line="36">}}location{{</hover>}} 入力を取得し、個々の
+リソースで使用される{{<hover label="comp" line="37">}}location{{</hover>}}として使用します。
 
-Apply this Composition to your cluster. 
+このCompositionをクラスターに適用します。
 
 ```yaml {label="comp",copy-lines="all"}
 cat <<EOF | kubectl apply -f -
@@ -433,20 +407,20 @@ spec:
 EOF
 ```
 
-The {{<hover label="comp" line="52">}}compositeTypeRef{{</hover >}} defines
-which custom APIs can use this template to create resources.
+{{<hover label="comp" line="52">}}compositeTypeRef{{</hover >}} は、
+このテンプレートを使用してリソースを作成できるカスタムAPIを定義します。
 
 {{<hint "tip" >}}
-Read the [Composition documentation]({{<ref "../concepts/compositions">}}) for
-more information on configuring Compositions and all the available options.
+[Compositionのドキュメント]({{<ref "../concepts/compositions">}})を読んで、
+Compositionの構成や利用可能なオプションについての詳細を確認してください。
 
-Read the 
-[Patch and Transform documentation]({{<ref "../concepts/patch-and-transform">}}) 
-for more information on how Crossplane uses patches to map user inputs to
-Composition resource templates.
+[Patch and Transformのドキュメント]({{<ref "../concepts/patch-and-transform">}})を読んで、
+Crossplaneがユーザーの入力をCompositionリソーステンプレートにマッピングするために
+patchesをどのように使用するかについての詳細を確認してください。
 {{< /hint >}}
 
-View the Composition with `kubectl get composition`
+
+`kubectl get composition`を使用してCompositionを表示します。
 
 ```shell {copy-lines="1"}
 kubectl get composition
@@ -454,12 +428,11 @@ NAME                                    XR-KIND           XR-APIVERSION         
 crossplane-quickstart-vm-with-network   XVirtualMachine   custom-api.example.org/v1alpha1   77s
 ```
 
-## Install the Azure virtual machine provider
+## Azure仮想マシンプロバイダーのインストール
 
-Part 1 only installed the Azure Virtual Network Provider. To deploying virtual
-machines requires the Azure Compute provider as well. 
+パート1ではAzure Virtual Network Providerのみがインストールされました。仮想マシンをデプロイするには、Azure Computeプロバイダーも必要です。
 
-Add the new Provider to the cluster. 
+新しいプロバイダーをクラスターに追加します。
 
 ```yaml
 cat <<EOF | kubectl apply -f -
@@ -472,8 +445,7 @@ spec:
 EOF
 ```
 
-View the new Compute provider with `kubectl get providers`.
-
+`kubectl get providers`を使用して新しいComputeプロバイダーを表示します。
 
 ```shell {copy-lines="1"}
 kubectl get providers
@@ -483,13 +455,11 @@ provider-azure-network          True        True      xpkg.upbound.io/upbound/pr
 upbound-provider-family-azure   True        True      xpkg.upbound.io/upbound/provider-family-azure:v0.42.1    3h
 ```
 
-## Access the custom API
+## カスタムAPIにアクセスする
 
-With the custom API (XRD) installed and associated to a resource template
-(Composition) users can access the API to create resources.
+カスタムAPI（XRD）がインストールされ、リソーステンプレート（Composition）に関連付けられると、ユーザーはAPIにアクセスしてリソースを作成できます。
 
-Create a {{<hover label="xr" line="3">}}VirtualMachine{{</hover>}} object to 
-create the cloud resources.
+{{<hover label="xr" line="3">}}VirtualMachine{{</hover>}}オブジェクトを作成して、クラウドリソースを作成します。
 
 ```yaml {copy-lines="all",label="xr"}
 cat <<EOF | kubectl apply -f -
@@ -502,10 +472,10 @@ spec:
 EOF
 ```
 
-View the resource with `kubectl get VirtualMachine`.
+`kubectl get VirtualMachine`を使用してリソースを表示します。
 
 {{< hint "note" >}}
-It may take up to five minutes for the resources to provision.
+リソースのプロビジョニングには最大5分かかる場合があります。
 {{< /hint >}}
 
 ```shell {copy-lines="1"}
@@ -514,12 +484,10 @@ NAME    SYNCED   READY   COMPOSITION                             AGE
 my-vm   True     True    crossplane-quickstart-vm-with-network   3m3s
 ```
 
-This object is a Crossplane _composite resource_ (also called an `XR`).  
-It's a
-single object representing the collection of resources created from the
-Composition template. 
+このオブジェクトはCrossplaneの_複合リソース_（`XR`とも呼ばれます）です。  
+これは、Compositionテンプレートから作成されたリソースのコレクションを表す単一のオブジェクトです。
 
-View the individual resources with `kubectl get managed`
+`kubectl get managed`を使用して個々のリソースを表示します。
 
 ```shell {copy-lines="1"}
 kubectl get managed
@@ -539,10 +507,9 @@ NAME                                                  READY   SYNCED   EXTERNAL-
 virtualnetwork.network.azure.upbound.io/my-vm-pd2sw   True    True     my-vm-pd2sw     3m43s
 ```
 
-Accessing the API created all five resources defined in the template and linked
-them together. 
+APIにアクセスすることで、テンプレートで定義された5つのリソースがすべて作成され、それらがリンクされました。
 
-Look at a specific resource to see it's created in the location used in the API.
+特定のリソースを見て、APIで使用された場所に作成されていることを確認します。
 
 ```yaml {copy-lines="1"}
 kubectl describe linuxvirtualmachine | grep Location
@@ -550,43 +517,43 @@ kubectl describe linuxvirtualmachine | grep Location
     Location:                         swedencentral
 ```
 
-Delete the resources with `kubectl delete VirtualMachine`.
+`kubectl delete VirtualMachine`を使用してリソースを削除します。
 
 ```shell {copy-lines="1"}
 kubectl delete VirtualMachine my-vm
-virtualmachine.compute.example.com "my-vm" deleted
+virtualmachine.compute.example.com "my-vm" が削除されました
 ```
 
-Verify Crossplane deleted the resources with `kubectl get managed`
+Crossplaneがリソースを削除したことを`kubectl get managed`で確認します。
 
 {{<hint "note" >}}
-It may take up to 5 minutes to delete the resources.
+リソースの削除には最大で5分かかる場合があります。
 {{< /hint >}}
 
 ```shell {copy-lines="1"}
 kubectl get managed
-No resources found
+リソースは見つかりませんでした
 ```
 
-## Using the API with namespaces
+## 名前空間を使用したAPIの利用
 
-Accessing the API `VirtualMachine` happens at the cluster scope.  
-Most organizations
-isolate their users into namespaces.  
+API `VirtualMachine`へのアクセスはクラスターのスコープで行われます。  
+ほとんどの組織は
+ユーザーを名前空間に隔離します。  
 
-A Crossplane _Claim_ is the custom API in a namespace.
+Crossplaneの_Claim_は、名前空間内のカスタムAPIです。
 
-Creating a _Claim_ is just like accessing the custom API endpoint, but with the
+_Claim_を作成することは、カスタムAPIエンドポイントにアクセスするのと同じですが、
 {{<hover label="claim" line="3">}}kind{{</hover>}} 
-from the custom API's `claimNames`.
+はカスタムAPIの`claimNames`から取得します。
 
-Create a new namespace to test create a Claim in. 
+Claimを作成するために新しい名前空間を作成します。
 
 ```shell
 kubectl create namespace crossplane-test
 ```
 
-Then create a Claim in the `crossplane-test` namespace.
+次に、`crossplane-test`名前空間にClaimを作成します。
 
 ```yaml {label="claim",copy-lines="all"}
 cat <<EOF | kubectl apply -f -
@@ -599,7 +566,7 @@ spec:
   location: "EU"
 EOF
 ```
-View the Claim with `kubectl get claim -n crossplane-test`.
+`kubectl get claim -n crossplane-test`でClaimを表示します。
 
 ```shell {copy-lines="1"}
 kubectl get claim -n crossplane-test
@@ -607,10 +574,9 @@ NAME               SYNCED   READY   CONNECTION-SECRET   AGE
 my-namespaced-vm   True     True                        5m11s
 ```
 
-The Claim automatically creates a composite resource, which creates the managed
-resources. 
+Claimは自動的に複合リソースを作成し、それが管理リソースを作成します。
 
-View the Crossplane created composite resource with `kubectl get composite`.
+`kubectl get composite`でCrossplaneが作成した複合リソースを表示します。
 
 ```shell {copy-lines="1"}
 kubectl get composite
@@ -618,7 +584,7 @@ NAME                     SYNCED   READY   COMPOSITION                           
 my-namespaced-vm-r7gdr   True     True    crossplane-quickstart-vm-with-network   5m33s
 ```
 
-Again, view the managed resources with `kubectl get managed`.
+再度、`kubectl get managed`で管理リソースを表示します。
 
 ```shell {copy-lines="1"}
 NAME                                                          READY   SYNCED   EXTERNAL-NAME                  AGE
@@ -637,37 +603,34 @@ NAME                                                                   READY   S
 virtualnetwork.network.azure.upbound.io/my-namespaced-vm-r7gdr-5qhz7   True    True     my-namespaced-vm-r7gdr-5qhz7   5m51s
 ```
 
-Deleting the Claim deletes all the Crossplane generated resources.
+Claimを削除すると、すべてのCrossplane生成リソースが削除されます。
 
 `kubectl delete claim -n crossplane-test my-VirtualMachine-database`
 
 ```shell {copy-lines="1"}
 kubectl delete claim -n crossplane-test my-namespaced-vm
-virtualmachineclaim.compute.example.com "my-namespaced-vm" deleted
+virtualmachineclaim.compute.example.com "my-namespaced-vm" が削除されました
 ```
 
 {{<hint "note" >}}
-It may take up to 5 minutes to delete the resources.
+リソースの削除には最大で5分かかる場合があります。
 {{< /hint >}}
 
-Verify Crossplane deleted the composite resource with `kubectl get composite`.
+Crossplaneが複合リソースを削除したことを`kubectl get composite`で確認します。
 
 ```shell {copy-lines="1"}
 kubectl get composite
 No resources found
 ```
 
-Verify Crossplane deleted the managed resources with `kubectl get managed`.
+Crossplaneが管理リソースを削除したことを`kubectl get managed`で確認します。
 
 ```shell {copy-lines="1"}
 kubectl get managed
 No resources found
 ```
 
-## Next steps
-* Explore Azure resources that Crossplane can configure in the 
-  [Provider CRD reference](https://marketplace.upbound.io/providers/upbound/provider-family-azure/).
-* Join the [Crossplane Slack](https://slack.crossplane.io/) and connect with 
-  Crossplane users and contributors.
-* Read more about the [Crossplane concepts]({{<ref "../concepts">}}) to find out
-  what else you can do with Crossplane. 
+## 次のステップ
+* Crossplaneが構成できるAzureリソースを[Provider CRDリファレンス](https://marketplace.upbound.io/providers/upbound/provider-family-azure/)で探ります。
+* [Crossplane Slack](https://slack.crossplane.io/)に参加して、Crossplaneのユーザーや貢献者とつながります。
+* [Crossplaneの概念]({{<ref "../concepts">}})についてもっと読み、Crossplaneでできることを見つけます。

@@ -1,60 +1,51 @@
 ---
-title: Composite Resource Definitions
+title: コンポジットリソース定義
 weight: 40
-description: "Composite Resource Definitions or XRDs define custom API schemas"
+description: "コンポジットリソース定義またはXRDはカスタムAPIスキーマを定義します"
 ---
 
-Composite resource definitions (`XRDs`) define the schema for a custom API.  
-Users create composite resources (`XRs`) and Claims (`XCs`) using the API
-schema defined by an `XRD`.
+コンポジットリソース定義（`XRD`）はカスタムAPIのスキーマを定義します。  
+ユーザーは`XRD`で定義されたAPIスキーマを使用してコンポジットリソース（`XR`）とクレーム（`XC`）を作成します。
 
 
 {{< hint "note" >}}
 
-Read the [composite resources]({{<ref "./composite-resources">}}) page for more
-information about composite resources.
+コンポジットリソースに関する詳細は[コンポジットリソース]({{<ref "./composite-resources">}})ページをお読みください。
 
-Read the [Claims]({{<ref "./claims">}}) page for more
-information about Claims.
+クレームに関する詳細は[クレーム]({{<ref "./claims">}})ページをお読みください。
 {{</hint >}}
 
 
-{{<expand "Confused about Compositions, XRDs, XRs and Claims?" >}}
-Crossplane has four core components that users commonly mix up:
+{{<expand "コンポジション、XRD、XR、およびクレームについて混乱していますか？" >}}
+Crossplaneには、ユーザーが一般的に混同する4つのコアコンポーネントがあります：
 
-* [Compositions]({{<ref "./compositions" >}}) - A template to define how to create resources.
-* Composite Resource Definition (`XRD`) - This page. A custom API specification. 
-* [Composite Resource]({{<ref "./composite-resources">}}) (`XR`) - Created by
-  using the custom API defined in a Composite Resource Definition. XRs use the
-  Composition template to create new managed resources. 
-* [Claims]({{<ref "./claims" >}}) (`XRC`) - Like a Composite Resource, but
-  with namespace scoping. 
+* [コンポジション]({{<ref "./compositions" >}}) - リソースを作成する方法を定義するテンプレート。
+* コンポジットリソース定義（`XRD`） - このページ。カスタムAPI仕様。 
+* [コンポジットリソース]({{<ref "./composite-resources">}})（`XR`） - コンポジットリソース定義で定義されたカスタムAPIを使用して作成されます。XRはコンポジションテンプレートを使用して新しい管理リソースを作成します。 
+* [クレーム]({{<ref "./claims" >}})（`XRC`） - コンポジットリソースのようですが、名前空間スコープがあります。 
 {{</expand >}}
 
-Crossplane XRDs are like 
-[Kubernetes custom resource definitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/). 
-XRDs require fewer fields and add options related to Crossplane, like Claims and
-connection secrets. 
+CrossplaneのXRDは、[Kubernetesカスタムリソース定義](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/)のようなものです。 
+XRDは必要なフィールドが少なく、クレームや接続シークレットなどCrossplaneに関連するオプションを追加します。 
 
-## Creating a CompositeResourceDefinition
+## コンポジットリソース定義の作成
 
-Creating a CompositeResourceDefinition consists of:
-* [Defining a custom API group](#xrd-groups).
-* [Defining a custom API name](#xrd-names).
-* [Defining a custom API schema and version](#xrd-versions).
+コンポジットリソース定義の作成は以下から成ります：
+* [カスタムAPIグループの定義](#xrd-groups)。
+* [カスタムAPI名の定義](#xrd-names)。
+* [カスタムAPIスキーマとバージョンの定義](#xrd-versions)。
   
-Optionally, CompositeResourceDefinitions also support:
-* [Offering a Claim](#enable-claims).
-* [Defining connection secrets](#manage-connection-secrets).
-* [Setting composite resource defaults](#set-composite-resource-defaults).
+オプションとして、コンポジットリソース定義は以下もサポートします：
+* [クレームの提供](#enable-claims)。
+* [接続シークレットの定義](#manage-connection-secrets)。
+* [コンポジットリソースのデフォルト設定](#set-composite-resource-defaults)。
  
-Composite resource definitions (`XRDs`) create new API endpoints inside a
-Kubernetes cluster. 
+コンポジットリソース定義（`XRD`）はKubernetesクラスター内に新しいAPIエンドポイントを作成します。 
 
-Creating a new API requires defining an API 
-{{<hover label="xrd1" line="6">}}group{{</hover>}},
-{{<hover label="xrd1" line="7">}}name{{</hover>}} and
-{{<hover label="xrd1" line="10">}}version{{</hover>}}. 
+新しいAPIを作成するには、API 
+{{<hover label="xrd1" line="6">}}グループ{{</hover>}},
+{{<hover label="xrd1" line="7">}}名前{{</hover>}}および
+{{<hover label="xrd1" line="10">}}バージョン{{</hover>}}を定義する必要があります。
 
 ```yaml {label="xrd1",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -71,13 +62,12 @@ spec:
   # Removed for brevity
 ```
 
-After applying an XRD, Crossplane creates a new Kubernetes custom resource
-definition matching the defined API.
+XRDを適用すると、Crossplaneは定義されたAPIに一致する新しいKubernetesカスタムリソース定義を作成します。
 
-For example, the XRD 
+例えば、XRD 
 {{<hover label="xrd1" line="4">}}xmydatabases.example.org{{</hover >}} 
-creates a custom resource definition 
-{{<hover label="kubeapi" line="2">}}xmydatabases.example.org{{</hover >}}.  
+はカスタムリソース定義 
+{{<hover label="kubeapi" line="2">}}xmydatabases.example.org{{</hover >}}を作成します。  
 
 ```shell {label="kubeapi",copy-lines="3"}
 kubectl api-resources
@@ -87,55 +77,45 @@ xmydatabases.example.org                       v1alpha1            false        
 ```
 
 {{<hint "warning">}}
-You can't change the XRD
-{{<hover label="xrd1" line="6">}}group{{</hover>}} or
-{{<hover label="xrd1" line="7">}}names{{</hover>}}.  
-You must delete and
-recreate the XRD to change the 
-{{<hover label="xrd1" line="6">}}group{{</hover>}} or
-{{<hover label="xrd1" line="7">}}names{{</hover>}}.
+XRDの
+{{<hover label="xrd1" line="6">}}group{{</hover>}}や
+{{<hover label="xrd1" line="7">}}names{{</hover>}}を変更することはできません。  
+{{<hover label="xrd1" line="6">}}group{{</hover>}}や
+{{<hover label="xrd1" line="7">}}names{{</hover>}}を変更するには、XRDを削除して再作成する必要があります。
 {{</hint >}}
 
-### XRD groups
+### XRDグループ
 
-Groups define a collection of related API endpoints. The `group` can be any
-value, but common convention is to map to a fully qualified domain name.
+グループは関連するAPIエンドポイントのコレクションを定義します。 `group`は任意の値を使用できますが、一般的な慣習は完全修飾ドメイン名にマッピングすることです。
 
 <!-- vale write-good.Weasel = NO -->
-Many XRDs may use the same `group` to create a logical collection of APIs.  
+多くのXRDが同じ`group`を使用してAPIの論理コレクションを作成することがあります。  
 <!-- vale write-good.Weasel = YES -->
-For example a `database` group may have a `relational` and `nosql` kinds. 
+例えば、`database`グループには`relational`と`nosql`の種類があるかもしれません。
 
 {{<hint "tip" >}}
-Group names are cluster scoped. Choose group names that don't conflict with
-Providers.  
-Avoid Provider names in the group.
+グループ名はクラスターのスコープです。プロバイダーと競合しないグループ名を選択してください。  
+グループ内でプロバイダー名を避けてください。
 {{< /hint >}}
 
-### XRD names
+### XRD名
 
-The `names` field defines how to refer to this specific XRD.  
-The required name fields are: 
+`names`フィールドは、この特定のXRDを参照する方法を定義します。  
+必要な名前フィールドは次のとおりです：
 
-* `kind` - the `kind` value to use when calling this API. The kind is
-  [UpperCamelCased](https://kubernetes.io/docs/contribute/style/style-guide/#use-upper-camel-case-for-api-objects).
-  Crossplane recommends starting XRD `kinds` with an `X` to show 
-  it's a custom Crossplane API definition. 
-* `plural` - the plural name used for the API URL. The plural name must be
-  lowercase. 
+* `kind` - このAPIを呼び出すときに使用する`kind`値。kindは
+  [UpperCamelCased](https://kubernetes.io/docs/contribute/style/style-guide/#use-upper-camel-case-for-api-objects)である必要があります。
+  Crossplaneは、XRDの`kind`を`X`で始めることを推奨しており、これはカスタムCrossplane API定義であることを示します。 
+* `plural` - API URLに使用される複数形の名前。複数形の名前は
+  小文字である必要があります。
 
 {{<hint "important" >}}
-The XRD 
-{{<hover label="xrdName" line="4">}}metadata.name{{</hover>}} must be 
-{{<hover label="xrdName" line="9">}}plural{{</hover>}} name, `.` (dot character),
-{{<hover label="xrdName" line="6">}}group{{</hover>}}.
+XRD 
+{{<hover label="xrdName" line="4">}}metadata.name{{</hover>}}は 
+{{<hover label="xrdName" line="9">}}plural{{</hover>}}名、`.`（ドット文字）、
+{{<hover label="xrdName" line="6">}}group{{</hover>}}である必要があります。
 
-For example, {{<hover label="xrdName"
-line="4">}}xmydatabases.example.org{{</hover>}} matches the {{<hover
-label="xrdName" line="9">}}plural{{</hover>}} name
-{{<hover label="xrdName" line="9">}}xmydatabases{{</hover>}}, `.` 
-{{<hover label="xrdName" line="6">}}group{{</hover>}} name, 
-{{<hover label="xrdName" line="6">}}example.org{{</hover>}}.
+例えば、{{<hover label="xrdName" line="4">}}xmydatabases.example.org{{</hover>}}は{{<hover label="xrdName" line="9">}}plural{{</hover>}}名{{<hover label="xrdName" line="9">}}xmydatabases{{</hover>}}、 `.` {{<hover label="xrdName" line="6">}}group{{</hover>}}名、{{<hover label="xrdName" line="6">}}example.org{{</hover>}}に一致します。
 
 ```yaml {label="xrdName",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -151,57 +131,44 @@ spec:
 ```
 {{</hint >}}
 
-### XRD versions
+### XRD バージョン
 
 <!-- vale gitlab.SentenceLength = NO -->
-The XRD `version` is like the 
-[API versioning used by Kubernetes](https://kubernetes.io/docs/reference/using-api/#api-versioning).
-The version shows how mature or stable the API is and increments when changing,
-adding or removing fields in the API.
+XRD `version` は、 
+[Kubernetes によって使用される API バージョニング](https://kubernetes.io/docs/reference/using-api/#api-versioning)のようなものです。
+バージョンは、API がどれだけ成熟しているか、または安定しているかを示し、API のフィールドを変更、追加、または削除する際に増加します。
 <!-- vale gitlab.SentenceLength = YES -->
 
-Crossplane doesn't require specific versions or a specific version naming 
-convention, but following 
-[Kubernetes API versioning guidelines](https://kubernetes.io/docs/reference/using-api/#api-versioning)
-is strongly recommended. 
+Crossplane は特定のバージョンや特定のバージョン命名規則を必要としませんが、 
+[Kubernetes API バージョニングガイドライン](https://kubernetes.io/docs/reference/using-api/#api-versioning)に従うことが強く推奨されます。
 
-* `v1alpha1` - A new API that may change at any time.
-* `v1beta1` - An existing API that's considered stable. Breaking changes are
-  strongly discouraged.
-* `v1` - A stable API that doesn't have breaking changes. 
+* `v1alpha1` - いつでも変更される可能性のある新しい API。
+* `v1beta1` - 安定していると見なされる既存の API。破壊的変更は強く推奨されません。
+* `v1` - 破壊的変更がない安定した API。
 
-#### Define a schema
+#### スキーマの定義
 
 <!-- vale write-good.Passive = NO -->
 <!-- vale write-good.TooWordy = NO -->
-The `schema` defines the names
-of the parameters, the data types of the parameters and which parameters are
-required or optional. 
+`schema` は、パラメータの名前、パラメータのデータ型、およびどのパラメータが必須またはオプションであるかを定義します。
 <!-- vale write-good.Passive = YES -->
 <!-- vale write-good.TooWordy = YES -->
 
 {{<hint "note" >}}
-All `schemas` follow the Kubernetes custom resource definition 
-[OpenAPIv3 structural schema](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#specifying-a-structural-schema). 
+すべての `schemas` は、Kubernetes カスタムリソース定義の 
+[OpenAPIv3 構造スキーマ](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#specifying-a-structural-schema)に従います。
 {{< /hint >}}
 
-Each 
-{{<hover label="schema" line="11">}}version{{</hover>}} of the API has a unique 
-{{<hover label="schema" line="12">}}schema{{</hover>}}. 
+API の各{{<hover label="schema" line="11">}}version{{</hover>}}には、ユニークな{{<hover label="schema" line="12">}}schema{{</hover>}}があります。
 
-All XRD {{<hover label="schema" line="12">}}schemas{{</hover>}} validate against
-the {{<hover label="schema" line="13">}}openAPIV3Schema{{</hover>}}. The schema
-is an OpenAPI 
-{{<hover label="schema" line="14">}}object{{</hover>}} with the 
-{{<hover label="schema" line="15">}}properties{{</hover>}} of a 
-{{<hover label="schema" line="16">}}spec{{</hover>}}
-{{<hover label="schema" line="17">}}object{{</hover>}}.
+すべての XRD {{<hover label="schema" line="12">}}schemas{{</hover>}}は、{{<hover label="schema" line="13">}}openAPIV3Schema{{</hover>}}に対して検証されます。スキーマは、OpenAPIの{{<hover label="schema" line="14">}}object{{</hover>}}であり、{{<hover label="schema" line="15">}}properties{{</hover>}}は{{<hover label="schema" line="16">}}spec{{</hover>}}の{{<hover label="schema" line="17">}}object{{</hover>}}です。
 
-Inside the {{<hover label="schema" line="18">}}spec.properties{{</hover>}} is the custom
-API definition.
 
-In this example, the key {{<hover label="schema" line="19">}}region{{</hover>}}
-is a {{<hover label="schema" line="20">}}string{{</hover>}}.
+{{<hover label="schema" line="18">}}spec.properties{{</hover>}}の中にはカスタム
+API定義があります。
+
+この例では、キー{{<hover label="schema" line="19">}}region{{</hover>}}
+は{{<hover label="schema" line="20">}}string{{</hover>}}です。
 
 ```yaml {label="schema",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -227,11 +194,11 @@ spec:
     # Removed for brevity
 ```
 
-A composite resource using this API references the 
-{{<hover label="xr" line="1">}}group/version{{</hover>}} and 
-{{<hover label="xr" line="2">}}kind{{</hover>}}. The 
-{{<hover label="xr" line="5">}}spec{{</hover>}} has the 
-{{<hover label="xr" line="6">}}region{{</hover>}} key with a string value. 
+このAPIを使用するコンポジットリソースは、 
+{{<hover label="xr" line="1">}}group/version{{</hover>}}と 
+{{<hover label="xr" line="2">}}kind{{</hover>}}を参照します。 
+{{<hover label="xr" line="5">}}spec{{</hover>}}には、 
+{{<hover label="xr" line="6">}}region{{</hover>}}キーが文字列値で含まれています。 
 
 ```yaml {label="xr"}
 apiVersion: custom-api.example.org/v1alpha1
@@ -244,33 +211,30 @@ spec:
 
 
 {{<hint "tip" >}}
-The custom API defined inside the 
-{{<hover label="schema" line="18">}}spec.properties{{</hover>}} is an OpenAPIv3
-specification. The 
-[data models page](https://swagger.io/docs/specification/data-models/) of 
-the Swagger documentation provides a list of examples using data types and input
-restrictions. 
+{{<hover label="schema" line="18">}}spec.properties{{</hover>}}の中に定義されたカスタムAPIはOpenAPIv3
+仕様です。Swaggerドキュメントの 
+[data models page](https://swagger.io/docs/specification/data-models/) では、データ型や入力
+制限を使用した例のリストが提供されています。
 
-The Kubernetes documentation lists 
-[the set of special restrictions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation)
-on what your OpenAPIv3 custom API can use.
+Kubernetesドキュメントでは、 
+[OpenAPIv3カスタムAPIが使用できる特別な制限のセット](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation)
+がリストされています。
 {{< /hint >}}
 
 {{<hint "important" >}}
 
-Changing or expanding the XRD schema requires restarting the [Crossplane pod]({{<ref "./pods#crossplane-pod">}}) to take effect.
+XRDスキーマを変更または拡張するには、[Crossplane pod]({{<ref "./pods#crossplane-pod">}})を再起動する必要があります。
 {{< /hint >}}
 
-##### Required fields
+##### 必須フィールド
 
-By default all fields in a schema are optional. Define a parameter as required
-with the 
-{{< hover label="required" line="25">}}required{{</hover>}} attribute. 
+デフォルトでは、スキーマ内のすべてのフィールドはオプションです。 
+{{< hover label="required" line="25">}}required{{</hover>}}属性を使用してパラメータを必須として定義します。
 
-In this example the XRD requires 
-{{< hover label="required" line="19">}}region{{</hover>}} and 
-{{< hover label="required" line="21">}}size{{</hover>}} but
-{{< hover label="required" line="23">}}name{{</hover>}} is optional. 
+この例では、XRDは 
+{{< hover label="required" line="19">}}region{{</hover>}}と 
+{{< hover label="required" line="21">}}size{{</hover>}}を必要としますが、
+{{< hover label="required" line="23">}}name{{</hover>}}はオプションです。 
 ```yaml {label="required",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
@@ -302,25 +266,25 @@ spec:
     # Removed for brevity
 ```
 
-According to the OpenAPIv3 specification, the `required` field is per-object. If
-a schema contains multiple objects the schema may need multiple `required`
-fields.
+OpenAPIv3仕様によれば、`required`フィールドはオブジェクトごとです。 
+スキーマに複数のオブジェクトが含まれている場合、スキーマには複数の`required`
+フィールドが必要になることがあります。
 
-This XRD defines two objects:
- 1. the top-level {{<hover label="required2" line="7">}}spec{{</hover>}} object
- 2. a second {{<hover label="required2" line="14">}}location{{</hover>}} object
+このXRDは2つのオブジェクトを定義します：
+ 1. トップレベルの {{<hover label="required2" line="7">}}spec{{</hover>}} オブジェクト
+ 2. 2番目の {{<hover label="required2" line="14">}}location{{</hover>}} オブジェクト
 
-The {{<hover label="required2" line="7">}}spec{{</hover>}} object 
-{{<hover label="required2" line="23">}}requires{{</hover>}} the 
-{{<hover label="required2" line="10">}}size{{</hover>}} and 
-{{<hover label="required2" line="14">}}location{{</hover>}} but 
-{{<hover label="required2" line="12">}}name{{</hover>}} is optional.
+{{<hover label="required2" line="7">}}spec{{</hover>}} オブジェクトは 
+{{<hover label="required2" line="23">}}requires{{</hover>}} 
+{{<hover label="required2" line="10">}}size{{</hover>}} と 
+{{<hover label="required2" line="14">}}location{{</hover>}} を必要としますが、 
+{{<hover label="required2" line="12">}}name{{</hover>}} はオプションです。
 
-Inside the required {{<hover label="required2" line="14">}}location{{</hover>}} 
-object,
-{{<hover label="required2" line="17">}}country{{</hover>}} is 
-{{<hover label="required2" line="21">}}required{{</hover>}} and
-{{<hover label="required2" line="19">}}zone{{</hover>}} is optional.
+必須の {{<hover label="required2" line="14">}}location{{</hover>}} 
+オブジェクト内では、
+{{<hover label="required2" line="17">}}country{{</hover>}} は 
+{{<hover label="required2" line="21">}}required{{</hover>}} であり、
+{{<hover label="required2" line="19">}}zone{{</hover>}} はオプションです。
 
 ```yaml {copy-lines="none",label="required2"}
 # Removed for brevity
@@ -350,12 +314,12 @@ object,
               - location
 ```
 
-The Swagger "[Describing Parameters](https://swagger.io/docs/specification/describing-parameters/)"
-documentation has more examples. 
+Swaggerの "[Describing Parameters](https://swagger.io/docs/specification/describing-parameters/)"
+ドキュメントには、さらに多くの例があります。
 
-##### Crossplane reserved fields
+##### Crossplaneの予約フィールド
 
-Crossplane doesn't allow the following fields in a schema:
+Crossplaneはスキーマ内で以下のフィールドを許可しません：
 * `spec.resourceRef`
 * `spec.resourceRefs`
 * `spec.claimRef`
@@ -363,14 +327,14 @@ Crossplane doesn't allow the following fields in a schema:
 * `status.conditions`
 * `status.connectionDetails`
 
-Crossplane ignores any fields matching the reserved fields.
+Crossplaneは予約フィールドに一致するフィールドを無視します。
 
-#### Serve and reference a schema
+#### スキーマを提供し参照する
 
-To use a schema it must be
+スキーマを使用するには、次のようにする必要があります：
 {{<hover label="served" line="12" >}}served: true{{</hover >}}
-and 
-{{<hover label="served" line="13" >}}referenceable: true{{</hover>}}.
+および 
+{{<hover label="served" line="13" >}}referenceable: true{{</hover>}}。
 
 ```yaml {label="served"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -397,63 +361,55 @@ spec:
                 type: string            
 ```
 
-Composite resources can use any schema version set as 
-{{<hover label="served" line="12" >}}served: true{{</hover >}}.  
-Kubernetes rejects any composite resource using a schema version set as `served:
-false`.
+複合リソースは、{{<hover label="served" line="12" >}}served: true{{</hover >}}として設定された任意のスキーマバージョンを使用できます。  
+Kubernetesは、`served: false`として設定されたスキーマバージョンを使用する複合リソースを拒否します。
 
 {{< hint "tip" >}}
-Setting a schema version as `served:false` causes errors for users using an older
-schema. This can be an effective way to identify and upgrade users before
-deleting the older schema version. 
+スキーマバージョンを`served:false`として設定すると、古いスキーマを使用しているユーザーにエラーが発生します。これは、古いスキーマバージョンを削除する前にユーザーを特定し、アップグレードする効果的な方法となる可能性があります。 
 {{< /hint >}}
 
-The {{<hover label="served" line="13" >}}referenceable: true{{</hover>}}
-field indicates which version of the schema Compositions use. Only one
-version can be `referenceable`. 
+{{<hover label="served" line="13" >}}referenceable: true{{</hover>}} 
+フィールドは、Compositionが使用するスキーマのバージョンを示します。 
+`referenceable`であることができるのは1つのバージョンのみです。
+
 
 {{< hint "note" >}}
-Changing which version is `referenceable:true` requires [updating the `compositeTypeRef.apiVersion`]({{<ref "./compositions#enabling-composite-resources" >}}) 
-of any Compositions referencing that XRD.
+`referenceable:true` のバージョンを変更するには、その XRD を参照している任意の Composition の [compositeTypeRef.apiVersion]({{<ref "./compositions#enabling-composite-resources" >}}) を更新する必要があります。
 {{< /hint >}}
 
 
-#### Multiple schema versions
+#### 複数のスキーマバージョン
 
 {{<hint "warning" >}}
-Crossplane supports defining multiple `versions`, but the schema of each version
-can't change any existing fields, also called "making a breaking change."
+Crossplane は複数の `versions` を定義することをサポートしていますが、各バージョンのスキーマは既存のフィールドを変更することはできず、これを「破壊的変更」と呼びます。
 
-Breaking schema changes between versions requires the use of [conversion webhooks](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#webhook-conversion).
+バージョン間の破壊的スキーマ変更には、[変換ウェブホック](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/#webhook-conversion) の使用が必要です。
 
-New versions may define new optional parameters, but new required fields are
-a "breaking change."
+新しいバージョンは新しいオプションのパラメータを定義できますが、新しい必須フィールドは「破壊的変更」となります。
 
 <!-- vale Crossplane.Spelling = NO -->
 <!-- ignore to allow for CRDs -->
 <!-- don't add to the spelling exceptions to catch when it's used instead of XRD -->
-Crossplane XRDs use Kubernetes custom resource definitions for versioning. 
-Read the Kubernetes documentation on 
-[versions in CustomResourceDefinitions](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/)
-for more background on versions and breaking changes. 
+Crossplane XRD はバージョン管理のために Kubernetes カスタムリソース定義を使用します。 
+バージョンと破壊的変更に関する詳細は、Kubernetes の 
+[CustomResourceDefinitions におけるバージョン](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definition-versioning/) に関するドキュメントをお読みください。 
 <!-- vale Crossplane.Spelling = YES -->
 
-Crossplane recommends implementing breaking schema changes as brand new XRDs.
+Crossplane は、破壊的スキーマ変更を新しい XRD として実装することを推奨します。
 {{< /hint >}}
 
-For XRDs, to create a new version of an API add a new 
-{{<hover label="ver" line="21">}}name{{</hover>}} in the
-{{<hover label="ver" line="10">}}versions{{</hover>}}
-list. 
+XRD の場合、API の新しいバージョンを作成するには、新しい 
+{{<hover label="ver" line="21">}}name{{</hover>}} を 
+{{<hover label="ver" line="10">}}versions{{</hover>}} リストに追加します。 
 
-For example, this XRD version 
-{{<hover label="ver" line="11">}}v1alpha1{{</hover>}} only has the field 
-{{<hover label="ver" line="19">}}region{{</hover>}}.
+例えば、この XRD バージョン 
+{{<hover label="ver" line="11">}}v1alpha1{{</hover>}} には 
+{{<hover label="ver" line="19">}}region{{</hover>}} フィールドのみがあります。
 
-A second version, 
-{{<hover label="ver" line="21">}}v1{{</hover>}} expands the API to have both 
-{{<hover label="ver" line="29">}}region{{</hover>}} and 
-{{<hover label="ver" line="31">}}size{{</hover>}}.
+2 番目のバージョン 
+{{<hover label="ver" line="21">}}v1{{</hover>}} は API を拡張し、 
+{{<hover label="ver" line="29">}}region{{</hover>}} と 
+{{<hover label="ver" line="31">}}size{{</hover>}} の両方を持つようになります。
 
 ```yaml {label="ver",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -492,43 +448,41 @@ spec:
 
 {{<hint "important" >}}
 
-Changing or expanding the XRD schema requires restarting the [Crossplane pod]({{<ref "./pods#crossplane-pod">}}) to take effect.
+XRD スキーマの変更または拡張には、[Crossplane pod]({{<ref "./pods#crossplane-pod">}}) を再起動する必要があります。
 {{< /hint >}}
 
-### Enable Claims
+### クレームの有効化
 
-Optionally, XRDs can allow Claims to use the XRD API. 
+オプションとして、XRDはクレームがXRD APIを使用することを許可できます。
 
 {{<hint "note" >}}
 
-Read the [Claims]({{<ref "./claims">}}) page for more
-information about Claims.
+クレームに関する詳細情報は[Claims]({{<ref "./claims">}})ページを参照してください。
 {{</hint >}}
 
-XRDs offer Claims with a 
-{{<hover label="claim" line="10">}}claimNames{{</hover >}} object.
+XRDはクレームに対して
+{{<hover label="claim" line="10">}}claimNames{{</hover >}}オブジェクトを提供します。
 
-The {{<hover label="claim" line="10">}}claimNames{{</hover >}} defines a 
-{{<hover label="claim" line="11">}}kind{{</hover >}} and 
-{{<hover label="claim" line="12">}}plural{{</hover >}} like the XRD 
-{{<hover label="claim" line="7">}}names{{</hover >}} object.   
-Also like XRD 
-{{<hover label="claim" line="7">}}names{{</hover >}}, use UpperCamelCase
-for the
-{{<hover label="claim" line="11">}}kind{{</hover >}} and lowercase for the 
-{{<hover label="claim" line="12">}}plural{{</hover >}}.
+{{<hover label="claim" line="10">}}claimNames{{</hover >}}は、XRDの
+{{<hover label="claim" line="7">}}names{{</hover >}}オブジェクトのように
+{{<hover label="claim" line="11">}}kind{{</hover >}}と
+{{<hover label="claim" line="12">}}plural{{</hover >}}を定義します。   
+また、XRDの
+{{<hover label="claim" line="7">}}names{{</hover >}}と同様に、
+{{<hover label="claim" line="11">}}kind{{</hover >}}にはUpperCamelCaseを使用し、
+{{<hover label="claim" line="12">}}plural{{</hover >}}には小文字を使用します。
 
-The Claim 
-{{<hover label="claim" line="11">}}kind{{</hover >}} and 
-{{<hover label="claim" line="12">}}plural{{</hover >}} must be unique. They
-can't match any other Claim or other XRD 
-{{<hover label="claim" line="8">}}kind{{</hover >}}.
+クレームの
+{{<hover label="claim" line="11">}}kind{{</hover >}}と
+{{<hover label="claim" line="12">}}plural{{</hover >}}は一意でなければなりません。
+他のクレームや他のXRDの
+{{<hover label="claim" line="8">}}kind{{</hover >}}と一致してはいけません。
 
 {{<hint "tip" >}}
-Common Crossplane convention is to use 
-{{<hover label="claim" line="10">}}claimNames{{</hover >}} that match the XRD 
-{{<hover label="claim" line="7">}}names{{</hover >}}, but without the beginning
-"x."
+一般的なCrossplaneの慣例は、XRDの
+{{<hover label="claim" line="7">}}names{{</hover >}}と一致する
+{{<hover label="claim" line="10">}}claimNames{{</hover >}}を使用することですが、
+先頭の"x."は除外します。
 {{</hint >}}
 
 ```yaml {label="claim",copy-lines="none"}
@@ -549,50 +503,42 @@ spec:
 ```
 
 {{<hint "important" >}}
-You can't change the 
-{{<hover label="claim" line="10">}}claimNames{{</hover >}}
-after they're defined. You must delete and
-recreate the XRD to change the 
-{{<hover label="claim" line="10">}}claimNames{{</hover >}}.
+一度定義された
+{{<hover label="claim" line="10">}}claimNames{{</hover >}}は変更できません。
+{{<hover label="claim" line="10">}}claimNames{{</hover >}}を変更するには、XRDを削除して再作成する必要があります。
 {{</hint >}}
 
-### Manage connection secrets
+### 接続シークレットの管理
 
-When a composite resource creates managed resources, Crossplane provides any
-[connection secrets]({{<ref "./managed-resources#writeconnectionsecrettoref">}})
-to the composite resource or Claim. This requires the creators of composite
-resources and Claims to know the secrets provided by a managed resource.
-In other cases, Crossplane administrators may not want to expose some or all the
-generated connection secrets.
+複合リソースが管理リソースを作成する際、Crossplaneは複合リソースまたはクレームに対して
+[接続シークレット]({{<ref "./managed-resources#writeconnectionsecrettoref">}})を提供します。
+これには、複合リソースとクレームの作成者が管理リソースによって提供されるシークレットを知っている必要があります。
+他の場合では、Crossplaneの管理者は生成された接続シークレットの一部またはすべてを公開したくないかもしれません。
 
-XRDs can define a list of 
-{{<hover label="key" line="10">}}connectionSecretKeys{{</hover>}}
-to limit what's provided to a composite resource or Claim.
-
-Crossplane only provides the keys listed in the 
-{{<hover label="key" line="10">}}connectionSecretKeys{{</hover>}} 
-to the composite resource or Claim using this XRD. Any other connection
-secrets aren't passed to the composite resource or Claim. 
-
-{{<hint "important" >}}
-The keys listed in the
-{{<hover label="key" line="10">}}connectionSecretKeys{{</hover>}} must match the 
-key names listed in the Composition's `connectionDetails`.  
-
-An XRD ignores any keys listed that aren't created by a managed resource.
-
-For more information read the 
-[Composition documentation]({{<ref "./compositions#storing-connection-details">}}).
-{{< /hint >}}
+XRDは、複合リソースまたはクレームに提供される内容を制限するために
+{{<hover label="key" line="10">}}connectionSecretKeys{{</hover>}}のリストを定義できます。
 
 
-For example, an XRD passes the keys 
-{{<hover label="key" line="11">}}username{{</hover>}}, 
-{{<hover label="key" line="12">}}password{{</hover>}} and 
-{{<hover label="key" line="13">}}address{{</hover>}}.
+Crossplaneは、このXRDを使用して合成リソースまたはクレームに対して、  
+{{<hover label="key" line="10">}}connectionSecretKeys{{</hover>}}  
+にリストされているキーのみを提供します。他の接続シークレットは合成リソースまたはクレームに渡されません。  
 
-Composite resources or Claims save these in the secret defined by their
-`writeConnectionSecretToRef` field. 
+{{<hint "important" >}}  
+{{<hover label="key" line="10">}}connectionSecretKeys{{</hover>}}  
+にリストされているキーは、Compositionの`connectionDetails`にリストされているキー名と一致する必要があります。  
+
+XRDは、管理リソースによって作成されていないキーを無視します。  
+
+詳細については、  
+[Composition documentation]({{<ref "./compositions#storing-connection-details">}})をお読みください。  
+{{< /hint >}}  
+
+例えば、XRDはキー  
+{{<hover label="key" line="11">}}username{{</hover>}},  
+{{<hover label="key" line="12">}}password{{</hover>}} および  
+{{<hover label="key" line="13">}}address{{</hover>}}を渡します。  
+
+合成リソースまたはクレームは、これらを`writeConnectionSecretToRef`フィールドで定義されたシークレットに保存します。  
 
 ```yaml {label="key",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -612,49 +558,32 @@ spec:
   # Removed for brevity
 ```
 
-{{<hint "warning">}}
-You can't change the `connectionSecretKeys` of an XRD. You must delete and
-recreate the XRD to change the `connectionSecretKeys`.
-{{</hint >}}
+{{<hint "warning">}}  
+XRDの`connectionSecretKeys`を変更することはできません。`connectionSecretKeys`を変更するには、XRDを削除して再作成する必要があります。  
+{{</hint >}}  
 
-For more information on connection secrets read the 
-[Connection Secrets knowledge base article]({{<ref "connection-details">}}).
+接続シークレットに関する詳細は、  
+[Connection Secrets knowledge base article]({{<ref "connection-details">}})をお読みください。  
 
-### Set composite resource defaults
-XRDs can set default parameters for composite resources and Claims.
+### 合成リソースのデフォルトを設定  
+XRDは、合成リソースとクレームのデフォルトパラメータを設定できます。  
 
-<!-- vale off -->
-#### defaultCompositeDeletePolicy
-<!-- vale on -->
-The `defaultCompositeDeletePolicy` defines the default value for the claim's 
-`compositeDeletePolicy` property if the user doesn't specify a value when creating
-the claim. The claim controller uses the `compositeDeletePolicy` property to specify
-the propagation policy when deleting the associated composite.
-The `compositeDeletePolicy` doesn't apply to standalone composites that don't have
-associated claims.
+<!-- vale off -->  
+#### defaultCompositeDeletePolicy  
+<!-- vale on -->  
+`defaultCompositeDeletePolicy`は、ユーザーがクレームを作成する際に値を指定しない場合のクレームの`compositeDeletePolicy`プロパティのデフォルト値を定義します。クレームコントローラーは、関連する合成を削除する際に伝播ポリシーを指定するために`compositeDeletePolicy`プロパティを使用します。`compositeDeletePolicy`は、関連するクレームを持たないスタンドアロンの合成には適用されません。  
 
-Using a `defaultCompositeDeletePolicy: Background` policy causes the CRD for the claim to have
-the default value `Background` for the `compositeDeletePolicy` property.
-When a deleted claim has the `compositeDeletePolicy` property set to `Background` 
-the claim controller deletes the composite resource using the propagation policy `background`
-and returns, relying on Kubernetes to delete the remaining child objects,
-like managed resources, nested composites and secrets.
+`defaultCompositeDeletePolicy: Background`ポリシーを使用すると、クレームのCRDは`compositeDeletePolicy`プロパティのデフォルト値`Background`を持つことになります。削除されたクレームの`compositeDeletePolicy`プロパティが`Background`に設定されている場合、クレームコントローラーは伝播ポリシー`background`を使用して合成リソースを削除し、残りの子オブジェクト（管理リソース、ネストされた合成、シークレットなど）を削除するためにKubernetesに依存します。
 
-Using `defaultCompositeDeletePolicy: Foreground` causes the CRD for the claim to have
-the `compositeDeletePolicy` default value `Foreground`. When a deleted claim has the
-`compositeDeletePolicy` property set to `Foreground` the controller
-deletes the associated composite using the propagation policy `foreground`. This causes Kubernetes
-to use foreground cascading deletion which deletes all child resources before deleting the
-parent resource. The claim controller waits for the composite deletion to finish before returning.
 
-When creating a claim the user can override the `defaultCompositeDeletePolicy` by including
-the `spec.compositeDeletePolicy` property with either the `Background` or `Foreground` value.
+`defaultCompositeDeletePolicy: Foreground` を使用すると、クレームの CRD に `compositeDeletePolicy` のデフォルト値 `Foreground` が設定されます。削除されたクレームが `compositeDeletePolicy` プロパティを `Foreground` に設定している場合、コントローラーは関連するコンポジットを伝播ポリシー `foreground` を使用して削除します。これにより、Kubernetes はフォアグラウンドカスケード削除を使用し、親リソースを削除する前にすべての子リソースを削除します。クレームコントローラーは、削除が完了するまで待機します。
 
-The default value is `defaultCompositeDeletePolicy: Background`. 
+クレームを作成する際、ユーザーは `spec.compositeDeletePolicy` プロパティに `Background` または `Foreground` の値を含めることで `defaultCompositeDeletePolicy` をオーバーライドできます。
 
-Set 
+デフォルト値は `defaultCompositeDeletePolicy: Background` です。
+
 {{<hover label="delete" line="6">}}defaultCompositeDeletePolicy: Foreground{{</hover>}} 
-to change the XRD deletion policy.
+を設定して XRD 削除ポリシーを変更します。
 
 ```yaml {label="delete",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -673,16 +602,12 @@ spec:
 <!-- vale off -->
 #### defaultCompositionRef
 <!-- vale on -->
-It's possible for multiple [Compositions]({{<ref "./compositions">}}) to
-reference the same XRD. If more than one Composition references the same XRD,
-the composite resource or Claim must select which Composition to use. 
+複数の [Compositions]({{<ref "./compositions">}}) が同じ XRD を参照することが可能です。複数の Composition が同じ XRD を参照する場合、コンポジットリソースまたはクレームはどの Composition を使用するかを選択する必要があります。
 
-An XRD can define the default Composition to use with the
-`defaultCompositionRef` value. 
+XRD は `defaultCompositionRef` 値を使用して、使用するデフォルトの Composition を定義できます。
 
-Set a
 {{<hover label="defaultComp" line="6">}}defaultCompositionRef{{</hover>}} 
-to set the default Composition.
+を設定してデフォルトの Composition を設定します。
 
 ```yaml {label="defaultComp",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -703,17 +628,14 @@ spec:
 #### defaultCompositionUpdatePolicy
 <!-- vale on -->
 
-Changes to a Composition generate a new Composition revision. By default all
-composite resources and Claims use the updated Composition revision. 
+Composition の変更は新しい Composition リビジョンを生成します。デフォルトでは、すべてのコンポジットリソースとクレームは更新された Composition リビジョンを使用します。
 
-Set the XRD `defaultCompositionUpdatePolicy` to `Manual` to prevent composite
-resources and Claims from automatically using the new revision. 
+XRD の `defaultCompositionUpdatePolicy` を `Manual` に設定して、コンポジットリソースとクレームが新しいリビジョンを自動的に使用しないようにします。
 
-The default value is `defaultCompositionUpdatePolicy: Automatic`.
+デフォルト値は `defaultCompositionUpdatePolicy: Automatic` です。
 
-Set {{<hover label="compRev" line="6">}}defaultCompositionUpdatePolicy: Manual{{</hover>}}
-to set the default Composition update policy for composite resources and Claims
-using this XRD.
+{{<hover label="compRev" line="6">}}defaultCompositionUpdatePolicy: Manual{{</hover>}} 
+を設定して、この XRD を使用するコンポジットリソースとクレームのデフォルトの Composition 更新ポリシーを設定します。
 
 ```yaml {label="compRev",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -732,14 +654,14 @@ spec:
 <!-- vale off -->
 #### enforcedCompositionRef
 <!-- vale on -->
-To require all composite resources or Claims to use a specific Composition use
-the `enforcedCompositionRef` setting in the XRD.
+特定のCompositionを使用するようにすべての複合リソースまたはClaimを要求するには、
+XRDの`enforcedCompositionRef`設定を使用します。
 
-For example, to require all composite resources and Claims using this XRD to use
-the Composition 
+たとえば、このXRDを使用するすべての複合リソースとClaimが
+Composition 
 {{<hover label="enforceComp" line="6">}}myComposition{{</hover>}} 
-set 
-{{<hover label="enforceComp" line="6">}}enforcedCompositionRef.name: myComposition{{</hover>}}.
+を使用するように要求するには、 
+{{<hover label="enforceComp" line="6">}}enforcedCompositionRef.name: myComposition{{</hover>}}を設定します。
 
 ```yaml {label="defaultComp",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -756,10 +678,10 @@ spec:
   # Removed for brevity
 ```
 
-## Verify a CompositeResourceDefinition
+## CompositeResourceDefinitionの検証
 
-Verify an XRD with `kubectl get compositeresourcedefinition` or the short form, 
-{{<hover label="getxrd" line="1">}}kubectl get xrd{{</hover>}}.
+`kubectl get compositeresourcedefinition`または短縮形の 
+{{<hover label="getxrd" line="1">}}kubectl get xrd{{</hover>}}を使用してXRDを検証します。
 
 ```yaml {label="getxrd",copy-lines="1"}
 kubectl get xrd                                
@@ -767,16 +689,15 @@ NAME                                ESTABLISHED   OFFERED   AGE
 xdatabases.custom-api.example.org   True          True      22m
 ```
 
-The `ESTABLISHED` field indicates Crossplane installed the Kubernetes custom
-resource definition for this XRD.
+`ESTABLISHED`フィールドは、CrossplaneがこのXRDのためにKubernetesカスタム
+リソース定義をインストールしたことを示します。
 
-The `OFFERED` field indicates this XRD offers a Claim and Crossplane installed
-the Kubernetes custom resource definitions for the Claim.
+`OFFERED`フィールドは、このXRDがClaimを提供し、Crossplaneが
+ClaimのためにKubernetesカスタムリソース定義をインストールしたことを示します。
 
-### XRD conditions
-Crossplane uses a standard set of `Conditions` for XRDs.  
-View the conditions of a XRD under their `Status` with 
-`kubectl describe xrd`. 
+### XRDの条件
+CrossplaneはXRDのために標準の`Conditions`セットを使用します。  
+`kubectl describe xrd`を使用して、XRDの`Status`の下にある条件を表示します。
 
 ```yaml {copy-lines="none"}
 kubectl describe xrd
@@ -798,9 +719,8 @@ Status:
 <!-- vale off -->
 #### WatchingCompositeResource
 <!-- vale on -->
-`Reason: WatchingCompositeResource` indicates Crossplane defined the new
-Kubernetes custom resource definitions related to the composite resource and is 
-watching for the creation of new composite resources. 
+`Reason: WatchingCompositeResource`は、Crossplaneが複合リソースに関連する新しい
+Kubernetesカスタムリソース定義を定義し、新しい複合リソースの作成を監視していることを示します。
 
 ```yaml
 Type: Established
@@ -811,9 +731,8 @@ Reason: WatchingCompositeResource
 <!-- vale off -->
 #### TerminatingCompositeResource
 <!-- vale on -->
-`Reason: TerminatingCompositeResource` indicates Crossplane is deleting the
-custom resource definitions related to the composite resource and is 
-terminating the composite resource controller.
+`Reason: TerminatingCompositeResource`は、Crossplaneが複合リソースに関連する
+カスタムリソース定義を削除しており、複合リソースコントローラーを終了していることを示します。
 
 ```yaml
 Type: Established
@@ -824,9 +743,8 @@ Reason: TerminatingCompositeResource
 <!-- vale off -->
 #### WatchingCompositeResourceClaim
 <!-- vale on -->
-`Reason: WatchingCompositeResourceClaim` indicates Crossplane defined the new
-Kubernetes custom resource definitions related to the offered Claims and is 
-watching for the creation of new Claims. 
+`Reason: WatchingCompositeResourceClaim` は、Crossplane が提供されたクレームに関連する新しい
+Kubernetes カスタムリソース定義を定義し、新しいクレームの作成を監視していることを示します。
 
 ```yaml
 Type: Offered
@@ -837,9 +755,8 @@ Reason: WatchingCompositeResourceClaim
 <!-- vale off -->
 #### TerminatingCompositeResourceClaim
 <!-- vale on -->
-`Reason: TerminatingCompositeResourceClaim` indicates Crossplane is deleting the
-custom resource definitions related to the offered Claims and is 
-terminating the Claims controller.
+`Reason: TerminatingCompositeResourceClaim` は、Crossplane が提供されたクレームに関連する
+カスタムリソース定義を削除しており、クレームコントローラーを終了していることを示します。
 
 ```yaml
 Type: Offered

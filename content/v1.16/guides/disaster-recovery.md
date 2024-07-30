@@ -1,10 +1,8 @@
 ---
-title: Disaster Recovery with Crossplane
+title: Crossplaneによる災害復旧
 weight: 10
 ---
 
-AWS wrote a guide covering disaster recovery with Crossplane. The guide covers
-using Crossplane to provision resources and Velero for Kubernetes backup and
-recovery.
+AWSは、Crossplaneを使用した災害復旧に関するガイドを作成しました。このガイドでは、Crossplaneを使用してリソースをプロビジョニングし、Kubernetesのバックアップと復旧にVeleroを使用する方法について説明しています。
 
-[Read the guide on AWS](https://aws.amazon.com/blogs/opensource/disaster-recovery-when-using-crossplane-for-infrastructure-provisioning-on-aws/).
+[ガイドをAWSで読む](https://aws.amazon.com/blogs/opensource/disaster-recovery-when-using-crossplane-for-infrastructure-provisioning-on-aws/)。

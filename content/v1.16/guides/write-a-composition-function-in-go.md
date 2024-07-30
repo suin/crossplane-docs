@@ -1,35 +1,23 @@
 ---
-title: Write a Composition Function in Go
+title: Goでコンポジション関数を書く
 state: beta
 alphaVersion: "1.11"
 betaVersion: "1.14"
 weight: 80
-description: "Composition functions allow you to template resources using Go"
+description: "コンポジション関数を使用してGoでリソースをテンプレート化できます"
 ---
 
-Composition functions (or just functions, for short) are custom programs that
-template Crossplane resources. Crossplane calls composition functions to
-determine what resources it should create when you create a composite resource
-(XR). Read the
-[concepts]({{<ref "../concepts/composition-functions" >}})
-page to learn more about composition functions.
+コンポジション関数（略して関数）は、Crossplaneリソースをテンプレート化するカスタムプログラムです。Crossplaneは、合成リソース（XR）を作成するときに、どのリソースを作成すべきかを判断するためにコンポジション関数を呼び出します。コンポジション関数について詳しくは、[concepts]({{<ref "../concepts/composition-functions" >}})ページをお読みください。
 
-You can write a function to template resources using a general purpose
-programming language. Using a general purpose programming language allows a
-function to use advanced logic to template resources, like loops and
-conditionals. This guide explains how to write a composition function in
-[Go](https://go.dev).
+一般的なプログラミング言語を使用してリソースをテンプレート化する関数を書くことができます。一般的なプログラミング言語を使用することで、ループや条件文などの高度なロジックを使用してリソースをテンプレート化することが可能になります。このガイドでは、[Go](https://go.dev)でコンポジション関数を書く方法を説明します。
 
 {{< hint "important" >}}
-It helps to be familiar with
-[how composition functions work]({{<ref "../concepts/composition-functions#how-composition-functions-work" >}})
-before following this guide.
+このガイドに従う前に、[コンポジション関数の動作]({{<ref "../concepts/composition-functions#how-composition-functions-work" >}})に慣れておくと良いでしょう。
 {{< /hint >}}
 
-## Understand the steps
+## ステップを理解する
 
-This guide covers writing a composition function for an
-{{<hover label="xr" line="2">}}XBuckets{{</hover>}} composite resource (XR).
+このガイドでは、{{<hover label="xr" line="2">}}XBuckets{{</hover>}}合成リソース（XR）のためのコンポジション関数の作成について説明します。
 
 ```yaml {label="xr"}
 apiVersion: example.crossplane.io/v1
@@ -46,121 +34,97 @@ spec:
 
 <!-- vale gitlab.FutureTense = NO -->
 <!--
-This section is setting the stage for future sections. It doesn't make sense to
-refer to the function in the present tense, because it doesn't exist yet.
+このセクションは今後のセクションの準備をしています。関数はまだ存在しないため、現在形で関数に言及することは意味がありません。
 -->
-An `XBuckets` XR has a region and an array of bucket names. The function will
-create an Amazon Web Services (AWS) S3 bucket for each entry in the names array.
+`XBuckets` XRには、リージョンとバケット名の配列があります。この関数は、名前の配列の各エントリに対してAmazon Web Services（AWS）S3バケットを作成します。
 <!-- vale gitlab.FutureTense = YES -->
 
-To write a function in Go:
+Goで関数を書くには：
 
-1. [Install the tools you need to write the function](#install-the-tools-you-need-to-write-the-function)
-1. [Initialize the function from a template](#initialize-the-function-from-a-template)
-1. [Edit the template to add the function's logic](#edit-the-template-to-add-the-functions-logic)
-1. [Test the function end-to-end](#test-the-function-end-to-end)
-1. [Build and push the function to a package repository](#build-and-push-the-function-to-a-package-registry)
+1. [関数を書くために必要なツールをインストールする](#install-the-tools-you-need-to-write-the-function)
+1. [テンプレートから関数を初期化する](#initialize-the-function-from-a-template)
+1. [テンプレートを編集して関数のロジックを追加する](#edit-the-template-to-add-the-functions-logic)
+1. [関数をエンドツーエンドでテストする](#test-the-function-end-to-end)
+1. [関数をパッケージリポジトリにビルドしてプッシュする](#build-and-push-the-function-to-a-package-registry)
 
-This guide covers each of these steps in detail.
+このガイドでは、これらのステップを詳細に説明します。
 
-## Install the tools you need to write the function
+## 関数を書くために必要なツールをインストールする
 
-To write a function in Go you need:
+Goで関数を書くには、次のものが必要です：
 
-* [Go](https://go.dev/dl/) v1.21 or newer. The guide uses Go v1.21.
-* [Docker Engine](https://docs.docker.com/engine/). This guide uses Engine v24.
-* The [Crossplane CLI]({{<ref "../cli" >}}) v1.14 or newer. This guide uses Crossplane
-  CLI v1.14.
+* [Go](https://go.dev/dl/) v1.21以上。このガイドではGo v1.21を使用します。
+* [Docker Engine](https://docs.docker.com/engine/)。このガイドではEngine v24を使用します。
+* [Crossplane CLI]({{<ref "../cli" >}}) v1.14以上。このガイドではCrossplane CLI v1.14を使用します。
 
 {{<hint "note">}}
-You don't need access to a Kubernetes cluster or a Crossplane control plane to
-build or test a composition function.
+KubernetesクラスターやCrossplaneコントロールプレーンへのアクセスは、構成関数をビルドまたはテストするために必要ありません。
 {{</hint>}}
 
-## Initialize the function from a template
+## テンプレートから関数を初期化する
 
-Use the `crossplane beta xpkg init` command to initialize a new function. When
-you run this command it initializes your function using
-[a GitHub repository](https://github.com/crossplane/function-template-go)
-as a template.
+`crossplane beta xpkg init`コマンドを使用して新しい関数を初期化します。このコマンドを実行すると、[GitHubリポジトリ](https://github.com/crossplane/function-template-go)をテンプレートとして使用して関数が初期化されます。
 
 ```shell {copy-lines=1}
 crossplane beta xpkg init function-xbuckets function-template-go -d function-xbuckets 
 Initialized package "function-xbuckets" in directory "/home/negz/control/negz/function-xbuckets" from https://github.com/crossplane/function-template-go/tree/91a1a5eed21964ff98966d72cc6db6f089ad63f4 (main)
 ```
 
-The `crossplane beta init xpkg` command creates a directory named
-`function-xbuckets`. When you run the command the new directory should look like
-this:
+`crossplane beta init xpkg`コマンドは、`function-xbuckets`という名前のディレクトリを作成します。コマンドを実行すると、新しいディレクトリは次のようになります：
 
 ```shell {copy-lines=1}
 ls function-xbuckets
 Dockerfile  fn.go  fn_test.go  go.mod  go.sum  input/  LICENSE  main.go  package/  README.md  renovate.json
 ```
 
-The `fn.go` file is where you add the function's code. It's useful to know about
-some other files in the template:
+`fn.go`ファイルは、関数のコードを追加する場所です。テンプレート内の他のファイルについて知っておくと便利です：
 
-* `main.go` runs the function. You don't need to edit `main.go`.
-* `Dockerfile` builds the function runtime. You don't need to edit `Dockerfile`.
-* The `input` directory defines the function's input type.
-* The `package` directory contains metadata used to build the function package.
+* `main.go`は関数を実行します。`main.go`を編集する必要はありません。
+* `Dockerfile`は関数のランタイムをビルドします。`Dockerfile`を編集する必要はありません。
+* `input`ディレクトリは関数の入力タイプを定義します。
+* `package`ディレクトリには、関数パッケージをビルドするために使用されるメタデータが含まれています。
 
 {{<hint "tip">}}
 <!-- vale gitlab.FutureTense = NO -->
 <!--
-This tip talks about future plans for Crossplane.
+このヒントはCrossplaneの将来の計画について説明しています。
 -->
-In v1.14 of the Crossplane CLI `crossplane beta xpkg init` just clones a
-template GitHub repository. A future CLI release will automate tasks like
-replacing the template name with the new function's name. See Crossplane issue
-[#4941](https://github.com/crossplane/crossplane/issues/4941) for details.
+Crossplane CLIのv1.14では、`crossplane beta xpkg init`はテンプレートのGitHubリポジトリをクローンするだけです。将来のCLIリリースでは、テンプレート名を新しい関数の名前に置き換えるなどのタスクが自動化される予定です。詳細については、Crossplaneの問題[#4941](https://github.com/crossplane/crossplane/issues/4941)を参照してください。
 <!-- vale gitlab.FutureTense = YES -->
 {{</hint>}}
 
-You must make some changes before you start adding code:
 
-* Edit `package/crossplane.yaml` to change the package's name.
-* Edit `go.mod` to change the Go module's name.
+コードを追加する前にいくつかの変更を行う必要があります：
 
-Name your package `function-xbuckets`.
+* `package/crossplane.yaml`を編集して、パッケージの名前を変更します。
+* `go.mod`を編集して、Goモジュールの名前を変更します。
 
-The name of your module depends on where you want to keep your function code. If
-you push Go code to GitHub, you can use your GitHub username. For example
-`module github.com/negz/function-xbuckets`.
+パッケージの名前を`function-xbuckets`にします。
 
-The function in this guide doesn't use an input type. For this function you
-should delete the `input` and `package/input` directories.
+モジュールの名前は、関数コードをどこに保管したいかによって異なります。GoコードをGitHubにプッシュする場合は、GitHubのユーザー名を使用できます。例えば、`module github.com/negz/function-xbuckets`のようになります。
 
-The `input` directory defines a Go struct that a function can use to take input,
-using the `input` field from a Composition. The
-[composition functions]({{<ref "../concepts/composition-functions" >}})
-documentation explains how to pass an input to a composition function.
+このガイドの関数は入力タイプを使用しません。この関数では、`input`および`package/input`ディレクトリを削除する必要があります。
 
-The `package/input` directory contains an OpenAPI schema generated from the
-structs in the `input` directory.
+`input`ディレクトリは、Compositionからの`input`フィールドを使用して、関数が入力を受け取るために使用できるGo構造体を定義します。  
+[composition functions]({{<ref "../concepts/composition-functions" >}})のドキュメントでは、入力をコンポジション関数に渡す方法について説明しています。
 
-{{<hint "tip">}}
-If you're writing a function that uses an input, edit the input to meet your
-function's requirements.
+`package/input`ディレクトリには、`input`ディレクトリ内の構造体から生成されたOpenAPIスキーマが含まれています。
 
-Change the input's kind and API group. Don't use `Input` and
-`template.fn.crossplane.io`. Instead use something meaningful to your function.
+{{<hint "tip">}}  
+入力を使用する関数を書いている場合は、関数の要件を満たすように入力を編集してください。
 
-When you edit files under the `input` directory you must update some generated
-files by running `go generate`. See `input/generate.go` for details.
+入力の種類とAPIグループを変更します。`Input`や`template.fn.crossplane.io`は使用しないでください。代わりに、関数にとって意味のあるものを使用してください。
+
+`input`ディレクトリ内のファイルを編集した場合は、`go generate`を実行して生成されたファイルを更新する必要があります。詳細は`input/generate.go`を参照してください。
 
 ```shell
 go generate ./...
 ```
 {{</hint>}}
 
-## Edit the template to add the function's logic
+## テンプレートを編集して関数のロジックを追加する
 
-You add your function's logic to the
-{{<hover label="hello-world" line="1">}}RunFunction{{</hover>}}
-method in `fn.go`. When you first open the file it contains a "hello world"
-function.
+関数のロジックは、`fn.go`の{{<hover label="hello-world" line="1">}}RunFunction{{</hover>}}メソッドに追加します。ファイルを最初に開くと、「hello world」関数が含まれています。
 
 ```go {label="hello-world"}
 func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequest) (*fnv1beta1.RunFunctionResponse, error) {
@@ -179,21 +143,15 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequ
 }
 ```
 
-All Go composition functions have a `RunFunction` method. Crossplane passes
-everything the function needs to run in a
-{{<hover label="hello-world" line="1">}}RunFunctionRequest{{</hover>}} struct.
+すべてのGoコンポジション関数には`RunFunction`メソッドがあります。Crossplaneは、関数が実行するために必要なすべての情報を{{<hover label="hello-world" line="1">}}RunFunctionRequest{{</hover>}}構造体で渡します。
 
-The function tells Crossplane what resources it should compose by returning a
-{{<hover label="hello-world" line="13">}}RunFunctionResponse{{</hover>}} struct.
+関数は、{{<hover label="hello-world" line="13">}}RunFunctionResponse{{</hover>}}構造体を返すことで、Crossplaneにどのリソースを構成すべきかを伝えます。
 
-{{<hint "tip">}}
-Crossplane generates the `RunFunctionRequest` and `RunFunctionResponse` structs
-using [Protocol Buffers](http://protobuf.dev). You can find detailed schemas for
-`RunFunctionRequest` and `RunFunctionResponse` in the
-[Buf Schema Registry](https://buf.build/crossplane/crossplane/docs/main:apiextensions.fn.proto.v1beta1).
+{{<hint "tip">}}  
+Crossplaneは、[Protocol Buffers](http://protobuf.dev)を使用して`RunFunctionRequest`および`RunFunctionResponse`構造体を生成します。`RunFunctionRequest`および`RunFunctionResponse`の詳細なスキーマは、[Buf Schema Registry](https://buf.build/crossplane/crossplane/docs/main:apiextensions.fn.proto.v1beta1)で見つけることができます。  
 {{</hint>}}
 
-Edit the `RunFunction` method to replace it with this code.
+`RunFunction` メソッドを編集して、次のコードに置き換えます。
 
 ```go {hl_lines="4-56"}
 func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequest) (*fnv1beta1.RunFunctionResponse, error) {
@@ -257,8 +215,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequ
 }
 ```
 
-Expand the below block to view the full `fn.go`, including imports and
-commentary explaining the function's logic.
+以下のブロックを展開して、インポートや関数のロジックを説明するコメントを含む完全な `fn.go` を表示します。
 
 {{<expand "The full fn.go file" >}}
 ```go
@@ -396,49 +353,35 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequ
 ```
 {{</expand>}}
 
-This code:
+このコードは：
 
-1. Gets the observed composite resource from the `RunFunctionRequest`.
-1. Gets the region and bucket names from the observed composite resource.
-1. Adds one desired S3 bucket for each bucket name.
-1. Returns the desired S3 buckets in a `RunFunctionResponse`.
+1. `RunFunctionRequest` から観測された複合リソースを取得します。
+1. 観測された複合リソースからリージョンとバケット名を取得します。
+1. 各バケット名に対して1つの希望する S3 バケットを追加します。
+1. 希望する S3 バケットを `RunFunctionResponse` で返します。
 
-The code uses the `v1beta1.Bucket` type from
-[Upbound's AWS S3 provider](https://github.com/upbound/provider-aws). One
-advantage of writing a function in Go is that you can compose resources using
-the same strongly typed structs Crossplane uses in its providers.
+このコードは、[UpboundのAWS S3プロバイダー](https://github.com/upbound/provider-aws) の `v1beta1.Bucket` 型を使用しています。Goで関数を書く利点の1つは、Crossplaneがプロバイダーで使用するのと同じ強く型付けされた構造体を使用してリソースを構成できることです。
 
-You must get the AWS Provider Go module to use this type:
+この型を使用するには、AWSプロバイダーGoモジュールを取得する必要があります：
 
 ```shell
 go get github.com/upbound/provider-aws@v0.43.0
 ```
 
-Crossplane provides a
-[software development kit](https://github.com/crossplane/function-sdk-go) (SDK)
-for writing composition functions in [Go](https://go.dev). This function uses
-utilities from the SDK. In particular the `request` and `response` packages make
-working with the `RunFunctionRequest` and `RunFunctionResponse` types easier.
+Crossplaneは、[Go](https://go.dev)で構成関数を書くための[ソフトウェア開発キット](https://github.com/crossplane/function-sdk-go)（SDK）を提供しています。この関数はSDKのユーティリティを使用しています。特に、`request` と `response` パッケージは、`RunFunctionRequest` と `RunFunctionResponse` 型を扱いやすくします。
 
 {{<hint "tip">}}
-Read the
-[Go package documentation](https://pkg.go.dev/github.com/crossplane/function-sdk-go)
-for the SDK.
+SDKの[Goパッケージドキュメント](https://pkg.go.dev/github.com/crossplane/function-sdk-go)を読んでください。
 {{</hint>}}
 
-## Test the function end-to-end
+## 関数をエンドツーエンドでテストする
 
-Test your function by adding unit tests, and by using the `crossplane beta
-render` command.
+ユニットテストを追加し、`crossplane beta render` コマンドを使用して関数をテストします。
 
-Go has rich support for unit testing. When you initialize a function from the
-template it adds some unit tests to `fn_test.go`. These tests follow Go's
-[recommendations](https://github.com/golang/go/wiki/TestComments). They use only
-[`pkg/testing`](https://pkg.go.dev/testing) from the Go standard library and
-[`google/go-cmp`](https://pkg.go.dev/github.com/google/go-cmp/cmp).
+Goはユニットテストに対して豊富なサポートを提供しています。テンプレートから関数を初期化すると、いくつかのユニットテストが `fn_test.go` に追加されます。これらのテストはGoの[推奨事項](https://github.com/golang/go/wiki/TestComments)に従っています。標準ライブラリの[`pkg/testing`](https://pkg.go.dev/testing)と[`google/go-cmp`](https://pkg.go.dev/github.com/google/go-cmp/cmp)のみを使用しています。
 
-To add test cases, update the `cases` map in `TestRunFunction`. Expand the below
-block to view the full `fn_test.go` file for the function.
+テストケースを追加するには、`TestRunFunction` の `cases` マップを更新します。以下のブロックを展開して、関数の完全な `fn_test.go` ファイルを表示します。
+
 
 {{<expand "The full fn_test.go file" >}}
 ```go
@@ -559,7 +502,7 @@ func TestRunFunction(t *testing.T) {
 ```
 {{</expand>}}
 
-Run the unit tests using the `go test` command:
+ユニットテストを `go test` コマンドを使用して実行します：
 
 ```shell
 go test -v -cover .
@@ -572,20 +515,17 @@ coverage: 52.6% of statements
 ok      github.com/negz/function-xbuckets       0.016s  coverage: 52.6% of statements
 ```
 
-You can preview the output of a Composition that uses this function using
-the Crossplane CLI. You don't need a Crossplane control plane to do this.
+この関数を使用するコンポジションの出力を、Crossplane CLIを使用してプレビューできます。これを行うためにCrossplaneコントロールプレーンは必要ありません。
 
-Create a directory under `function-xbuckets` named `example` and create
-Composite Resource, Composition and Function YAML files.
+`function-xbuckets` の下に `example` という名前のディレクトリを作成し、Composite Resource、Composition、およびFunctionのYAMLファイルを作成します。
 
-Expand the following block to see example files.
+以下のブロックを展開して、例のファイルを確認してください。
 
 {{<expand "The xr.yaml, composition.yaml and function.yaml files">}}
 
-You can recreate the output below using by running `crossplane beta render` with
-these files.
+これらのファイルを使用して `crossplane beta render` を実行することで、以下の出力を再現できます。
 
-The `xr.yaml` file contains the composite resource to render:
+`xr.yaml` ファイルには、レンダリングするためのコンポジットリソースが含まれています：
 
 ```yaml
 apiVersion: example.crossplane.io/v1
@@ -602,8 +542,7 @@ spec:
 
 <br />
 
-The `composition.yaml` file contains the Composition to use to render the
-composite resource:
+`composition.yaml` ファイルには、コンポジットリソースをレンダリングするために使用するCompositionが含まれています：
 
 ```yaml
 apiVersion: apiextensions.crossplane.io/v1
@@ -623,8 +562,7 @@ spec:
 
 <br />
 
-The `functions.yaml` file contains the Functions the Composition references in
-its pipeline steps:
+`functions.yaml` ファイルには、Compositionがそのパイプラインステップで参照するFunctionsが含まれています：
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1beta1
@@ -640,11 +578,7 @@ spec:
 ```
 {{</expand>}}
 
-The Function in `functions.yaml` uses the
-{{<hover label="development" line="6">}}Development{{</hover>}}
-runtime. This tells `crossplane beta render` that your function is running
-locally. It connects to your locally running function instead of using Docker to
-pull and run the function.
+`functions.yaml` のFunctionは、{{<hover label="development" line="6">}}Development{{</hover>}} ランタイムを使用しています。これは、`crossplane beta render` に対して、あなたの関数がローカルで実行されていることを示します。これは、Dockerを使用して関数をプルして実行するのではなく、ローカルで実行されている関数に接続します。
 
 ```yaml {label="development"}
 apiVersion: pkg.crossplane.io/v1beta1
@@ -655,26 +589,23 @@ metadata:
     render.crossplane.io/runtime: Development
 ```
 
-Use `go run` to run your function locally.
+`go run` を使用して、ローカルで関数を実行します。
 
 ```shell {label="run"}
 go run . --insecure --debug
 ```
 
 {{<hint "warning">}}
-The {{<hover label="run" line="1">}}insecure{{</hover>}} flag tells the function
-to run without encryption or authentication. Only use it during testing and
-development.
+{{<hover label="run" line="1">}}insecure{{</hover>}} フラグは、関数を暗号化や認証なしで実行するように指示します。テストや開発中のみ使用してください。
 {{</hint>}}
 
-In a separate terminal, run `crossplane beta render`. 
+別のターミナルで `crossplane beta render` を実行します。
 
 ```shell
 crossplane beta render xr.yaml composition.yaml functions.yaml
 ```
 
-This command calls your function. In the terminal where your function is running
-you should now see log output:
+このコマンドは、あなたの関数を呼び出します。関数が実行されているターミナルでは、次のようなログ出力が表示されるはずです：
 
 ```shell
 go run . --insecure --debug
@@ -682,8 +613,7 @@ go run . --insecure --debug
 2023-10-31T16:17:32.159-0700    INFO    function-xbuckets/fn.go:125     Added desired buckets   {"xr-version": "example.crossplane.io/v1", "xr-kind": "XBuckets", "xr-name": "example-buckets", "region": "us-east-2", "count": 3}
 ```
 
-The `crossplane beta render` command prints the desired resources the function
-returns.
+`crossplane beta render` コマンドは、関数が返す望ましいリソースを出力します。
 
 ```yaml
 ---
@@ -739,28 +669,18 @@ spec:
 ```
 
 {{<hint "tip">}}
-Read the composition functions documentation to learn more about
-[testing composition functions]({{< ref "../concepts/composition-functions#test-a-composition-that-uses-functions" >}}).
+構成関数のドキュメントを読んで、[構成関数のテスト]({{< ref "../concepts/composition-functions#test-a-composition-that-uses-functions" >}})について学びましょう。
 {{</hint>}}
 
-## Build and push the function to a package registry
+## 関数をパッケージレジストリにビルドしてプッシュする
 
-You build a function in two stages. First you build the function's runtime. This
-is the Open Container Initiative (OCI) image Crossplane uses to run your
-function. You then embed that runtime in a package, and push it to a package
-registry. The Crossplane CLI uses `xpkg.upbound.io` as its default package
-registry.
+関数は2つの段階でビルドします。最初に関数のランタイムをビルドします。これは、Crossplaneが関数を実行するために使用するOpen Container Initiative (OCI) イメージです。その後、そのランタイムをパッケージに埋め込み、パッケージレジストリにプッシュします。Crossplane CLIは、デフォルトのパッケージレジストリとして `xpkg.upbound.io` を使用します。
 
-A function supports a single platform, like `linux/amd64`, by default. You can
-support multiple platforms by building a runtime and package for each platform,
-then pushing all the packages to a single tag in the registry.
+関数はデフォルトで `linux/amd64` のような単一のプラットフォームをサポートします。各プラットフォーム用にランタイムとパッケージをビルドし、すべてのパッケージをレジストリの単一のタグにプッシュすることで、複数のプラットフォームをサポートできます。
 
-Pushing your function to a registry allows you to use your function in a
-Crossplane control plane. See the
-[composition functions documentation]({{<ref "../concepts/composition-functions" >}}).
-to learn how to use a function in a control plane.
+関数をレジストリにプッシュすることで、Crossplane コントロールプレーンで関数を使用できるようになります。関数をコントロールプレーンで使用する方法については、[構成関数のドキュメント]({{<ref "../concepts/composition-functions" >}})を参照してください。
 
-Use Docker to build a runtime for each platform.
+Dockerを使用して、各プラットフォームのランタイムをビルドします。
 
 ```shell {copy-lines="1"}
 docker build . --quiet --platform=linux/amd64 --tag runtime-amd64
@@ -773,24 +693,17 @@ sha256:cb015ceabf46d2a55ccaeebb11db5659a2fb5e93de36713364efcf6d699069af
 ```
 
 {{<hint "tip">}}
-You can use whatever tag you want. There's no need to push the runtime images to
-a registry. The tag is only used to tell `crossplane xpkg build` what runtime to
-embed.
+任意のタグを使用できます。ランタイムイメージをレジストリにプッシュする必要はありません。タグは、`crossplane xpkg build` にどのランタイムを埋め込むかを伝えるためだけに使用されます。
 {{</hint>}}
 
-Use the Crossplane CLI to build a package for each platform. Each package embeds
-a runtime image. 
+Crossplane CLIを使用して、各プラットフォーム用のパッケージをビルドします。各パッケージはランタイムイメージを埋め込んでいます。
 
-The {{<hover label="build" line="2">}}--package-root{{</hover>}} flag specifies
-the `package` directory, which contains `crossplane.yaml`. This includes
-metadata about the package.
+{{<hover label="build" line="2">}}--package-root{{</hover>}} フラグは、`crossplane.yaml` を含む `package` ディレクトリを指定します。これには、パッケージに関するメタデータが含まれています。
 
-The {{<hover label="build" line="3">}}--embed-runtime-image{{</hover>}} flag
-specifies the runtime image tag built using Docker.
 
-The {{<hover label="build" line="4">}}--package-file{{</hover>}} flag specifies
-specifies where to write the package file to disk. Crossplane package files use
-the extension `.xpkg`.
+{{<hover label="build" line="3">}}--embed-runtime-image{{</hover>}} フラグは、Dockerを使用してビルドされたランタイムイメージタグを指定します。
+
+{{<hover label="build" line="4">}}--package-file{{</hover>}} フラグは、パッケージファイルをディスクに書き込む場所を指定します。Crossplaneパッケージファイルは、拡張子 `.xpkg` を使用します。
 
 ```shell {label="build"}
 crossplane xpkg build \
@@ -807,14 +720,12 @@ crossplane xpkg build \
 ```
 
 {{<hint "tip">}}
-Crossplane packages are special OCI images. Read more about packages in the
-[packages documentation]({{< ref "../concepts/packages" >}}).
+Crossplaneパッケージは特別なOCIイメージです。パッケージについての詳細は、[パッケージのドキュメント]({{< ref "../concepts/packages" >}})をお読みください。
 {{</hint>}}
 
-Push both package files to a registry. Pushing both files to one tag in the
-registry creates a
+両方のパッケージファイルをレジストリにプッシュします。両方のファイルをレジストリの1つのタグにプッシュすると、`linux/arm64` と `linux/amd64` ホストの両方で実行される
 [multi-platform](https://docs.docker.com/build/building/multi-platform/)
-package that runs on both `linux/arm64` and `linux/amd64` hosts.
+パッケージが作成されます。
 
 ```shell
 crossplane xpkg push \
@@ -823,16 +734,9 @@ crossplane xpkg push \
 ```
 
 {{<hint "tip">}}
-If you push the function to a GitHub repository the template automatically sets
-up continuous integration (CI) using
-[GitHub Actions](https://github.com/features/actions). The CI workflow will
-lint, test, and build your function. You can see how the template configures CI
-by reading `.github/workflows/ci.yaml`.
+関数をGitHubリポジトリにプッシュすると、テンプレートは自動的に
+[GitHub Actions](https://github.com/features/actions)を使用して継続的インテグレーション（CI）を設定します。CIワークフローは、関数をリント、テスト、およびビルドします。テンプレートがCIをどのように設定しているかは、`.github/workflows/ci.yaml`を読むことで確認できます。
 
-The CI workflow can automatically push packages to `xpkg.upbound.io`. For this
-to work you must create a repository at https://marketplace.upbound.io. Give the
-CI workflow access to push to the Marketplace by creating an API token and
-[adding it to your repository](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository).
-Save your API token access ID as a secret named `XPKG_ACCESS_ID` and your API
-token as a secret named `XPKG_TOKEN`.
+CIワークフローは自動的にパッケージを `xpkg.upbound.io` にプッシュできます。これを機能させるには、https://marketplace.upbound.io でリポジトリを作成する必要があります。APIトークンを作成し、[リポジトリに追加する](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository)ことで、CIワークフローにマーケットプレイスへのプッシュアクセスを与えます。
+APIトークンアクセスIDを `XPKG_ACCESS_ID` という名前のシークレットとして保存し、APIトークンを `XPKG_TOKEN` という名前のシークレットとして保存します。
 {{</hint>}}

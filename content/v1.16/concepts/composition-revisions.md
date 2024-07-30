@@ -1,72 +1,38 @@
 ---
-title: Composition Revisions
+title: コンポジションのリビジョン
 weight: 35
 ---
 
-This guide discusses the use of "Composition Revisions" to safely make and roll
-back changes to a Crossplane [`Composition`][composition-type]. It assumes
-familiarity with Crossplane, and particularly with
-[Compositions].
+このガイドでは、「コンポジションのリビジョン」を使用して、Crossplaneの[`Composition`][composition-type]に安全に変更を加えたり、変更を元に戻したりする方法について説明します。Crossplaneに関する基本的な知識、特に[Compositions]に精通していることを前提としています。
 
-A `Composition` configures how Crossplane should reconcile a Composite Resource
-(XR). Put otherwise, when you create an XR the selected `Composition` determines
-what managed resources Crossplane will create in response. Let's say for example
-that you define a `PlatformDB` XR, which represents your organisation's common
-database configuration of an Azure MySQL Server and a few firewall rules. The
-`Composition` contains the 'base' configuration for the MySQL server and the
-firewall rules that is extended by the configuration for the `PlatformDB`.
+`Composition`は、CrossplaneがComposite Resource (XR)をどのように調整するかを設定します。言い換えれば、XRを作成するときに選択した`Composition`が、Crossplaneが応じて作成する管理リソースを決定します。例えば、Azure MySQL Serverといくつかのファイアウォールルールの組織共通のデータベース構成を表す`PlatformDB` XRを定義したとしましょう。この`Composition`には、MySQLサーバーとファイアウォールルールの「基本」構成が含まれており、`PlatformDB`の構成によって拡張されます。
 
-There is a one-to-many relationship between a `Composition` and the XRs that use
-it. You might define a `Composition` named `big-platform-db` that is used by ten
-different `PlatformDB` XRs. Usually, in the interest of self-service, the
-`Composition` is managed by a different team from the actual `PlatformDB` XRs.
-For example the `Composition` may be written and maintained by a platform team
-member, while individual application teams create `PlatformDB` XRs that use said
-`Composition`.
+`Composition`とそれを使用するXRとの間には一対多の関係があります。例えば、10個の異なる`PlatformDB` XRで使用される`big-platform-db`という名前の`Composition`を定義することができます。通常、セルフサービスの観点から、`Composition`は実際の`PlatformDB` XRとは異なるチームによって管理されます。例えば、`Composition`はプラットフォームチームのメンバーによって作成および維持され、個々のアプリケーションチームがその`Composition`を使用する`PlatformDB` XRを作成します。
 
-Each `Composition` is mutable - you can update it as your organisation's needs
-change. However, without Composition Revisions updating a `Composition` can be a
-risky process. Crossplane constantly uses the `Composition` to ensure that your
-actual infrastructure - your MySQL Servers and firewall rules - match your
-desired state. If you have 10 `PlatformDB` XRs all using the `big-platform-db`
-`Composition`, all 10 of those XRs will be instantly updated in accordance with
-any updates you make to the `big-platform-db` `Composition`.
+各`Composition`は可変であり、組織のニーズの変化に応じて更新できます。しかし、コンポジションのリビジョンがない場合、`Composition`を更新することはリスクのあるプロセスになる可能性があります。Crossplaneは常に`Composition`を使用して、実際のインフラストラクチャ（MySQLサーバーやファイアウォールルール）が望ましい状態と一致するようにします。もし10個の`PlatformDB` XRがすべて`big-platform-db` `Composition`を使用している場合、`big-platform-db` `Composition`に対する更新に応じて、これら10個のXRはすぐに更新されます。
 
-Composition Revisions allow XRs to opt out of automatic updates. Instead you can
-update your XRs to leverage the latest `Composition` settings at your own pace.
-This enables you to [canary] changes to your infrastructure, or to roll back
-some XRs to previous `Composition` settings without rolling back all XRs.
+コンポジションのリビジョンを使用すると、XRは自動更新をオプトアウトできます。代わりに、最新の`Composition`設定を自分のペースで利用するためにXRを更新できます。これにより、インフラストラクチャに対する変更を[カナリア]として行ったり、一部のXRを以前の`Composition`設定に戻したりすることができ、すべてのXRを元に戻す必要がなくなります。
 
-## Using Composition Revisions
+## コンポジションリビジョンの使用
 
-When you enable Composition Revisions three things happen:
+コンポジションリビジョンを有効にすると、3つのことが発生します：
 
-1. Crossplane creates a `CompositionRevision` for each `Composition` update.
-1. Composite Resources gain a `spec.compositionRevisionRef` field that specifies
-   which `CompositionRevision` they use.
-1. Composite Resources gain a `spec.compositionUpdatePolicy` field that
-   specifies how they should be updated to new Composition Revisions.
+1. Crossplaneは各`Composition`の更新に対して`CompositionRevision`を作成します。
+1. コンポジットリソースは、どの`CompositionRevision`を使用するかを指定する`spec.compositionRevisionRef`フィールドを持ちます。
+1. コンポジットリソースは、新しいコンポジションリビジョンにどのように更新されるべきかを指定する`spec.compositionUpdatePolicy`フィールドを持ちます。
 
-Each time you edit a `Composition` Crossplane will automatically create a
-`CompositionRevision` that represents that 'revision' of the `Composition` -
-that unique state. Each revision is allocated an increasing revision number.
-This gives `CompositionRevision` consumers an idea about which revision is
-'newest'.
+`Composition`を編集するたびに、Crossplaneはその`Composition`の「リビジョン」を表す`CompositionRevision`を自動的に作成します - それはユニークな状態です。各リビジョンには増加するリビジョン番号が割り当てられます。これにより、`CompositionRevision`の消費者はどのリビジョンが「最新」であるかを把握できます。
 
-Crossplane distinguishes between the 'newest' and the 'current' revision of a
-`Composition`. That is, if you revert a `Composition` to a previous state that
-corresponds to an existing `CompositionRevision` that revision will become
-'current' even if it is not the 'newest' revision (i.e. the most latest _unique_
-`Composition` configuration).
+Crossplaneは`Composition`の「最新」と「現在」のリビジョンを区別します。つまり、既存の`CompositionRevision`に対応する以前の状態に`Composition`を戻すと、そのリビジョンは「現在」となりますが、「最新」のリビジョンではない場合があります（つまり、最も最近の_ユニーク_な`Composition`構成）。
 
-You can discover which revisions exist using `kubectl`:
+`kubectl`を使用して、どのリビジョンが存在するかを確認できます：
 
 ```console
-# Find all revisions of the Composition named 'example'
+# 'example'という名前のコンポジションのすべてのリビジョンを見つける
 kubectl get compositionrevision -l crossplane.io/composition-name=example
 ```
 
-This should produce output something like:
+これにより、次のような出力が得られます：
 
 ```console
 NAME            REVISION   CURRENT   AGE
@@ -75,21 +41,14 @@ example-2bgdr   2          True      73s
 example-xjrdm   3          False     61s
 ```
 
-> A `Composition` is a mutable resource that you can update as your needs
-> change over time. Each `CompositionRevision` is an immutable snapshot of those
-> needs at a particular point in time.
+> `Composition`は、ニーズが変化するにつれて更新できる可変リソースです。各`CompositionRevision`は、特定の時点でのそれらのニーズの不変のスナップショットです。
 
-Crossplane behaves the same way by default whether Composition Revisions are
-enabled or not. This is because when you enable Composition Revisions all XRs
-default to the `Automatic` `compositionUpdatePolicy`. XRs support two update
-policies:
+デフォルトでは、コンポジションリビジョンが有効かどうかにかかわらず、Crossplaneは同じように動作します。これは、コンポジションリビジョンを有効にすると、すべてのXRが`Automatic`な`compositionUpdatePolicy`にデフォルトで設定されるためです。XRは2つの更新ポリシーをサポートしています：
 
-* `Automatic`: Automatically use the current `CompositionRevision`. (Default)
-* `Manual`: Require manual intervention to change `CompositionRevision`.
+* `Automatic`：現在の`CompositionRevision`を自動的に使用します。（デフォルト）
+* `Manual`：`CompositionRevision`を変更するために手動の介入が必要です。
 
-The below XR uses the `Manual` policy. When this policy is used the XR will
-select the current `CompositionRevision` when it is first created, but must
-manually be updated when you wish it to use another `CompositionRevision`.
+以下のXRは`Manual`ポリシーを使用しています。このポリシーが使用されると、XRは最初に作成されたときに現在の`CompositionRevision`を選択しますが、別の`CompositionRevision`を使用する場合は手動で更新する必要があります。
 
 ```yaml
 apiVersion: example.org/v1alpha1
@@ -108,10 +67,7 @@ spec:
     name: db-conn
 ```
 
-Crossplane sets an XR's `compositionRevisionRef` automatically at creation time
-regardless of your chosen `compositionUpdatePolicy`. If you choose the `Manual`
-policy you must edit the `compositionRevisionRef` field when you want your XR to
-use a different `CompositionRevision`.
+Crossplaneは、選択した`compositionUpdatePolicy`に関係なく、XRの`compositionRevisionRef`を作成時に自動的に設定します。`Manual`ポリシーを選択した場合、XRが異なる`CompositionRevision`を使用するようにしたいときは、`compositionRevisionRef`フィールドを編集する必要があります。
 
 ```yaml
 apiVersion: example.org/v1alpha1
@@ -131,16 +87,13 @@ spec:
     name: db-conn
 ```
 
-## Complete example
+## 完全な例
 
-This tutorial discusses how CompositionRevisions work and how they manage Composite Resource
-(XR) updates. This starts with a `Composition` and `CompositeResourceDefinition` (XRD) that defines a `MyVPC`
-resource and continues with creating multiple XRs to observe different upgrade paths. Crossplane will
-assign different CompositionRevisions to the created composite resources each time the composition is updated. 
+このチュートリアルでは、CompositionRevisionsがどのように機能し、Composite Resource (XR) の更新をどのように管理するかについて説明します。これは、`MyVPC`リソースを定義する`Composition`と`CompositeResourceDefinition` (XRD) から始まり、異なるアップグレードパスを観察するために複数のXRを作成することに続きます。Crossplaneは、構成が更新されるたびに作成された複合リソースに異なるCompositionRevisionsを割り当てます。
 
-### Preparation 
-##### Install Crossplane
-Install Crossplane v1.11.0 or later and wait until the Crossplane pods are running.
+### 準備 
+##### Crossplaneのインストール
+Crossplane v1.11.0以降をインストールし、Crossplaneポッドが実行されるまで待ちます。
 ```shell
 kubectl create namespace crossplane-system
 helm repo add crossplane-master https://charts.crossplane.io/master/
@@ -148,15 +101,15 @@ helm repo update
 helm install crossplane --namespace crossplane-system crossplane-master/crossplane --devel --version 1.11.0-rc.0.108.g0521c32e
 kubectl get pods -n crossplane-system
 ```
-Expected Output:
+期待される出力:
 ```shell
 NAME                                       READY   STATUS    RESTARTS   AGE
 crossplane-7f75ddcc46-f4d2z                1/1     Running   0          9s
 crossplane-rbac-manager-78bd597746-sdv6w   1/1     Running   0          9s
 ```
 
-#### Deploy Composition and XRD Examples
-Apply the example Composition.
+#### CompositionとXRDの例をデプロイ
+例のCompositionを適用します。
 
 ```yaml
 apiVersion: apiextensions.crossplane.io/v1
@@ -183,7 +136,7 @@ spec:
     name: my-vcp
 ```
 
-Apply the example XRD.
+例のXRDを適用します。
 ```yaml
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
@@ -212,29 +165,26 @@ spec:
             - id
 ```
 
-Verify that Crossplane created the Composition revision
+CrossplaneがCompositionリビジョンを作成したことを確認します。
 ```shell
 kubectl get compositionrevisions -o="custom-columns=NAME:.metadata.name,REVISION:.spec.revision,CHANNEL:.metadata.labels.channel"
 ```
-Expected Output:
+期待される出力:
 ```shell
 NAME                                    REVISION   CHANNEL
 myvpcs.aws.example.upbound.io-ad265bc   1          dev
 ```
 
 {{< hint "note" >}}
-The label `dev` is automatically created from the Composition.
+ラベル`dev`はCompositionから自動的に作成されます。
 {{< /hint >}}
 
 
-### Create Composite Resources
-This tutorial has four composite resources to cover different update policies and composition selection options.
-The default behavior is updating XRs to the latest revision of the Composition. However, this can be changed by setting
-`compositionUpdatePolicy: Manual` in the XR. It is also possible to select the latest revision with a specific label
-with `compositionRevisionSelector.matchLabels` together with `compositionUpdatePolicy: Automatic`.
+### 複合リソースの作成
+このチュートリアルでは、異なる更新ポリシーと構成選択オプションをカバーするために4つの複合リソースがあります。デフォルトの動作は、XRをCompositionの最新リビジョンに更新することです。ただし、XRで`compositionUpdatePolicy: Manual`を設定することでこれを変更できます。また、`compositionUpdatePolicy: Automatic`とともに`compositionRevisionSelector.matchLabels`を使用して特定のラベルを持つ最新のリビジョンを選択することも可能です。
 
-#### Default update policy
-Create an XR without a `compositionUpdatePolicy` defined. The update policy is `Automatic` by default:
+#### デフォルトの更新ポリシー
+`compositionUpdatePolicy` が定義されていない XR を作成します。更新ポリシーはデフォルトで `Automatic` です：
 ```yaml
 apiVersion: aws.example.upbound.io/v1alpha1
 kind: MyVPC
@@ -243,13 +193,13 @@ metadata:
 spec:
   id: vpc-auto
 ```
-Expected Output:
+期待される出力：
 ```shell
 myvpc.aws.example.upbound.io/vpc-auto created
 ``` 
 
-#### Manual update policy
-Create a Composite Resource with `compositionUpdatePolicy: Manual` and `compositionRevisionRef`.
+#### 手動更新ポリシー
+`compositionUpdatePolicy: Manual` と `compositionRevisionRef` を持つ Composite Resource を作成します。
 ```yaml
 apiVersion: aws.example.upbound.io/v1alpha1
 kind: MyVPC
@@ -262,13 +212,13 @@ spec:
     name: myvpcs.aws.example.upbound.io-ad265bc
 ```
 
-Expected Output:
+期待される出力：
 ```shell
 myvpc.aws.example.upbound.io/vpc-man created
 ``` 
 
-#### Using a selector
-Create an XR with a `compositionRevisionSelector` of `channel: dev`:
+#### セレクターを使用する
+`channel: dev` の `compositionRevisionSelector` を持つ XR を作成します：
 ```yaml
 apiVersion: aws.example.upbound.io/v1alpha1
 kind:  MyVPC
@@ -280,12 +230,12 @@ spec:
     matchLabels:
       channel: dev
 ```
-Expected Output:
+期待される出力：
 ```shell
 myvpc.aws.example.upbound.io/vpc-dev created
 ``` 
 
-Create an XR with a `compositionRevisionSelector` of `channel: staging`:
+`channel: staging` の `compositionRevisionSelector` を持つ XR を作成します：
 ```yaml
 apiVersion: aws.example.upbound.io/v1alpha1
 kind: MyVPC
@@ -298,17 +248,17 @@ spec:
       channel: staging
 ```
 
-Expected Output:
+期待される出力：
 ```shell
 myvpc.aws.example.upbound.io/vpc-staging created
 ``` 
 
-Verify the Composite Resource with the label `channel: staging` doesn't have a `REVISION`.  
-All other XRs have a `REVISION` matching the created Composition Revision.
+ラベル `channel: staging` を持つ Composite Resource に `REVISION` がないことを確認します。  
+他のすべての XR には、作成された Composition Revision に一致する `REVISION` があります。
 ```shell
 kubectl get composite -o="custom-columns=NAME:.metadata.name,SYNCED:.status.conditions[0].status,REVISION:.spec.compositionRevisionRef.name,POLICY:.spec.compositionUpdatePolicy,MATCHLABEL:.spec.compositionRevisionSelector.matchLabels"
 ```
-Expected Output:
+期待される出力：
 ```shell
 NAME          SYNCED   REVISION                                POLICY      MATCHLABEL
 vpc-auto      True     myvpcs.aws.example.upbound.io-ad265bc   Automatic   <none>
@@ -318,41 +268,40 @@ vpc-staging   False    <none>                                  Automatic   map[c
 ``` 
 
 {{< hint "note" >}}
-The `vpc-staging` XR label doesn't match any existing Composition Revisions.
+`vpc-staging` XR のラベルは、既存の Composition Revisions と一致しません。
 {{< /hint >}}
 
-### Create new Composition revisions
-Crossplane creates a new CompositionRevision when a Composition is created or updated. Label and annotation changes will
-also trigger a new CompositionRevision. 
+### 新しい Composition revisions を作成する
+Crossplane は、Composition が作成または更新されると新しい CompositionRevision を作成します。ラベルやアノテーションの変更も新しい CompositionRevision をトリガーします。
 
-#### Update the Composition label
-Update the `Composition` label to `channel: staging`:
+#### Composition ラベルを更新する
+`Composition` ラベルを `channel: staging` に更新します：
 ```shell
 kubectl label composition myvpcs.aws.example.upbound.io channel=staging --overwrite
 ```
-Expected Output:
+期待される出力：
 ```shell
 composition.apiextensions.crossplane.io/myvpcs.aws.example.upbound.io labeled
 ``` 
 
-Verify that Crossplane creates a new Composition revision:
+Crossplane が新しい Composition revision を作成することを確認します：
 ```shell
 kubectl get compositionrevisions -o="custom-columns=NAME:.metadata.name,REVISION:.spec.revision,CHANNEL:.metadata.labels.channel"
 ```
-Expected Output:
+期待される出力：
 ```shell
 NAME                                    REVISION   CHANNEL
 myvpcs.aws.example.upbound.io-727b3c8   2          staging
 myvpcs.aws.example.upbound.io-ad265bc   1          dev
 ``` 
 
-Verify that Crossplane assigns the Composite Resources `vpc-auto` and `vpc-staging` to Composite revision:2.  
-XRs `vpc-man` and `vpc-dev` are still assigned to the original revision:1:
+CrossplaneがCompositeリソース`vpc-auto`と`vpc-staging`をCompositeリビジョン:2に割り当てていることを確認します。  
+XRs `vpc-man`と`vpc-dev`はまだ元のリビジョン:1に割り当てられています:
 
 ```shell
 kubectl get composite -o="custom-columns=NAME:.metadata.name,SYNCED:.status.conditions[0].status,REVISION:.spec.compositionRevisionRef.name,POLICY:.spec.compositionUpdatePolicy,MATCHLABEL:.spec.compositionRevisionSelector.matchLabels"
 ```
-Expected Output:
+期待される出力:
 ```shell
 NAME          SYNCED   REVISION                                POLICY      MATCHLABEL
 vpc-auto      True     myvpcs.aws.example.upbound.io-727b3c8   Automatic   <none>
@@ -362,14 +311,14 @@ vpc-staging   True     myvpcs.aws.example.upbound.io-727b3c8   Automatic   map[c
 ``` 
 
 {{< hint "note" >}}
-`vpc-auto` always use the latest Revision.  
-`vpc-staging` now matches the label applied to Revision revision:2.
+`vpc-auto`は常に最新のリビジョンを使用します。  
+`vpc-staging`は現在、リビジョン:2に適用されたラベルと一致しています。
 {{< /hint >}}
 
-#### Update Composition Spec and Label
-Update the Composition to disable DNS support in the VPC and change the label from `staging` back to `dev`.
+#### コンポジション仕様とラベルの更新
+VPCでDNSサポートを無効にし、ラベルを`staging`から`dev`に戻すためにコンポジションを更新します。
 
-Apply the following changes to update the `Composition` spec and label:
+以下の変更を適用して`Composition`仕様とラベルを更新します:
 ```yaml
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
@@ -395,17 +344,17 @@ spec:
     name: my-vcp
 ```
 
-Expected Output:
+期待される出力:
 ```shell
 composition.apiextensions.crossplane.io/myvpcs.aws.example.upbound.io configured
 ``` 
 
-Verify that Crossplane creates a new Composition revision:
+Crossplaneが新しいコンポジションリビジョンを作成することを確認します:
 
 ```shell
 kubectl get compositionrevisions -o="custom-columns=NAME:.metadata.name,REVISION:.spec.revision,CHANNEL:.metadata.labels.channel"
 ```
-Expected Output:
+期待される出力:
 ```shell
 NAME                                    REVISION   CHANNEL
 myvpcs.aws.example.upbound.io-727b3c8   2          staging
@@ -414,16 +363,16 @@ myvpcs.aws.example.upbound.io-f81c553   3          dev
 ``` 
 
 {{< hint "note" >}}
-Changing the label and the spec values simultaneously is critical for deploying new changes to the `dev` channel.
+ラベルと仕様の値を同時に変更することは、`dev`チャネルに新しい変更をデプロイするために重要です。
 {{< /hint >}}
 
-Verify Crossplane assigns the Composite Resources `vpc-auto` and `vpc-dev` to Composite revision:3.  
-`vpc-staging` is assigned to revision:2, and `vpc-man` is still assigned to the original revision:1:
+CrossplaneがCompositeリソース`vpc-auto`と`vpc-dev`をCompositeリビジョン:3に割り当てていることを確認します。  
+`vpc-staging`はリビジョン:2に割り当てられ、`vpc-man`はまだ元のリビジョン:1に割り当てられています:
 
 ```shell
 kubectl get composite -o="custom-columns=NAME:.metadata.name,SYNCED:.status.conditions[0].status,REVISION:.spec.compositionRevisionRef.name,POLICY:.spec.compositionUpdatePolicy,MATCHLABEL:.spec.compositionRevisionSelector.matchLabels"
 ```
-Expected Output:
+期待される出力:
 ```shell
 NAME          SYNCED   REVISION                                POLICY      MATCHLABEL
 vpc-auto      True     myvpcs.aws.example.upbound.io-f81c553   Automatic   <none>
@@ -434,12 +383,13 @@ vpc-staging   True     myvpcs.aws.example.upbound.io-727b3c8   Automatic   map[c
 
 
 {{< hint "note" >}}
-`vpc-dev` matches the updated label applied to Revision revision:3.
-`vpc-staging` matches the label applied to Revision revision:2.
+`vpc-dev`はリビジョン:3に適用された更新されたラベルと一致します。  
+`vpc-staging`はリビジョン:2に適用されたラベルと一致します。
 {{< /hint >}}
 
-
+```
 [composition-type]: {{<ref "../../master/concepts/compositions" >}}
 [Compositions]: {{<ref "../../master/concepts/compositions" >}}
 [canary]: https://martinfowler.com/bliki/CanaryRelease.html
 [install-guide]: {{<ref "../../master/software/install" >}}
+```

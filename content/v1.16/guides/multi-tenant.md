@@ -1,56 +1,35 @@
 ---
-title: Multi-Tenant Crossplane
+title: マルチテナント Crossplane
 weight: 240
 ---
 
-This guide describes how to use Crossplane effectively in multi-tenant
-environments by utilizing Kubernetes primitives and compatible policy
-enforcement projects in the cloud-native ecosystem.
+このガイドでは、Kubernetes プリミティブとクラウドネイティブエコシステムの互換性のあるポリシー強制プロジェクトを活用して、マルチテナント環境で Crossplane を効果的に使用する方法について説明します。
 
 ## TL;DR
 
-Infrastructure operators in multi-tenant Crossplane environments typically
-utilize composition and Kubernetes RBAC to define lightweight, standardized
-policies that dictate what level of self-service developers are given when
-requesting infrastructure. This is primarily achieved through exposing abstract
-resource types at the namespace scope, defining `Roles` for teams and
-individuals within that namespace, and patching the `spec.providerConfigRef` of
-the underlying managed resources so that they use a specific `ProviderConfig`
-and credentials when provisioned from each namespace. Larger organizations, or
-those with more complex environments, may choose to incorporate third-party
-policy engines, or scale to multiple Crossplane clusters. The following sections
-describe each of these scenarios in greater detail.
+マルチテナント Crossplane 環境のインフラストラクチャオペレーターは、通常、構成と Kubernetes RBAC を利用して、インフラストラクチャを要求する際に開発者に与えられるセルフサービスのレベルを定義する軽量で標準化されたポリシーを定義します。これは主に、名前空間スコープで抽象リソースタイプを公開し、その名前空間内のチームや個人のために `Roles` を定義し、基盤となる管理リソースの `spec.providerConfigRef` をパッチして、各名前空間からプロビジョニングされる際に特定の `ProviderConfig` と資格情報を使用するようにすることで達成されます。大規模な組織や、より複雑な環境を持つ組織は、サードパーティのポリシーエンジンを組み込むか、複数の Crossplane クラスターにスケールアップすることを選択する場合があります。以下のセクションでは、これらのシナリオのそれぞれについて詳しく説明します。
 
 - [TL;DR](#tldr)
-- [Background](#background)
-  - [Cluster-Scoped Managed Resources](#cluster-scoped-managed-resources)
-  - [Namespace Scoped Claims](#namespace-scoped-claims)
-- [Single Cluster Multi-Tenancy](#single-cluster-multi-tenancy)
-  - [Composition as an Isolation Mechanism](#composition-as-an-isolation-mechanism)
-  - [Namespaces as an Isolation Mechanism](#namespaces-as-an-isolation-mechanism)
-  - [Policy Enforcement with Open Policy Agent](#policy-enforcement-with-open-policy-agent)
-- [Multi-Cluster Multi-Tenancy](#multi-cluster-multi-tenancy)
-  - [Reproducible Platforms with Configuration Packages](#reproducible-platforms-with-configuration-packages)
-  - [Control Plane of Control Planes](#control-plane-of-control-planes)
+- [背景](#background)
+  - [クラスター スコープの管理リソース](#cluster-scoped-managed-resources)
+  - [名前空間スコープのクレーム](#namespace-scoped-claims)
+- [単一クラスターのマルチテナンシー](#single-cluster-multi-tenancy)
+  - [隔離メカニズムとしての構成](#composition-as-an-isolation-mechanism)
+  - [隔離メカニズムとしての名前空間](#namespaces-as-an-isolation-mechanism)
+  - [Open Policy Agentによるポリシー強制](#policy-enforcement-with-open-policy-agent)
+- [マルチクラスターのマルチテナンシー](#multi-cluster-multi-tenancy)
+  - [構成パッケージによる再現可能なプラットフォーム](#reproducible-platforms-with-configuration-packages)
+  - [コントロールプレーンのコントロールプレーン](#control-plane-of-control-planes)
 
-## Background
+## 背景
 
-Crossplane is designed to run in multi-tenant environments where many teams are
-consuming the services and abstractions provided by infrastructure operators in
-the cluster. This functionality is facilitated by two major design patterns in
-the Crossplane ecosystem. 
+Crossplane は、多くのチームがクラスター内のインフラストラクチャオペレーターによって提供されるサービスと抽象化を利用するマルチテナント環境で実行されるように設計されています。この機能は、Crossplane エコシステム内の 2 つの主要なデザインパターンによって促進されます。
 
-### Cluster-Scoped Managed Resources
+### クラスター範囲の管理リソース
 
-Typically, Crossplane providers, which supply granular [managed resources] that
-reflect an external API, authenticate by using a `ProviderConfig` object that
-points to a credentials source (such as a Kubernetes `Secret`, the `Pod`
-filesystem, or an environment variable). Then, every managed resource references
-a `ProviderConfig` that points to credentials with sufficient permissions to
-manage that resource type.
+通常、外部APIを反映する詳細な [管理リソース] を提供するCrossplaneプロバイダーは、資格情報ソース（Kubernetesの`Secret`、`Pod`ファイルシステム、または環境変数など）を指す`ProviderConfig`オブジェクトを使用して認証します。その後、すべての管理リソースは、そのリソースタイプを管理するのに十分な権限を持つ資格情報を指す`ProviderConfig`を参照します。
 
-For example, the following `ProviderConfig` for `provider-aws` points to a
-Kubernetes `Secret` with AWS credentials.
+たとえば、以下の`provider-aws`の`ProviderConfig`は、AWS資格情報を持つKubernetesの`Secret`を指しています。
 
 ```yaml
 apiVersion: aws.crossplane.io/v1beta1
@@ -66,8 +45,7 @@ spec:
       key: creds
 ```
 
-If a user desired for these credentials to be used to provision an
-`RDSInstance`, they would reference the `ProviderConfig` in the object manifest:
+ユーザーがこれらの資格情報を使用して`RDSInstance`をプロビジョニングしたい場合、オブジェクトマニフェストで`ProviderConfig`を参照します。
 
 ```yaml
 apiVersion: database.aws.crossplane.io/v1beta1
@@ -90,26 +68,13 @@ spec:
     name: aws-rdsmysql-conn
 ```
 
-Since both the `ProviderConfig` and all managed resources are cluster-scoped,
-the RDS controller in `provider-aws` will resolve this reference by fetching the
-`ProviderConfig`, obtaining the credentials it points to, and using those
-credentials to reconcile the `RDSInstance`. This means that anyone who has been
-given [RBAC] to manage `RDSInstance` objects can use any credentials to do so.
-In practice, Crossplane assumes that only folks acting as infrastructure
-administrators or platform builders will interact directly with cluster-scoped
-resources.
+`ProviderConfig`とすべての管理リソースがクラスター範囲であるため、`provider-aws`のRDSコントローラーはこの参照を解決するために`ProviderConfig`を取得し、それが指す資格情報を取得し、それらの資格情報を使用して`RDSInstance`を調整します。これは、`RDSInstance`オブジェクトを管理するために[RBAC]を与えられた誰でも、任意の資格情報を使用できることを意味します。実際には、Crossplaneはインフラストラクチャ管理者またはプラットフォームビルダーとして行動する人々だけがクラスター範囲のリソースと直接対話することを前提としています。
 
-### Namespace Scoped Claims
+### ネームスペーススコープのクレーム
 
-While managed resources exist at the cluster scope, composite resources, which
-are defined using a **CompositeResourceDefinition (XRD)** may exist at either
-the cluster or namespace scope. Platform builders define XRDs and
-**Compositions** that specify what granular managed resources should be created
-in response to the creation of an instance of the XRD. More information about
-this architecture can be found in the [Composition] documentation.
+管理リソースはクラスター範囲に存在しますが、**CompositeResourceDefinition (XRD)**を使用して定義された複合リソースは、クラスター範囲またはネームスペース範囲のいずれかに存在する可能性があります。プラットフォームビルダーは、XRDのインスタンスの作成に応じてどの詳細な管理リソースを作成するかを指定するXRDと**Composition**を定義します。このアーキテクチャに関する詳細情報は、[Composition]ドキュメントにあります。
 
-Every XRD is exposed at the cluster scope, but only those with `spec.claimNames`
-defined will have a namespace-scoped variant.
+すべてのXRDはクラスター範囲で公開されますが、`spec.claimNames`が定義されているものだけがネームスペーススコープのバリアントを持ちます。
 
 ```yaml
 apiVersion: apiextensions.crossplane.io/v1
@@ -127,83 +92,33 @@ spec:
 ...
 ```
 
-When the example above is created, Crossplane will produce two
-[CustomResourceDefinitions]:
-1. A cluster-scoped type with `kind: XMySQLInstance`. This is referred to as a
-   **Composite Resource (XR)**.
-2. A namespace-scoped type with `kind: MySQLInstance`. This is referred to as a
-   **Claim (XRC)**.
+上記の例が作成されると、Crossplaneは2つの[CustomResourceDefinitions]を生成します：
+1. `kind: XMySQLInstance`を持つクラスター範囲のタイプ。これは**Composite Resource (XR)**と呼ばれます。
+2. `kind: MySQLInstance`を持つネームスペース範囲のタイプ。これは**Claim (XRC)**と呼ばれます。
 
-Platform builders may choose to define an arbitrary number of Compositions that
-map to these types, meaning that creating a `MySQLInstance` in a given namespace
-can result in the creations of any set of managed resources at the cluster
-scope. For instance, creating a `MySQLInstance` could result in the creation of
-the `RDSInstance` defined above.
+プラットフォームビルダーは、これらのタイプにマッピングされる任意の数のコンポジションを定義することを選択できるため、特定のネームスペースで `MySQLInstance` を作成すると、クラスターのスコープで任意の管理リソースのセットが作成される可能性があります。たとえば、`MySQLInstance` を作成すると、上記で定義された `RDSInstance` の作成が行われる可能性があります。
 
-## Single Cluster Multi-Tenancy
+## シングルクラスターのマルチテナンシー
 
-Depending on the size and scope of an organization, platform teams may choose to
-run one central Crossplane control plane, or many different ones for each team
-or business unit. This section will focus on servicing multiple teams within a
-single cluster, which may or may not be one of many other Crossplane clusters in
-the organization.
+組織の規模や範囲に応じて、プラットフォームチームは1つの中央のCrossplaneコントロールプレーンを運用するか、各チームやビジネスユニットのために多くの異なるものを運用することを選択できます。このセクションでは、組織内の他の多くのCrossplaneクラスターの1つであるかどうかにかかわらず、単一のクラスター内で複数のチームにサービスを提供することに焦点を当てます。
 
-### Composition as an Isolation Mechanism
+### 孤立メカニズムとしてのコンポジション
 
-While managed resources always reflect every field that the underlying provider
-API exposes, XRDs can have any schema that a platform builder chooses. The
-fields in the XRD schema can then be patched onto fields in the underlying
-managed resource defined in a Composition, essentially exposing those fields as
-configurable to the consumer of the XR or XRC.
+管理リソースは常に基盤となるプロバイダーAPIが公開するすべてのフィールドを反映しますが、XRDはプラットフォームビルダーが選択した任意のスキーマを持つことができます。XRDスキーマ内のフィールドは、コンポジションで定義された基盤となる管理リソースのフィールドにパッチを当てることができ、実質的にそれらのフィールドをXRまたはXRCの消費者に対して構成可能として公開します。
 
-This feature serves as a lightweight policy mechanism by only giving the
-consumer the ability to customize the underlying resources to the extent the
-platform builder desires. For instance, in the examples above, a platform
-builder may choose to define a `spec.location` field in the schema of the
-`XMySQLInstance` that is an enum with options `east` and `west`. In the
-Composition, those fields could map to the `RDSInstance` `spec.region` field,
-making the value either `us-east-1` or `us-west-1`. If no other patches were
-defined for the `RDSInstance`, giving a user the ability (using RBAC) to create
-a `XMySQLInstance` / `MySQLInstance` would be akin to giving the ability to
-create a very specifically configured `RDSInstance`, where they can only decide
-the region where it lives and they are restricted to two options.
+この機能は、消費者に対して基盤となるリソースをプラットフォームビルダーが望む範囲でカスタマイズする能力のみを与えることによって、軽量なポリシーメカニズムとして機能します。たとえば、上記の例では、プラットフォームビルダーは、`east` と `west` のオプションを持つ列挙型である `XMySQLInstance` のスキーマ内に `spec.location` フィールドを定義することを選択するかもしれません。コンポジション内では、これらのフィールドは `RDSInstance` の `spec.region` フィールドにマッピングされ、値は `us-east-1` または `us-west-1` になります。`RDSInstance` に対して他のパッチが定義されていない場合、ユーザーに `XMySQLInstance` / `MySQLInstance` を作成する能力を与えることは、非常に特定の構成の `RDSInstance` を作成する能力を与えることに等しく、ユーザーはそれが存在するリージョンを決定することができ、2つのオプションに制限されます。
 
-This model is in contrast to many infrastructure as code tools where the end
-user must have provider credentials to create the underlying resources that are
-rendered from the abstraction. Crossplane takes a different approach, defining
-various credentials in the cluster (using the `ProviderConfig`), then giving
-only the provider controllers the ability to utilize those credentials and
-provision infrastructure on the users behalf. This creates a consistent
-permission model, even when using many providers with differing IAM models, by
-standardizing on Kubernetes RBAC.
+このモデルは、エンドユーザーが抽象化からレンダリングされる基盤となるリソースを作成するためにプロバイダーの資格情報を持たなければならない多くのインフラストラクチャコードツールとは対照的です。Crossplaneは異なるアプローチを取り、クラスター内でさまざまな資格情報を定義し（`ProviderConfig`を使用）、プロバイダーコントローラーのみにその資格情報を利用してユーザーの代理でインフラストラクチャをプロビジョニングする能力を与えます。これにより、異なるIAMモデルを持つ多くのプロバイダーを使用しても、一貫した権限モデルが作成され、Kubernetes RBACに標準化されます。
 
-### Namespaces as an Isolation Mechanism
+### 名前空間を隔離メカニズムとして
 
-While the ability to define abstract schemas and patches to concrete resource
-types using composition is powerful, the ability to define Claim types at the
-namespace scope enhances the functionality further by enabling RBAC to be
-applied with namespace restrictions. Most users in a cluster do not have access
-to cluster-scoped resources as they are considered only relevant to
-infrastructure admins by both Kubernetes and Crossplane.
+抽象スキーマと具体的なリソースタイプへのパッチを定義する能力は強力ですが、名前空間スコープでクレームタイプを定義する能力は、名前空間制限を適用できるRBACを可能にすることで機能をさらに強化します。クラスター内のほとんどのユーザーは、KubernetesとCrossplaneの両方によってインフラストラクチャ管理者にのみ関連すると見なされるため、クラスター範囲のリソースにアクセスできません。
 
-Building on our simple `XMySQLInstance` / `MySQLInstance` example, a platform
-builder may choose to define permissions on `MySQLInstance` at the namespace
-scope using a `Role`. This allows for giving users the ability to create and
-manage `MySQLInstances` in their given namespace, but not the ability to see
-those defined in other namespaces.
+シンプルな `XMySQLInstance` / `MySQLInstance` の例を基に、プラットフォームビルダーは `Role` を使用して名前空間スコープで `MySQLInstance` に対する権限を定義することを選択できます。これにより、ユーザーは自分の名前空間内で `MySQLInstances` を作成および管理する能力を持ちますが、他の名前空間で定義されたものを見る能力は持ちません。
 
-Furthermore, because the `metadata.namespace` is a field on the XRC, patching can
-be utilized to configure managed resources based on the namespace in which the
-corresponding XRC was defined. This is especially useful if a platform builder
-wants to designate specific credentials or a set of credentials that users in a
-given namespace can utilize when provisioning infrastructure using an XRC. This
-can be accomplished today by creating one or more `ProviderConfig` objects that
-include the name of the namespace in the `ProviderConfig` name. For example, if
-any `MySQLInstance` created in the `team-1` namespace should use specific AWS
-credentials when the provider controller creates the underlying `RDSInstance`,
-the platform builder could:
+さらに、`metadata.namespace` がXRCのフィールドであるため、パッチを利用して対応するXRCが定義された名前空間に基づいて管理リソースを構成できます。これは、プラットフォームビルダーが特定の資格情報または特定の名前空間内のユーザーがXRCを使用してインフラストラクチャをプロビジョニングする際に利用できる資格情報のセットを指定したい場合に特に便利です。これは、`ProviderConfig` 名に名前空間の名前を含む1つ以上の `ProviderConfig` オブジェクトを作成することで実現できます。たとえば、`team-1` 名前空間で作成された任意の `MySQLInstance` が、プロバイダーコントローラーが基盤となる `RDSInstance` を作成する際に特定のAWS資格情報を使用する必要がある場合、プラットフォームビルダーは次のようにできます。
 
-1. Define a `ProviderConfig` with name `team-1`.
+1. 名前 `team-1` の `ProviderConfig` を定義します。
 
 ```yaml
 apiVersion: aws.crossplane.io/v1beta1
@@ -219,8 +134,7 @@ spec:
       key: creds
 ```
 
-2. Define a `Composition` that patches the namespace of the Claim reference in the XR
-   to the `providerConfigRef` of the `RDSInstance`.
+2. XR内のクレーム参照の名前空間を `RDSInstance` の `providerConfigRef` にパッチする `Composition` を定義します。
 
 ```yaml
 ...
@@ -238,67 +152,35 @@ resources:
       fromFieldPath: Required
 ```
 
-This would result in the `RDSInstance` using the `ProviderConfig` of whatever
-namespace the corresponding `MySQLInstance` was created in.
+これにより、`RDSInstance` は対応する `MySQLInstance` が作成された名前空間の `ProviderConfig` を使用することになります。
 
-> Note that this model currently only allows for a single `ProviderConfig` per
-> namespace. However, future Crossplane releases should allow for defining a set
-> of `ProviderConfig` that can be selected from using [Multiple Source Field
-> patching]. 
+> このモデルは現在、名前空間ごとに単一の `ProviderConfig` のみを許可しています。ただし、将来のCrossplaneリリースでは、[Multiple Source Field patching] を使用して選択できる `ProviderConfig` のセットを定義できるようになるはずです。
 
-### Policy Enforcement with Open Policy Agent
+### Open Policy Agentによるポリシーの強制
 
-In some Crossplane deployment models, only using composition and RBAC to define
-policy will not be flexible enough. However, because Crossplane brings
-management of external infrastructure to the Kubernetes API, it is well suited
-to integrate with other projects in the cloud-native ecosystem. Organizations
-and individuals that need a more robust policy engine, or just prefer a more
-general language for defining policy, often turn to [Open Policy Agent] (OPA).
-OPA allows platform builders to write custom logic in [Rego], a domain-specific
-language. Writing policy in this manner allows for not only incorporating the
-information available in the specific resource being evaluated, but also using
-other state represented in the cluster. Crossplane users typically install OPA's
-[Gatekeeper] to make policy management as streamlined as possible.
+一部のCrossplaneデプロイメントモデルでは、ポリシーを定義するためにコンポジションとRBACのみを使用することは、十分な柔軟性を持たない場合があります。しかし、Crossplaneは外部インフラストラクチャの管理をKubernetes APIに統合するため、クラウドネイティブエコシステム内の他のプロジェクトと統合するのに適しています。より堅牢なポリシーエンジンが必要な組織や個人、またはポリシーを定義するためのより一般的な言語を好む場合は、[Open Policy Agent](OPA)に目を向けることがよくあります。OPAはプラットフォームビルダーが[Rego]というドメイン固有言語でカスタムロジックを書くことを可能にします。この方法でポリシーを書くことで、評価されている特定のリソースで利用可能な情報を取り入れるだけでなく、クラスター内で表現されている他の状態を使用することもできます。Crossplaneユーザーは通常、ポリシー管理をできるだけ効率的にするためにOPAの[Gatekeeper]をインストールします。
 
-> A live demo of using OPA with Crossplane can be viewed [here].
+> OPAをCrossplaneと一緒に使用するライブデモは[こちら]で見ることができます。
 
-## Multi-Cluster Multi-Tenancy
+## マルチクラスター マルチテナンシー
 
-Organizations that deploy Crossplane across many clusters typically take
-advantage of two major features that make managing multiple control planes much
-simpler.
+多くのクラスターにCrossplaneをデプロイする組織は、複数のコントロールプレーンを管理するのをはるかに簡単にする2つの主要な機能を活用することが一般的です。
 
-### Reproducible Platforms with Configuration Packages
+### 設定パッケージによる再現可能なプラットフォーム
 
-[Configuration packages] allow platform builders to package their XRDs and
-Compositions into [OCI images] that can be distributed via any OCI-compliant
-image registry. These packages can also declare dependencies on providers,
-meaning that a single package can declare all of the granular managed resources,
-the controllers that must be deployed to reconcile them, and the abstract types
-that expose the underlying resources using composition.
+[設定パッケージ]は、プラットフォームビルダーが自分のXRDとコンポジションを[OCIイメージ]にパッケージ化し、任意のOCI準拠のイメージレジストリを介して配布できるようにします。これらのパッケージはプロバイダーへの依存関係を宣言することもでき、単一のパッケージがすべての詳細な管理リソース、これらを調整するためにデプロイする必要があるコントローラー、およびコンポジションを使用して基盤となるリソースを公開する抽象型を宣言できます。
 
-Organizations with many Crossplane deployments utilize Configuration packages to
-reproduce their platform in each cluster. This can be as simple as installing
-Crossplane with the flag to automatically install a Configuration package
-alongside it.
+多くのCrossplaneデプロイメントを持つ組織は、各クラスターでプラットフォームを再現するために設定パッケージを利用します。これは、Crossplaneをインストールする際に設定パッケージを自動的にインストールするフラグを付けるだけで済む場合もあります。
 
 ```
 helm install crossplane --namespace crossplane-system crossplane-stable/crossplane --set configuration.packages='{"registry.upbound.io/xp/getting-started-with-aws:latest"}'
 ```
 
-### Control Plane of Control Planes
+### コントロールプレーンのコントロールプレーン
 
-Taking the multi-cluster multi-tenancy model one step further, some
-organizations opt to manage their many Crossplane clusters using a single
-central Crossplane control plane. This requires setting up the central cluster,
-then using a provider to spin up new clusters (such as an [EKS Cluster] using
-[provider-aws]), then using [provider-helm] to install Crossplane into the new
-remote cluster, potentially bundling a common Configuration package into each
-install using the method described above.
+マルチクラスター・マルチテナンシーモデルをさらに一歩進めて、一部の組織は単一の中央Crossplaneコントロールプレーンを使用して多くのCrossplaneクラスターを管理することを選択します。これには、中央クラスターのセットアップが必要で、その後、プロバイダーを使用して新しいクラスターを立ち上げます（例えば、[EKS Cluster]を[provider-aws]を使用して）、次に、[provider-helm]を使用して新しいリモートクラスターにCrossplaneをインストールし、上記の方法で共通のConfigurationパッケージを各インストールにバンドルすることができます。
 
-This advanced pattern allows for full management of Crossplane clusters using
-Crossplane itself, and when done properly, is a scalable solution to providing
-dedicated control planes to many tenants within a single organization.
+この高度なパターンは、Crossplane自体を使用してCrossplaneクラスターを完全に管理することを可能にし、適切に実行されれば、単一の組織内の多くのテナントに専用のコントロールプレーンを提供するためのスケーラブルなソリューションとなります。
 
 
 <!-- Named Links -->
@@ -321,3 +203,5 @@ dedicated control planes to many tenants within a single organization.
 [Cloudfoundry]: https://www.cloudfoundry.org/
 [Kubernetes Service Catalog]: https://github.com/kubernetes-sigs/service-catalog
 [vshn/application-catalog-demo]: https://github.com/vshn/application-catalog-demo
+
+It seems that there is no content provided for translation. Please paste the Markdown content you'd like me to translate into Japanese.

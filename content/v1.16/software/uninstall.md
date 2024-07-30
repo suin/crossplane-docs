@@ -1,35 +1,32 @@
 ---
-title: Uninstall Crossplane
+title: Crossplaneのアンインストール
 weight: 300
 ---
 
 {{<hint "warning" >}}
-Resources created by Crossplane aren't deleted if Crossplane isn't uninstalled
-in order.
+Crossplaneがアンインストールされない限り、Crossplaneによって作成されたリソースは削除されません。
 
-This can leave cloud resources running, requiring manual deletion.
+これにより、手動で削除する必要があるクラウドリソースが残る可能性があります。
 {{< /hint >}}
 
-## Ordered Crossplane uninstall
-Most Crossplane resources have dependencies on other Crossplane resources. 
+## 順序付きCrossplaneアンインストール
+ほとんどのCrossplaneリソースは、他のCrossplaneリソースに依存しています。
 
-For example, a _managed resource_ is dependent on the _provider_.
+例えば、_マネージドリソース_は_プロバイダー_に依存しています。
 
-Failure to delete Crossplane resources in order may prevent Crossplane from
-deleting provisioned external resources.
+Crossplaneリソースを順番に削除しないと、Crossplaneがプロビジョニングされた外部リソースを削除できなくなる場合があります。
 
-Removing Crossplane resources should happen in the following order:
-1. Remove all _composite resource definitions_
-2. Remove all remaining _managed resources_
-3. Remove all _providers_
+Crossplaneリソースの削除は、以下の順序で行う必要があります：
+1. すべての_コンポジットリソース定義_を削除する
+2. 残りのすべての_マネージドリソース_を削除する
+3. すべての_プロバイダー_を削除する
 
-Deleting the Crossplane pod removes remaining Crossplane components like _claims_.
+Crossplaneポッドを削除すると、_クレーム_などの残りのCrossplaneコンポーネントが削除されます。
 
 {{<hint "tip" >}}
-Collect an inventory of all external resources with `kubectl get managed`. 
+`kubectl get managed`を使用して、すべての外部リソースのインベントリを収集します。
 
-Depending on the size of the Kubernetes API server and number of resources, this
-command may take minutes to return.
+Kubernetes APIサーバーのサイズやリソースの数によっては、このコマンドが返すまでに数分かかる場合があります。
 
 {{<expand "An example kubectl get managed" >}}
 
@@ -91,12 +88,10 @@ crossplane-bucket-867737b10   5m26s
 {{</expand >}}
 {{< /hint >}}
 
-### Remove composite resource definitions
-Removing installed _composite resource definitions_ removes any
-_composite resources_ defined by the _composite resource definition_ and the
-_managed resourced_ they created. 
+### コンポジットリソース定義の削除
+インストールされた_コンポジットリソース定義_を削除すると、_コンポジットリソース定義_によって定義されたすべての_コンポジットリソース_と、それらが作成した_マネージドリソース_が削除されます。
 
-View the installed _composite resource definitions_ with `kubectl get xrd`.
+インストールされた_コンポジットリソース定義_を`kubectl get xrd`で表示します。
 
 ```shell {copy-lines="1"}
 kubectl get xrd
@@ -104,17 +99,17 @@ NAME                                                ESTABLISHED   OFFERED   AGE
 compositepostgresqlinstances.database.example.org   True          True      40s
 ```
 
-Delete the _composite resource definitions_ with `kubectl delete xrd`.
+`kubectl delete xrd`を使用して_コンポジットリソース定義_を削除します。
 
 ```shell
 kubectl delete xrd compositepostgresqlinstances.database.example.org
 ```
 
-### Remove managed resources
+### マネージドリソースの削除
 
-Manually delete any _managed resources_ manually created. 
+手動で作成した_マネージドリソース_を手動で削除します。
 
-Use `kubectl get managed` to view remaining _managed resources_.
+残りの_マネージドリソース_を表示するには、`kubectl get managed`を使用します。
 
 ```shell {copy-lines="1"}
 kubectl get managed
@@ -122,15 +117,15 @@ NAME                                                   READY   SYNCED   EXTERNAL
 bucket.s3.aws.upbound.io/crossplane-bucket-867737b10   True    True     crossplane-bucket-867737b10   8h
 ```
 
-Use `kubectl delete` to remove the resources. 
+リソースを削除するには `kubectl delete` を使用します。
 
 ```shell
 kubectl delete bucket.s3.aws.upbound.io/crossplane-bucket-867737b10
 ```
 
-### Remove Crossplane providers
+### Crossplane プロバイダーの削除
 
-List the installed _providers_ with `kubectl get providers`.
+インストールされている _プロバイダー_ を `kubectl get providers` でリストします。
 
 ```shell {copy-lines="1"}
 kubectl get providers
@@ -138,39 +133,38 @@ NAME                   INSTALLED   HEALTHY   PACKAGE                            
 upbound-provider-aws   True        True      xpkg.upbound.io/upbound/provider-aws:v0.27.0   8h
 ```
 
-Remove the installed _providers_ with `kubectl delete provider`.
+インストールされている _プロバイダー_ を `kubectl delete provider` で削除します。
 
 ```shell
 kubectl delete provider upbound-provider-aws
 ```
 
-## Uninstall the Crossplane deployment 
+## Crossplane デプロイメントのアンインストール
 
-Uninstall Crossplane using Helm with `helm uninstall`
+`helm uninstall` を使用して Helm で Crossplane をアンインストールします。
 
 ```shell
 helm uninstall crossplane --namespace crossplane-system
 ```
 
-Verify Helm removed the Crossplane pods with `kubectl get pods`
+`kubectl get pods` で Helm が Crossplane ポッドを削除したことを確認します。
 
 ```shell
 kubectl get pods -n crossplane-system
 No resources found in crossplane-system namespace.
 ```
 
-## Delete the Crossplane namespace
+## Crossplane ネームスペースの削除
 
-When Helm installs Crossplane it creates the `crossplane-system` namespace. Helm
-doesn't uninstall this namespace with `helm uninstall`.
+Helm が Crossplane をインストールすると、`crossplane-system` ネームスペースが作成されます。Helm は `helm uninstall` でこのネームスペースをアンインストールしません。
 
-Manually delete the Crossplane namespace with `kubectl delete namespace`.
+`kubectl delete namespace` で Crossplane ネームスペースを手動で削除します。
 
 ```shell
 kubectl delete namespace crossplane-system
 ```
 
-Verify Kubernetes removed the namespace with `kubectl get namespaces`
+`kubectl get namespaces` で Kubernetes がネームスペースを削除したことを確認します。
 
 ```shell
 kubectl get namespace

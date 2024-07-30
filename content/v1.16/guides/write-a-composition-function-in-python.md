@@ -1,35 +1,23 @@
 ---
-title: Write a Composition Function in Python
+title: Pythonでコンポジション関数を書く
 state: beta
 alphaVersion: "1.11"
 betaVersion: "1.14"
 weight: 81
-description: "Composition functions allow you to template resources using Python"
+description: "コンポジション関数を使用してPythonでリソースをテンプレート化できます"
 ---
 
-Composition functions (or just functions, for short) are custom programs that
-template Crossplane resources. Crossplane calls composition functions to
-determine what resources it should create when you create a composite resource
-(XR). Read the
-[concepts]({{<ref "../concepts/composition-functions" >}})
-page to learn more about composition functions.
+コンポジション関数（略して関数）は、Crossplaneリソースをテンプレート化するカスタムプログラムです。Crossplaneは、合成リソース（XR）を作成する際に、どのリソースを作成すべきかを判断するためにコンポジション関数を呼び出します。コンポジション関数について詳しくは、[concepts]({{<ref "../concepts/composition-functions" >}})ページをお読みください。
 
-You can write a function to template resources using a general purpose
-programming language. Using a general purpose programming language allows a
-function to use advanced logic to template resources, like loops and
-conditionals. This guide explains how to write a composition function in
-[Python](https://python.org).
+一般的なプログラミング言語を使用してリソースをテンプレート化する関数を書くことができます。一般的なプログラミング言語を使用することで、ループや条件文などの高度なロジックを使用してリソースをテンプレート化することが可能になります。このガイドでは、[Python](https://python.org)でコンポジション関数を書く方法を説明します。
 
 {{< hint "important" >}}
-It helps to be familiar with
-[how composition functions work]({{<ref "../concepts/composition-functions#how-composition-functions-work" >}})
-before following this guide.
+このガイドに従う前に、[コンポジション関数の動作]({{<ref "../concepts/composition-functions#how-composition-functions-work" >}})に慣れておくと良いでしょう。
 {{< /hint >}}
 
-## Understand the steps
+## ステップを理解する
 
-This guide covers writing a composition function for an
-{{<hover label="xr" line="2">}}XBuckets{{</hover>}} composite resource (XR).
+このガイドでは、{{<hover label="xr" line="2">}}XBuckets{{</hover>}}合成リソース（XR）のためのコンポジション関数を書くことを扱います。
 
 ```yaml {label="xr"}
 apiVersion: example.crossplane.io/v1
@@ -46,109 +34,87 @@ spec:
 
 <!-- vale gitlab.FutureTense = NO -->
 <!--
-This section is setting the stage for future sections. It doesn't make sense to
-refer to the function in the present tense, because it doesn't exist yet.
+このセクションは今後のセクションのための準備をしています。関数がまだ存在しないため、現在形で関数を参照するのは意味がありません。
 -->
-An `XBuckets` XR has a region and an array of bucket names. The function will
-create an Amazon Web Services (AWS) S3 bucket for each entry in the names array.
+`XBuckets` XRには、リージョンとバケット名の配列があります。この関数は、名前の配列の各エントリに対してAmazon Web Services（AWS）S3バケットを作成します。
 <!-- vale gitlab.FutureTense = YES -->
 
-To write a function in Python:
+Pythonで関数を書くには：
 
-1. [Install the tools you need to write the function](#install-the-tools-you-need-to-write-the-function)
-1. [Initialize the function from a template](#initialize-the-function-from-a-template)
-1. [Edit the template to add the function's logic](#edit-the-template-to-add-the-functions-logic)
-1. [Test the function end-to-end](#test-the-function-end-to-end)
-1. [Build and push the function to a package repository](#build-and-push-the-function-to-a-package-registry)
+1. [関数を書くために必要なツールをインストールする](#install-the-tools-you-need-to-write-the-function)
+1. [テンプレートから関数を初期化する](#initialize-the-function-from-a-template)
+1. [テンプレートを編集して関数のロジックを追加する](#edit-the-template-to-add-the-functions-logic)
+1. [関数をエンドツーエンドでテストする](#test-the-function-end-to-end)
+1. [関数をパッケージリポジトリにビルドしてプッシュする](#build-and-push-the-function-to-a-package-registry)
 
-This guide covers each of these steps in detail.
+このガイドでは、これらのステップを詳細に説明します。
 
-## Install the tools you need to write the function
+## 関数を書くために必要なツールをインストールする
 
-To write a function in Python you need:
+Pythonで関数を書くために必要なものは次のとおりです：
 
-* [Python](https://www.python.org/downloads/) v3.11.
-* [Hatch](https://hatch.pypa.io/), a Python build tool. This guide uses v1.7.
-* [Docker Engine](https://docs.docker.com/engine/). This guide uses Engine v24.
-* The [Crossplane CLI]({{<ref "../cli" >}}) v1.14 or newer. This guide uses Crossplane
-  CLI v1.14.
+* [Python](https://www.python.org/downloads/) v3.11。
+* [Hatch](https://hatch.pypa.io/)、Pythonビルドツール。このガイドではv1.7を使用します。
+* [Docker Engine](https://docs.docker.com/engine/)。このガイドではEngine v24を使用します。
+* [Crossplane CLI]({{<ref "../cli" >}}) v1.14以上。このガイドではCrossplane CLI v1.14を使用します。
 
 {{<hint "note">}}
-You don't need access to a Kubernetes cluster or a Crossplane control plane to
-build or test a composition function.
+KubernetesクラスターやCrossplaneコントロールプレーンへのアクセスは、コンポジション関数を構築またはテストするために必要ありません。
 {{</hint>}}
 
-## Initialize the function from a template
+## テンプレートから関数を初期化する
 
-Use the `crossplane beta xpkg init` command to initialize a new function. When
-you run this command it initializes your function using
-[a GitHub repository](https://github.com/crossplane/function-template-python)
-as a template.
+`crossplane beta xpkg init`コマンドを使用して新しい関数を初期化します。このコマンドを実行すると、[GitHubリポジトリ](https://github.com/crossplane/function-template-python)をテンプレートとして使用して関数が初期化されます。
 
 ```shell {copy-lines=1}
 crossplane beta xpkg init function-xbuckets https://github.com/crossplane/function-template-python -d function-xbuckets
 Initialized package "function-xbuckets" in directory "/home/negz/control/negz/function-xbuckets" from https://github.com/crossplane/function-template-python/tree/bfed6923ab4c8e7adeed70f41138645fc7d38111 (main)
 ```
 
-The `crossplane beta init xpkg` command creates a directory named
-`function-xbuckets`. When you run the command the new directory should look like
-this:
+`crossplane beta init xpkg`コマンドは、`function-xbuckets`という名前のディレクトリを作成します。コマンドを実行すると、新しいディレクトリは次のようになります：
 
 ```shell {copy-lines=1}
 ls function-xbuckets
 Dockerfile  example/  function/  LICENSE  package/  pyproject.toml  README.md  renovate.json  tests/
 ```
 
-Your function's code lives in the `function` directory:
+関数のコードは`function`ディレクトリにあります：
 
 ```shell {copy-lines=1}
 ls function/
 __version__.py  fn.py  main.py
 ```
 
-The `function/fn.py` file is where you add the function's code. It's useful to
-know about some other files in the template:
+`function/fn.py`ファイルは、関数のコードを追加する場所です。テンプレート内の他のファイルについて知っておくと便利です：
 
-* `function/main.py` runs the function. You don't need to edit `main.py`.
-* `Dockerfile` builds the function runtime. You don't need to edit `Dockerfile`.
-* The `package` directory contains metadata used to build the function package.
+* `function/main.py`は関数を実行します。`main.py`を編集する必要はありません。
+* `Dockerfile`は関数のランタイムをビルドします。`Dockerfile`を編集する必要はありません。
+* `package`ディレクトリには、関数パッケージをビルドするために使用されるメタデータが含まれています。
 
 {{<hint "tip">}}
 <!-- vale gitlab.FutureTense = NO -->
 <!--
-This tip talks about future plans for Crossplane.
+このヒントはCrossplaneの将来の計画について説明しています。
 -->
-In v1.14 of the Crossplane CLI `crossplane beta xpkg init` just clones a
-template GitHub repository. A future CLI release will automate tasks like
-replacing the template name with the new function's name. See Crossplane issue
-[#4941](https://github.com/crossplane/crossplane/issues/4941) for details.
+Crossplane CLIのv1.14では、`crossplane beta xpkg init`はテンプレートGitHubリポジトリをクローンするだけです。将来のCLIリリースでは、テンプレート名を新しい関数の名前に置き換えるなどのタスクが自動化される予定です。詳細については、Crossplaneの問題[#4941](https://github.com/crossplane/crossplane/issues/4941)を参照してください。
 <!-- vale gitlab.FutureTense = YES -->
 {{</hint>}}
 
-Edit `package/crossplane.yaml` to change the package's name before you start
-adding code. Name your package `function-xbuckets`.
+`package/crossplane.yaml`を編集して、コードを追加する前にパッケージの名前を変更します。パッケージの名前を`function-xbuckets`にします。
 
-The `package/input` directory defines the OpenAPI schema for the a function's
-input. The function in this guide doesn't accept an input. Delete the
-`package/input` directory.   
+`package/input`ディレクトリは、関数の入力のOpenAPIスキーマを定義します。このガイドの関数は入力を受け付けません。`package/input`ディレクトリを削除します。
 
-The [composition functions]({{<ref "../concepts/composition-functions" >}})
-documentation explains composition function inputs.
+[composition functions]({{<ref "../concepts/composition-functions" >}})のドキュメントでは、composition functionの入力について説明しています。
 
 {{<hint "tip">}}
-If you're writing a function that uses an input, edit the input YAML file to
-meet your function's requirements.
+入力を使用する関数を書いている場合は、入力YAMLファイルを編集して関数の要件を満たしてください。
 
-Change the input's kind and API group. Don't use `Input` and
-`template.fn.crossplane.io`. Instead use something meaningful to your function.
+入力のkindとAPIグループを変更します。`Input`や`template.fn.crossplane.io`は使用しないでください。代わりに、関数にとって意味のあるものを使用してください。
 {{</hint>}}
 
-## Edit the template to add the function's logic
+## テンプレートを編集して関数のロジックを追加する
 
-You add your function's logic to the
-{{<hover label="hello-world" line="1">}}RunFunction{{</hover>}}
-method in `function/fn.py`. When you first open the file it contains a "hello
-world" function.
+関数のロジックは、`function/fn.py`の{{<hover label="hello-world" line="1">}}RunFunction{{</hover>}}メソッドに追加します。ファイルを最初に開くと、「hello world」関数が含まれています。
 
 ```python {label="hello-world"}
 async def RunFunction(self, req: fnv1beta1.RunFunctionRequest, _: grpc.aio.ServicerContext) -> fnv1beta1.RunFunctionResponse:
@@ -168,14 +134,11 @@ async def RunFunction(self, req: fnv1beta1.RunFunctionRequest, _: grpc.aio.Servi
     return rsp
 ```
 
-All Python composition functions have a `RunFunction` method. Crossplane passes
-everything the function needs to run in a
-{{<hover label="hello-world" line="1">}}RunFunctionRequest{{</hover>}} object.
+すべてのPython composition functionsには`RunFunction`メソッドがあります。Crossplaneは、関数が実行するために必要なすべての情報を{{<hover label="hello-world" line="1">}}RunFunctionRequest{{</hover>}}オブジェクトに渡します。
 
-The function tells Crossplane what resources it should compose by returning a
-{{<hover label="hello-world" line="15">}}RunFunctionResponse{{</hover>}} object.
+関数は、{{<hover label="hello-world" line="15">}}RunFunctionResponse{{</hover>}}オブジェクトを返すことで、Crossplaneにどのリソースを構成すべきかを指示します。
 
-Edit the `RunFunction` method to replace it with this code.
+`RunFunction`メソッドを編集して、以下のコードに置き換えます。
 
 ```python {hl_lines="7-28"}
 async def RunFunction(self, req: fnv1beta1.RunFunctionRequest, _: grpc.aio.ServicerContext) -> fnv1beta1.RunFunctionResponse:
@@ -210,8 +173,7 @@ async def RunFunction(self, req: fnv1beta1.RunFunctionRequest, _: grpc.aio.Servi
     return rsp
 ```
 
-Expand the below block to view the full `fn.py`, including imports and
-commentary explaining the function's logic.
+以下のブロックを展開して、インポートや関数のロジックを説明するコメントを含む完全な`fn.py`を表示します。
 
 {{<expand "The full fn.py file" >}}
 ```python
@@ -288,66 +250,51 @@ class FunctionRunner(grpcv1beta1.FunctionRunnerService):
 ```
 {{</expand>}}
 
-This code:
+このコードは次のことを行います：
 
-1. Gets the observed composite resource from the `RunFunctionRequest`.
-1. Gets the region and bucket names from the observed composite resource.
-1. Adds one desired S3 bucket for each bucket name.
-1. Returns the desired S3 buckets in a `RunFunctionResponse`.
+1. `RunFunctionRequest`から観測された複合リソースを取得します。
+1. 観測された複合リソースからリージョンとバケット名を取得します。
+1. 各バケット名に対して1つの希望するS3バケットを追加します。
+1. 希望するS3バケットを`RunFunctionResponse`で返します。
 
-Crossplane provides a
-[software development kit](https://github.com/crossplane/function-sdk-python)
-(SDK) for writing composition functions in Python. This function uses utilities
-from the SDK.
+Crossplaneは、Pythonでcomposition functionsを書くための[ソフトウェア開発キット](https://github.com/crossplane/function-sdk-python)（SDK）を提供しています。この関数はSDKのユーティリティを使用しています。
+
 
 {{<hint "tip">}}
-Read [the Python Function SDK documentation](https://crossplane.github.io/function-sdk-python).
+[Python Function SDKのドキュメント](https://crossplane.github.io/function-sdk-python)をお読みください。
 {{</hint>}}
 
 {{<hint "important">}}
-The Python SDK automatically generates the `RunFunctionRequest` and
-`RunFunctionResponse` Python objects from a
-[Protocol Buffers](https://protobuf.dev) schema. You can see the schema in the
-[Buf Schema Registry](https://buf.build/crossplane/crossplane/docs/main:apiextensions.fn.proto.v1beta1).
+Python SDKは、[Protocol Buffers](https://protobuf.dev)スキーマから`RunFunctionRequest`および`RunFunctionResponse`のPythonオブジェクトを自動的に生成します。スキーマは、[Buf Schema Registry](https://buf.build/crossplane/crossplane/docs/main:apiextensions.fn.proto.v1beta1)で確認できます。
 
-The fields of the generated Python objects behave similarly to builtin Python
-types like dictionaries and lists. Be aware that there are some differences.
+生成されたPythonオブジェクトのフィールドは、辞書やリストのような組み込みPython型と似た動作をします。ただし、いくつかの違いがあることに注意してください。
 
-Notably, you access the map of observed and desired resources like a dictionary
-but you can't add a new desired resource by assigning to a map key. Instead,
-access and mutate the map key as if it already exists.
+特に、観測されたリソースと望ましいリソースのマップには辞書のようにアクセスしますが、マップキーに割り当てることで新しい望ましいリソースを追加することはできません。代わりに、マップキーが既に存在するかのようにアクセスして変更してください。
 
-Instead of adding a new resource like this:
+このように新しいリソースを追加するのではなく：
 
 ```python
 resource = {"apiVersion": "example.org/v1", "kind": "Composed", ...}
 rsp.desired.resources["new-resource"] = fnv1beta1.Resource(resource=resource)
 ```
 
-Pretend it already exists and mutate it, like this:
+既に存在するかのように振る舞い、変更します：
 
 ```python
 resource = {"apiVersion": "example.org/v1", "kind": "Composed", ...}
 rsp.desired.resources["new-resource"].resource.update(resource)
 ```
 
-Refer to the Protocol Buffers
-[Python Generated Code Guide](https://protobuf.dev/reference/python/python-generated/#fields)
-for further details.
+詳細については、Protocol Buffersの[Python Generated Code Guide](https://protobuf.dev/reference/python/python-generated/#fields)を参照してください。
 {{</hint>}}
 
-## Test the function end-to-end
+## 関数のエンドツーエンドテスト
 
-Test your function by adding unit tests, and by using the `crossplane beta
-render` command.
+ユニットテストを追加し、`crossplane beta render`コマンドを使用して関数をテストします。
 
-When you initialize a function from the
-template it adds some unit tests to `tests/test_fn.py`. These tests use the
-[`unittest`](https://docs.python.org/3/library/unittest.html) module from the
-Python standard library.
+テンプレートから関数を初期化すると、`tests/test_fn.py`にいくつかのユニットテストが追加されます。これらのテストは、Python標準ライブラリの[`unittest`](https://docs.python.org/3/library/unittest.html)モジュールを使用しています。
 
-To add test cases, update the `cases` list in `test_run_function`. Expand the
-below block to view the full `tests/test_fn.py` file for the function.
+テストケースを追加するには、`test_run_function`の`cases`リストを更新します。関数の完全な`tests/test_fn.py`ファイルを表示するには、以下のブロックを展開してください。
 
 {{<expand "The full test_fn.py file" >}}
 ```python
@@ -454,7 +401,7 @@ if __name__ == "__main__":
 ```
 {{</expand>}}
 
-Run the unit tests using `hatch run`:
+`hatch run`を使用してユニットテストを実行します：
 
 ```shell {copy-lines="1"}
 hatch run test:unit
@@ -465,27 +412,23 @@ Ran 1 test in 0.003s
 OK
 ```
 
+```markdown
 {{<hint "tip">}}
-[Hatch](https://hatch.pypa.io/) is a Python build tool. It builds Python
-artifacts like wheels. It also manages virtual environments, similar
-to `virtualenv` or `venv`. The `hatch run` command creates a virtual environment
-and runs a command in that environment.
+[Hatch](https://hatch.pypa.io/) は Python のビルドツールです。Python
+アーティファクト（ホイールなど）をビルドします。また、`virtualenv` や `venv` に似た仮想環境を管理します。`hatch run` コマンドは仮想環境を作成し、その環境でコマンドを実行します。
 {{</hint>}}
 
-You can preview the output of a Composition that uses this function using
-the Crossplane CLI. You don't need a Crossplane control plane to do this.
+この関数を使用する Composition の出力を Crossplane CLI を使用してプレビューできます。これを行うために Crossplane コントロールプレーンは必要ありません。
 
-Create a directory under `function-xbuckets` named `example` and create
-Composite Resource, Composition and Function YAML files.
+`function-xbuckets` の下に `example` という名前のディレクトリを作成し、Composite Resource、Composition、および Function の YAML ファイルを作成します。
 
-Expand the following block to see example files.
+以下のブロックを展開して、例のファイルを確認してください。
 
 {{<expand "The xr.yaml, composition.yaml and function.yaml files">}}
 
-You can recreate the output below using by running `crossplane beta render` with
-these files.
+これらのファイルを使用して `crossplane beta render` を実行することで、以下の出力を再現できます。
 
-The `xr.yaml` file contains the composite resource to render:
+`xr.yaml` ファイルには、レンダリングするためのコンポジットリソースが含まれています：
 
 ```yaml
 apiVersion: example.crossplane.io/v1
@@ -502,8 +445,7 @@ spec:
 
 <br />
 
-The `composition.yaml` file contains the Composition to use to render the
-composite resource:
+`composition.yaml` ファイルには、コンポジットリソースをレンダリングするために使用する Composition が含まれています：
 
 ```yaml
 apiVersion: apiextensions.crossplane.io/v1
@@ -523,8 +465,7 @@ spec:
 
 <br />
 
-The `functions.yaml` file contains the Functions the Composition references in
-its pipeline steps:
+`functions.yaml` ファイルには、Composition がパイプラインステップで参照する Functions が含まれています：
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1beta1
@@ -540,11 +481,9 @@ spec:
 ```
 {{</expand>}}
 
-The Function in `functions.yaml` uses the
+`functions.yaml` の Function は
 {{<hover label="development" line="6">}}Development{{</hover>}}
-runtime. This tells `crossplane beta render` that your function is running
-locally. It connects to your locally running function instead of using Docker to
-pull and run the function.
+ランタイムを使用しています。これは `crossplane beta render` に対して、あなたの関数がローカルで実行されていることを示します。Docker を使用して関数をプルして実行するのではなく、ローカルで実行されている関数に接続します。
 
 ```yaml {label="development"}
 apiVersion: pkg.crossplane.io/v1beta1
@@ -555,25 +494,24 @@ metadata:
     render.crossplane.io/runtime: Development
 ```
 
-Use `hatch run development` to run your function locally.
+`hatch run development` を使用して、ローカルで関数を実行します。
 
 ```shell {label="run"}
 hatch run development
 ```
 
 {{<hint "warning">}}
-`hatch run development` runs the function without encryption or authentication.
-Only use it during testing and development.
+`hatch run development` は、暗号化や認証なしで関数を実行します。テストおよび開発中のみ使用してください。
 {{</hint>}}
 
-In a separate terminal, run `crossplane beta render`. 
+別のターミナルで `crossplane beta render` を実行します。
 
 ```shell
 crossplane beta render xr.yaml composition.yaml functions.yaml
 ```
 
-This command calls your function. In the terminal where your function is running
-you should now see log output:
+このコマンドはあなたの関数を呼び出します。関数が実行されているターミナルでは、今後ログ出力が表示されるはずです：
+```
 
 ```shell
 hatch run development
@@ -581,8 +519,7 @@ hatch run development
 2024-01-11T22:12:58.153792Z [info     ] Added desired buckets          count=3 filename=fn.py lineno=68 region=us-east-2 tag=
 ```
 
-The `crossplane beta render` command prints the desired resources the function
-returns.
+`crossplane beta render` コマンドは、関数が返す望ましいリソースを出力します。
 
 ```yaml
 ---
@@ -638,28 +575,18 @@ spec:
 ```
 
 {{<hint "tip">}}
-Read the composition functions documentation to learn more about
-[testing composition functions]({{< ref "../concepts/composition-functions#test-a-composition-that-uses-functions" >}}).
+構成関数のドキュメントを読んで、[構成関数のテスト]({{< ref "../concepts/composition-functions#test-a-composition-that-uses-functions" >}})について学びましょう。
 {{</hint>}}
 
-## Build and push the function to a package registry
+## 関数をパッケージレジストリにビルドしてプッシュする
 
-You build a function in two stages. First you build the function's runtime. This
-is the Open Container Initiative (OCI) image Crossplane uses to run your
-function. You then embed that runtime in a package, and push it to a package
-registry. The Crossplane CLI uses `xpkg.upbound.io` as its default package
-registry.
+関数は2つの段階でビルドします。最初に関数のランタイムをビルドします。これは、Crossplaneが関数を実行するために使用するOpen Container Initiative (OCI) イメージです。その後、そのランタイムをパッケージに埋め込み、パッケージレジストリにプッシュします。Crossplane CLIは、デフォルトのパッケージレジストリとして `xpkg.upbound.io` を使用します。
 
-A function supports a single platform, like `linux/amd64`, by default. You can
-support multiple platforms by building a runtime and package for each platform,
-then pushing all the packages to a single tag in the registry.
+関数はデフォルトで `linux/amd64` のような単一のプラットフォームをサポートします。各プラットフォームのためにランタイムとパッケージをビルドし、すべてのパッケージをレジストリの単一のタグにプッシュすることで、複数のプラットフォームをサポートできます。
 
-Pushing your function to a registry allows you to use your function in a
-Crossplane control plane. See the
-[composition functions documentation]({{<ref "../concepts/composition-functions" >}}).
-to learn how to use a function in a control plane.
+関数をレジストリにプッシュすることで、Crossplaneコントロールプレーンで関数を使用できるようになります。関数をコントロールプレーンで使用する方法については、[構成関数のドキュメント]({{<ref "../concepts/composition-functions" >}})を参照してください。
 
-Use Docker to build a runtime for each platform.
+Dockerを使用して、各プラットフォームのランタイムをビルドします。
 
 ```shell {copy-lines="1"}
 docker build . --quiet --platform=linux/amd64 --tag runtime-amd64
@@ -672,32 +599,27 @@ sha256:cb015ceabf46d2a55ccaeebb11db5659a2fb5e93de36713364efcf6d699069af
 ```
 
 {{<hint "tip">}}
-You can use whatever tag you want. There's no need to push the runtime images to
-a registry. The tag is only used to tell `crossplane xpkg build` what runtime to
-embed.
+任意のタグを使用できます。ランタイムイメージをレジストリにプッシュする必要はありません。タグは、`crossplane xpkg build` にどのランタイムを埋め込むかを伝えるためだけに使用されます。
 {{</hint>}}
 
 {{<hint "important">}}
-Docker uses emulation to create images for different platforms. If building an
-image for a different platform fails, make sure you have installed `binfmt`. See
-the
-[Docker documentation](https://docs.docker.com/build/building/multi-platform/#qemu)
-for instructions.
+Dockerは、異なるプラットフォームのイメージを作成するためにエミュレーションを使用します。異なるプラットフォームのイメージのビルドが失敗した場合は、`binfmt` がインストールされていることを確認してください。手順については、[Dockerのドキュメント](https://docs.docker.com/build/building/multi-platform/#qemu)を参照してください。
 {{</hint>}}
 
-Use the Crossplane CLI to build a package for each platform. Each package embeds
-a runtime image. 
 
-The {{<hover label="build" line="2">}}--package-root{{</hover>}} flag specifies
-the `package` directory, which contains `crossplane.yaml`. This includes
-metadata about the package.
+Crossplane CLIを使用して、各プラットフォーム用のパッケージをビルドします。各パッケージには
+ランタイムイメージが埋め込まれています。
 
-The {{<hover label="build" line="3">}}--embed-runtime-image{{</hover>}} flag
-specifies the runtime image tag built using Docker.
+{{<hover label="build" line="2">}}--package-root{{</hover>}} フラグは
+`package` ディレクトリを指定します。このディレクトリには `crossplane.yaml` が含まれています。
+これにはパッケージに関するメタデータが含まれています。
 
-The {{<hover label="build" line="4">}}--package-file{{</hover>}} flag specifies
-specifies where to write the package file to disk. Crossplane package files use
-the extension `.xpkg`.
+{{<hover label="build" line="3">}}--embed-runtime-image{{</hover>}} フラグは
+Dockerを使用してビルドされたランタイムイメージタグを指定します。
+
+{{<hover label="build" line="4">}}--package-file{{</hover>}} フラグは
+パッケージファイルをディスクに書き込む場所を指定します。Crossplaneパッケージファイルは
+拡張子 `.xpkg` を使用します。
 
 ```shell {label="build"}
 crossplane xpkg build \
@@ -714,14 +636,14 @@ crossplane xpkg build \
 ```
 
 {{<hint "tip">}}
-Crossplane packages are special OCI images. Read more about packages in the
-[packages documentation]({{< ref "../concepts/packages" >}}).
+Crossplaneパッケージは特別なOCIイメージです。パッケージについての詳細は
+[パッケージのドキュメント]({{< ref "../concepts/packages" >}})をお読みください。
 {{</hint>}}
 
-Push both package files to a registry. Pushing both files to one tag in the
-registry creates a
+両方のパッケージファイルをレジストリにプッシュします。両方のファイルをレジストリの
+1つのタグにプッシュすると、`linux/arm64` と `linux/amd64` ホストの両方で動作する
 [multi-platform](https://docs.docker.com/build/building/multi-platform/)
-package that runs on both `linux/arm64` and `linux/amd64` hosts.
+パッケージが作成されます。
 
 ```shell
 crossplane xpkg push \
@@ -730,16 +652,17 @@ crossplane xpkg push \
 ```
 
 {{<hint "tip">}}
-If you push the function to a GitHub repository the template automatically sets
-up continuous integration (CI) using
-[GitHub Actions](https://github.com/features/actions). The CI workflow will
-lint, test, and build your function. You can see how the template configures CI
-by reading `.github/workflows/ci.yaml`.
+関数をGitHubリポジトリにプッシュすると、テンプレートが自動的に
+[GitHub Actions](https://github.com/features/actions)を使用して継続的インテグレーション（CI）を設定します。CIワークフローは
+関数をリント、テスト、ビルドします。テンプレートがCIをどのように設定しているかは
+`.github/workflows/ci.yaml`を読むことで確認できます。
 
-The CI workflow can automatically push packages to `xpkg.upbound.io`. For this
-to work you must create a repository at https://marketplace.upbound.io. Give the
-CI workflow access to push to the Marketplace by creating an API token and
-[adding it to your repository](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository).
-Save your API token access ID as a secret named `XPKG_ACCESS_ID` and your API
-token as a secret named `XPKG_TOKEN`.
+CIワークフローは自動的にパッケージを `xpkg.upbound.io` にプッシュできます。これを機能させるには、
+https://marketplace.upbound.io にリポジトリを作成する必要があります。APIトークンを作成し、
+[リポジトリに追加する](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository)ことで、
+CIワークフローにマーケットプレイスへのプッシュアクセスを与えます。
+APIトークンアクセスIDを `XPKG_ACCESS_ID` という名前のシークレットとして保存し、
+APIトークンを `XPKG_TOKEN` という名前のシークレットとして保存します。
 {{</hint>}}
+
+It seems that there is no content provided for translation. Please paste the Markdown content you'd like me to translate into Japanese.

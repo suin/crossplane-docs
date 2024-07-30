@@ -1,25 +1,17 @@
 ---
-title: Troubleshoot Crossplane
+title: トラブルシュート Crossplane
 weight: 306
 ---
-## Requested Resource Not Found
+## リクエストされたリソースが見つかりません
 
-If you use the Crossplane CLI to install a `Provider` or
-`Configuration` (e.g. `crossplane install provider
-xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0`) and get `the server
-could not find the requested resource` error, more often than not, that is an
-indicator that the Crossplane CLI you're using is outdated. In other words
-some Crossplane API has been graduated from alpha to beta or stable and the old
-plugin is not aware of this change.
+Crossplane CLIを使用して`Provider`または
+`Configuration`（例：`crossplane install provider
+xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0`）をインストールし、`the server
+could not find the requested resource`エラーが発生した場合、ほとんどの場合、それは使用しているCrossplane CLIが古いことを示しています。言い換えれば、いくつかのCrossplane APIがアルファからベータまたは安定版に移行しており、古いプラグインはこの変更を認識していません。
 
+## リソースの状態と条件
 
-## Resource Status and Conditions
-
-Most Crossplane resources have a `status` section that can represent the current
-state of that particular resource. Running `kubectl describe` against a
-Crossplane resource will frequently give insightful information about its
-condition. For example, to determine the status of a GCP `CloudSQLInstance`
-managed resource use `kubectl describe` for the resource.
+ほとんどのCrossplaneリソースには、その特定のリソースの現在の状態を表す`status`セクションがあります。Crossplaneリソースに対して`kubectl describe`を実行すると、その条件に関する洞察に満ちた情報が得られることがよくあります。たとえば、GCPの`CloudSQLInstance`管理リソースの状態を確認するには、そのリソースに対して`kubectl describe`を使用します。
 
 ```shell {copy-lines="1"}
 kubectl describe cloudsqlinstance my-db
@@ -31,16 +23,11 @@ Status:
     Type:                  Ready
 ```
 
-Most Crossplane resources set the `Ready` condition. `Ready` represents the
-availability of the resource - whether it is creating, deleting, available,
-unavailable, binding, etc.
+ほとんどのCrossplaneリソースは`Ready`条件を設定します。`Ready`はリソースの可用性を表します - それが作成中、削除中、利用可能、利用不可、バインディング中などであるかどうかです。
 
-## Resource Events
+## リソースイベント
 
-Most Crossplane resources emit _events_ when something interesting happens. You
-can see the events associated with a resource by running `kubectl describe` -
-e.g. `kubectl describe cloudsqlinstance my-db`. You can also see all events in a
-particular namespace by running `kubectl get events`.
+ほとんどのCrossplaneリソースは、何か興味深いことが起こると_イベント_を発生させます。リソースに関連するイベントは、`kubectl describe`を実行することで確認できます - 例：`kubectl describe cloudsqlinstance my-db`。特定の名前空間内のすべてのイベントを確認するには、`kubectl get events`を実行します。
 
 ```console
 Events:
@@ -49,38 +36,27 @@ Events:
   Warning  CannotConnectToProvider  16s (x4 over 46s)  managed/postgresqlserver.database.azure.crossplane.io  cannot get referenced ProviderConfig: ProviderConfig.azure.crossplane.io "default" not found
 ```
 
-> Note that events are namespaced, while many Crossplane resources (XRs, etc)
-> are cluster scoped. Crossplane emits events for cluster scoped resources to
-> the 'default' namespace.
+> イベントは名前空間に依存しますが、多くのCrossplaneリソース（XRなど）はクラスター範囲です。Crossplaneはクラスター範囲のリソースに対してイベントを`default`名前空間に発生させます。
 
-## Crossplane Logs
+## Crossplaneログ
 
-The next place to look to get more information or investigate a failure would be
-in the Crossplane pod logs, which should be running in the `crossplane-system`
-namespace. To get the current Crossplane logs, run the following:
+さらなる情報を得たり、障害を調査したりするために次に見るべき場所は、`crossplane-system`名前空間で実行されているCrossplaneポッドのログです。現在のCrossplaneログを取得するには、次のコマンドを実行します。
 
 ```shell
 kubectl -n crossplane-system logs -lapp=crossplane
 ```
 
-> Note that Crossplane emits few logs by default - events are typically the best
-> place to look for information about what Crossplane is doing. You may need to
-> restart Crossplane with the `--debug` flag if you can't find what you're
-> looking for.
+> Crossplaneはデフォルトで少ないログを発生させます - イベントは通常、Crossplaneが何をしているかに関する情報を探すのに最適な場所です。探している情報が見つからない場合は、`--debug`フラグを使用してCrossplaneを再起動する必要があるかもしれません。
 
-## Provider Logs
+## プロバイダーログ
 
-Remember that much of Crossplane's functionality is provided by providers. You
-can use `kubectl logs` to view provider logs too. By convention, they also emit
-few logs by default.
+Crossplaneの機能の多くはプロバイダーによって提供されることを忘れないでください。`kubectl logs`を使用してプロバイダーのログも表示できます。慣例として、デフォルトでいくつかのログも出力されます。
 
 ```shell
 kubectl -n crossplane-system logs <name-of-provider-pod>
 ```
 
-All providers maintained by the Crossplane community mirror Crossplane's support
-of the `--debug` flag. The easiest way to set flags on a provider is to create a
-`ControllerConfig` and reference it from the `Provider`:
+Crossplaneコミュニティによって維持されているすべてのプロバイダーは、Crossplaneの`--debug`フラグのサポートを反映しています。プロバイダーにフラグを設定する最も簡単な方法は、`ControllerConfig`を作成し、それを`Provider`から参照することです。
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1alpha1
@@ -101,39 +77,36 @@ spec:
     name: debug-config
 ```
 
-> Note that a reference to a `ControllerConfig` can be added to an already
-> installed `Provider` and it will update its `Deployment` accordingly.
+> `ControllerConfig`への参照は、すでにインストールされている`Provider`に追加でき、その`Deployment`が適切に更新されます。
 
-## Compositions and composite resource definition
+## コンポジションと複合リソース定義
 
-### General troubleshooting steps
+### 一般的なトラブルシューティング手順
 
-Crossplane and its providers log most error messages to resources' event fields. Whenever your Composite Resources aren't getting provisioned, follow the following steps:
+Crossplaneとそのプロバイダーは、ほとんどのエラーメッセージをリソースのイベントフィールドにログします。Composite Resourcesがプロビジョニングされない場合は、以下の手順に従ってください。
 
-1. Get the events for the root resource using `kubectl describe` or `kubectl get event`
-2. If there are errors in the events, address them.
-3. If there are no errors, follow its sub-resources.
+1. `kubectl describe`または`kubectl get event`を使用して、ルートリソースのイベントを取得します。
+2. イベントにエラーがある場合は、それに対処します。
+3. エラーがない場合は、そのサブリソースを確認します。
 
     `kubectl get <KIND> <NAME> -o=jsonpath='{.spec.resourceRef}{" "}{.spec.resourceRefs}' | jq`
-4. Repeat this process for each resource returned.
+4. 返された各リソースについてこのプロセスを繰り返します。
 
 {{< hint "note" >}}
-The rest of this section show you how to debug issues related to compositions without using external tooling. 
-If you are using ArgoCD or FluxCD with UI, you can visualize object relationships in the UI. 
-You can also use the kube-lineage plugin to visualize object relationships in your terminal.
+このセクションの残りでは、外部ツールを使用せずにコンポジションに関連する問題をデバッグする方法を示します。
+ArgoCDやFluxCDをUIで使用している場合、UIでオブジェクトの関係を視覚化できます。
+また、kube-lineageプラグインを使用して、ターミナルでオブジェクトの関係を視覚化することもできます。
 {{< /hint >}}
 
-### Examples
+### 例
 
-#### Composition
+#### コンポジション
 <!-- vale Google.WordList = NO --> 
-You deployed an example application using a claim. Kind = `ExampleApp`. Name = `example-application`.
+クレームを使用してサンプルアプリケーションをデプロイしました。種類 = `ExampleApp`。名前 = `example-application`。
 
+サンプルアプリケーションは、以下のように利用可能な状態に到達しません。
 
-The example application never reaches available state as shown below.
-
-
-1. View the claim.
+1. クレームを表示します。
 
     ```bash
     kubectl describe exampleapp example-application
@@ -147,7 +120,7 @@ The example application never reaches available state as shown below.
     Events:                    <none>
     ```
 
-2. If the claim doesn't have errors, inspect the `.spec.resourceRef` field of the claim.
+2. クレームにエラーがない場合は、クレームの`.spec.resourceRef`フィールドを確認します。
 
     ```bash
     kubectl get exampleapp example-application -o=jsonpath='{.spec.resourceRef}{" "}{.spec.resourceRefs}' | jq
@@ -158,10 +131,10 @@ The example application never reaches available state as shown below.
       "name": "example-application-xqlsz"
     }
     ```
-3. In the preceding output, you see the cluster scoped resource for this claim. Kind = `XExampleApp` name = `example-application-xqlsz`
-4. View the cluster scoped resource's events.
+3. 前の出力では、このクレームのクラスター範囲のリソースが表示されます。種類 = `XExampleApp` 名前 = `example-application-xqlsz`
+4. クラスター範囲のリソースのイベントを表示します。
 
-    ```bash
+```bash
     kubectl describe xexampleapp example-application-xqlsz
 
     Events:
@@ -172,7 +145,7 @@ The example application never reaches available state as shown below.
     Warning  ComposeResources         6s (x6 over 10s)  defined/compositeresourcedefinition.apiextensions.crossplane.io  can't render composed resource from resource template at index 3: can't use dry-run create to name composed resource: an empty namespace may not be set during creation
     Normal   ComposeResources         6s (x6 over 10s)  defined/compositeresourcedefinition.apiextensions.crossplane.io  Successfully composed resources
     ```
-5. You see errors in the events. it's complaining about not specifying namespace in its compositions. For this particular kind of error, you can get its sub-resources and check which one isn't created.
+5. イベントにエラーが表示されます。これは、構成で名前空間を指定していないことを不満に思っています。この特定の種類のエラーについては、そのサブリソースを取得し、どれが作成されていないかを確認できます。
 
     ```bash
     kubectl get xexampleapp example-application-xqlsz -o=jsonpath='{.spec.resourceRef}{" "}{.spec.resourceRefs}' | jq
@@ -199,13 +172,13 @@ The example application never reaches available state as shown below.
         }
     ]
     ```
-6. Notice the last element in the array doesn't have a name. When a resource in composition fails validation, the resource object isn't created and doesn't have a name. For this particular issue, you must specify the namespace for the IRSA resource.
+6. 配列の最後の要素に名前がないことに注意してください。構成内のリソースが検証に失敗すると、リソースオブジェクトは作成されず、名前を持ちません。この特定の問題については、IRSAリソースの名前空間を指定する必要があります。
 
-#### Composite resource definition
+#### 複合リソース定義
 
-Debugging Composite Resource Definition (XRD) is like debugging Compositions.
+複合リソース定義（XRD）のデバッグは、構成のデバッグと似ています。
 
-1. Get the XRD
+1. XRDを取得します。
 
     ```bash
     kubectl get xrd testing.awsblueprints.io
@@ -213,7 +186,7 @@ Debugging Composite Resource Definition (XRD) is like debugging Compositions.
     NAME                       ESTABLISHED   OFFERED   AGE
     testing.awsblueprints.io                           66s
     ```
-2. Notice its status it not established. You describe this XRD to get its events.
+2. そのステータスが確立されていないことに注意してください。このXRDを記述して、そのイベントを取得します。
 
     ```bash
     kubectl describe xrd testing.awsblueprints.io
@@ -225,19 +198,16 @@ Debugging Composite Resource Definition (XRD) is like debugging Compositions.
     Normal   RenderCRD           18s (x9 over 3m19s)    defined/compositeresourcedefinition.apiextensions.crossplane.io  Rendered composite resource CustomResourceDefinition
     Warning  EstablishComposite  18s (x9 over 3m19s)    defined/compositeresourcedefinition.apiextensions.crossplane.io  can't apply rendered composite resource CustomResourceDefinition: can't create object: CustomResourceDefinition.apiextensions.k8s.io "testing.awsblueprints.io" is invalid: metadata.name: Invalid value: "testing.awsblueprints.io": must be spec.names.plural+"."+spec.group
     ```
-3. You see in the events that Crossplane can't generate corresponding CRDs for this XRD. In this case, ensure the name is `spec.names.plural+"."+spec.group`
+3. イベントで、CrossplaneがこのXRDに対応するCRDを生成できないことがわかります。この場合、名前が `spec.names.plural+"."+spec.group` であることを確認してください。
 
-#### Providers
+#### プロバイダー
 
-You can use install providers in two ways: `configuration.pkg.crossplane.io` and `provider.pkg.crossplane.io`. You can use either one to install providers with no functional differences to providers themselves.
-If you define a `configuration.pkg.crossplane.io` object, Crossplane creates a
-`provider.pkg.crossplane.io` object and manages it. Refer to [the Packages
-documentation]({{<ref "/master/concepts/packages">}})
-for more information about Crossplane Packages.
+プロバイダーをインストールするには、`configuration.pkg.crossplane.io` と `provider.pkg.crossplane.io` の2つの方法があります。どちらを使用しても、プロバイダー自体に機能的な違いはありません。
+`configuration.pkg.crossplane.io` オブジェクトを定義すると、Crossplaneは `provider.pkg.crossplane.io` オブジェクトを作成し、それを管理します。Crossplaneパッケージに関する詳細は、[パッケージのドキュメント]({{<ref "/master/concepts/packages">}})を参照してください。
 
-If you are experiencing provider issues, steps below are a good starting point. 
+プロバイダーの問題が発生している場合、以下の手順は良い出発点です。
 
-1. Check the status of provider object. 
+1. プロバイダーオブジェクトのステータスを確認します。
     ```bash
     kubectl describe provider.pkg.crossplane.io provider-aws
 
@@ -258,23 +228,22 @@ If you are experiencing provider issues, steps below are a good starting point.
         ----    ------                  ----                     ----                                 -------
         Normal  InstallPackageRevision  9m49s (x237 over 4d17h)  packages/provider.pkg.crossplane.io  Successfully installed package revision
     ```
-    In the output above you see that this provider is healthy. To get more information about this provider, you can dig deeper. The `Current Revision` field let you know of your next object to look at.
+    上記の出力では、このプロバイダーが正常であることがわかります。このプロバイダーに関する詳細情報を取得するには、さらに掘り下げることができます。`Current Revision` フィールドは、次に見るべきオブジェクトを知らせてくれます。
 
+2. プロバイダーオブジェクトを作成すると、CrossplaneはOCIイメージの内容に基づいて `ProviderRevision` オブジェクトを作成します。この例では、OCIイメージを `crossplane/provider-aws:v0.29.0` に指定しています。このイメージには、Deployment、ServiceAccount、CRDなどのKubernetesオブジェクトを定義するYAMLファイルが含まれています。
+`ProviderRevision` オブジェクトは、YAMLファイルの内容に基づいてプロバイダーが機能するために必要なリソースを作成します。プロバイダーパッケージの一部としてデプロイされているものを調査するには、ProviderRevisionオブジェクトを調査します。上記の `Current Revision` フィールドは、このプロバイダーが使用しているProviderRevisionオブジェクトを示しています。
 
-2. When you create a provider object, Crossplane creates a `ProviderRevision` object based on the contents of the OCI image. In this example, you're specifying the OCI image to be `crossplane/provider-aws:v0.29.0`. This image contains a YAML file which defines Kubernetes objects such as Deployment, ServiceAccount, and CRDs.
-The `ProviderRevision` object creates resources necessary for a provider to function based on the contents of the YAML file. To inspect what's deployed as part of the provider package, you inspect the ProviderRevision object. The `Current Revision` field above indicates which ProviderRevision object this provider uses.
-
-    ```bash
-    kubectl get providerrevision provider-aws-a2e16ca2fc1a
+```bash
+(kubectl get providerrevision provider-aws-a2e16ca2fc1a
 
     NAME                        HEALTHY   REVISION   IMAGE                             STATE    DEP-FOUND   DEP-INSTALLED   AGE
     provider-aws-a2e16ca2fc1a   True      1          crossplane/provider-aws:v0.29.0   Active                               19d
-    ```
+```
 
-    When you describe the object, you find all CRDs managed by this object. 
+オブジェクトを説明すると、このオブジェクトによって管理されているすべてのCRDが見つかります。
 
-    ```bash
-    kubectl describe providerrevision provider-aws-a2e16ca2fc1a
+```bash
+(kubectl describe providerrevision provider-aws-a2e16ca2fc1a
 
     Status:
         Controller Ref:
@@ -291,14 +260,14 @@ The `ProviderRevision` object creates resources necessary for a provider to func
         Normal  SyncPackage        22m (x369 over 4d18h)  packages/providerrevision.pkg.crossplane.io  Successfully configured package revision
         Normal  BindClusterRole    15m (x348 over 4d18h)  rbac/providerrevision.pkg.crossplane.io      Bound system ClusterRole to provider ServiceAccount
         Normal  ApplyClusterRoles  15m (x364 over 4d18h)  rbac/providerrevision.pkg.crossplane.io      Applied RBAC ClusterRoles
-    ```
-    
-    The event field also indicates any issues that may have occurred during this process.
-    <!-- vale  Google.WordList = YES -->
-3. If you don't see any errors in the event field above, you should check if Crossplane provisioned deployments and their status.
+```
 
-    ```bash
-    kubectl get deployment -n crossplane-system
+イベントフィールドは、このプロセス中に発生した可能性のある問題も示します。
+<!-- vale  Google.WordList = YES -->
+3. 上記のイベントフィールドにエラーが表示されない場合は、Crossplaneがデプロイメントをプロビジョニングし、そのステータスを確認しているかどうかを確認してください。
+
+```bash
+(kubectl get deployment -n crossplane-system
 
     NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
     crossplane                  1/1     1            1           105d
@@ -311,34 +280,27 @@ The `ProviderRevision` object creates resources necessary for a provider to func
     crossplane-54db688c8d-qng6b                  2/2     Running   0          4d19h
     crossplane-rbac-manager-5776c9fbf4-wn5rj     1/1     Running   0          4d19h
     provider-aws-a2e16ca2fc1a-776769ccbd-4dqml   1/1     Running   0          4d23h
-    ```
-    If there are any pods failing, check its logs and remedy the problem.
+```
+失敗しているポッドがある場合は、そのログを確認し、問題を解決してください。
 
 
-## Pausing Crossplane
+## Crossplaneの一時停止
 
-Sometimes, for example when you encounter a bug, it can be useful to pause
-Crossplane if you want to stop it from actively attempting to manage your
-resources. To pause Crossplane without deleting all of its resources, run the
-following command to simply scale down its deployment:
+時々、バグに遭遇したときなど、リソースの管理を積極的に停止したい場合は、Crossplaneを一時停止することが有用です。すべてのリソースを削除せずにCrossplaneを一時停止するには、次のコマンドを実行してデプロイメントを単にスケールダウンします：
 
 ```bash
 kubectl -n crossplane-system scale --replicas=0 deployment/crossplane
 ```
 
-Once you have been able to rectify the problem or smooth things out, you can
-unpause Crossplane simply by scaling its deployment back up:
+問題を修正したり、状況を整えたりできたら、デプロイメントを再度スケールアップすることでCrossplaneを再開できます：
 
 ```bash
 kubectl -n crossplane-system scale --replicas=1 deployment/crossplane
 ```
 
-## Pausing Providers
+## プロバイダーの一時停止
 
-Providers can also be paused when troubleshooting an issue or orchestrating a
-complex migration of resources. Creating and referencing a `ControllerConfig` is
-the easiest way to scale down a provider, and the `ControllerConfig` can be
-modified or the reference can be removed to scale it back up:
+プロバイダーも、問題をトラブルシューティングしたり、リソースの複雑な移行を調整したりする際に一時停止できます。`ControllerConfig`を作成して参照することが、プロバイダーをスケールダウンする最も簡単な方法であり、`ControllerConfig`を変更するか、参照を削除することで再度スケールアップできます：
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1alpha1
@@ -358,69 +320,48 @@ spec:
     name: scale-config
 ```
 
-> Note that a reference to a `ControllerConfig` can be added to an already
-> installed `Provider` and it will update its `Deployment` accordingly.
+> すでにインストールされている`Provider`に`ControllerConfig`への参照を追加すると、それに応じて`Deployment`が更新されることに注意してください。
 
-## Deleting When a Resource Hangs
+## リソースがハングしたときの削除
 
-The resources that Crossplane manages will automatically be cleaned up so as not
-to leave anything running behind. This is accomplished by using finalizers, but
-in certain scenarios the finalizer can prevent the Kubernetes object from
-getting deleted.
+Crossplaneが管理するリソースは、自動的にクリーンアップされ、何も残らないようにします。これはファイナライザーを使用して実現されますが、特定のシナリオではファイナライザーがKubernetesオブジェクトの削除を妨げることがあります。
 
-To deal with this, we essentially want to patch the object to remove its
-finalizer, which will then allow it to be deleted completely. Note that this
-won't necessarily delete the external resource that Crossplane was managing, so
-you will want to go to your cloud provider's console and look there for any
-lingering resources to clean up.
+これに対処するために、基本的にはオブジェクトのファイナライザーを削除するためにパッチを適用したいと考えています。これにより、オブジェクトは完全に削除されることができます。ただし、これによりCrossplaneが管理していた外部リソースが必ずしも削除されるわけではないため、クラウドプロバイダーのコンソールに移動して、残っているリソースをクリーンアップする必要があります。
 
-In general, a finalizer can be removed from an object with this command:
+一般的に、ファイナライザーは次のコマンドでオブジェクトから削除できます：
 
 ```shell
 kubectl patch <resource-type> <resource-name> -p '{"metadata":{"finalizers": []}}' --type=merge
 ```
 
-For example, for a `CloudSQLInstance` managed resource (`database.gcp.crossplane.io`) named
-`my-db`, you can remove its finalizer with:
+たとえば、`my-db`という名前の`CloudSQLInstance`管理リソース（`database.gcp.crossplane.io`）のファイナライザーを削除するには、次のようにします：
 
 ```shell
 kubectl patch cloudsqlinstance my-db -p '{"metadata":{"finalizers": []}}' --type=merge
 ```
 
-## Tips, Tricks, and Troubleshooting
+## ヒント、コツ、およびトラブルシューティング
 
-In this section we'll cover some common tips, tricks, and troubleshooting steps
-for working with Composite Resources. If you're trying to track down why your
-Composite Resources aren't working the [Troubleshooting][trouble-ref] page also
-has some useful information.
+このセクションでは、Composite Resourcesを操作する際の一般的なヒント、コツ、およびトラブルシューティング手順について説明します。Composite Resourcesが機能しない理由を追跡しようとしている場合は、[トラブルシューティング][trouble-ref]ページにも役立つ情報があります。
 
-### Troubleshooting Claims and XRs
+### クレームとXRのトラブルシューティング
 
-Crossplane relies heavily on status conditions and events for troubleshooting.
-You can see both using `kubectl describe` - for example:
+Crossplaneはトラブルシューティングのためにステータス条件とイベントに大きく依存しています。
+これらは`kubectl describe`を使用して確認できます。たとえば：
 
 ```console
-# Describe the PostgreSQLInstance claim named my-db
+# my-dbという名前のPostgreSQLInstanceクレームを説明する
 kubectl describe postgresqlinstance.database.example.org my-db
 ```
 
-Per Kubernetes convention, Crossplane keeps errors close to the place they
-happen. This means that if your claim is not becoming ready due to an issue with
-your `Composition` or with a composed resource you'll need to "follow the
-references" to find out why. Your claim will only tell you that the XR is not
-yet ready.
+Kubernetesの慣例に従い、Crossplaneはエラーを発生した場所に近くに保持します。これは、`Composition`や構成リソースに問題があるためにクレームが準備完了にならない場合、なぜそうなっているのかを知るために「参照をたどる」必要があることを意味します。クレームはXRがまだ準備完了でないことだけを教えてくれます。
 
-To follow the references:
+参照をたどるには：
 
-1. Find your XR by running `kubectl describe` on your claim and looking for its
-   "Resource Ref" (aka `spec.resourceRef`).
-1. Run `kubectl describe` on your XR. This is where you'll find out about issues
-   with the `Composition` you're using, if any.
-1. If there are no issues but your XR doesn't seem to be becoming ready, take a
-   look for the "Resource Refs" (or `spec.resourceRefs`) to find your composed
-   resources.
-1. Run `kubectl describe` on each referenced composed resource to determine
-   whether it is ready and what issues, if any, it is encountering.
+1. クレームで`kubectl describe`を実行し、その「Resource Ref」（別名`spec.resourceRef`）を探してXRを見つけます。
+1. XRで`kubectl describe`を実行します。ここで、使用している`Composition`に関する問題があるかどうかがわかります。
+1. 問題がない場合でもXRが準備完了にならないようであれば、「Resource Refs」（または`spec.resourceRefs`）を探して構成リソースを見つけます。
+1. 各参照された構成リソースで`kubectl describe`を実行して、それが準備完了かどうか、または問題があるかどうかを確認します。
 
 
 
@@ -440,4 +381,4 @@ To follow the references:
 [Handling Crossplane Package Dependency]: #handling-crossplane-package-dependency
 [semver spec]: https://github.com/Masterminds/semver#basic-comparisons
 
-
+It seems that there is no content provided for translation. Please paste the Markdown content you would like me to translate into Japanese.

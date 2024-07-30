@@ -1,31 +1,23 @@
 ---
-title: Usages
+title: 使用法
 weight: 95
 state: alpha
 alphaVersion: "1.14"
-description: "Usage defines a usage relationship for Managed Resources or Composites"
+description: "Usageは、管理リソースまたはコンポジットの使用関係を定義します"
 ---
 
-A `Usage` is a Crossplane resource that defines a usage relationship for a 
-Managed Resource or a Composite Resource. Two main use cases for the Usages are
-as follows:
+`Usage`は、管理リソースまたはコンポジットリソースの使用関係を定義するCrossplaneリソースです。Usageの主な使用ケースは以下の2つです。
 
-1. Protecting a resource from accidental deletion.
-2. Deletion ordering by ensuring that a resource isn't deleted before the 
-   deletion of its dependent resources.
+1. リソースを誤って削除されるのから保護すること。
+2. 依存リソースの削除前にリソースが削除されないようにすることで、削除の順序を管理すること。
 
-See the section [Usage for Deletion Protection](#usage-for-deletion-protection) for the
-first use case and the section [Usage for Deletion Ordering](#usage-for-deletion-ordering)
-for the second one.
+最初の使用ケースについては[削除保護のためのUsage](#usage-for-deletion-protection)のセクションを、2つ目の使用ケースについては[削除順序のためのUsage](#usage-for-deletion-ordering)のセクションを参照してください。
 
-## Enable usages
-Usages are an alpha feature. Alpha features aren't enabled by default.
+## 使用法の有効化
+Usageはアルファ機能です。アルファ機能はデフォルトでは有効になっていません。
 
-Enable `Usage` support by 
-[changing the Crossplane pod setting]({{<ref "./pods#change-pod-settings">}})
-and enabling  
-{{<hover label="deployment" line="12">}}--enable-usages{{</hover>}}
-argument.
+[Crossplaneポッド設定を変更する]({{<ref "./pods#change-pod-settings">}})ことで`Usage`サポートを有効にし、  
+{{<hover label="deployment" line="12">}}--enable-usages{{</hover>}}引数を有効にします。
 
 ```yaml {label="deployment",copy-lines="12"}
 $ kubectl edit deployment crossplane --namespace crossplane-system
@@ -44,45 +36,32 @@ spec:
 
 {{<hint "tip" >}}
 
-The [Crossplane install guide]({{<ref "../software/install#feature-flags">}}) 
-describes enabling feature flags like 
-{{<hover label="deployment" line="12">}}\-\-enable-usages{{</hover>}}
-with Helm.
+[Crossplaneインストールガイド]({{<ref "../software/install#feature-flags">}})では、Helmを使用して
+{{<hover label="deployment" line="12">}}\-\-enable-usages{{</hover>}}のような機能フラグを有効にする方法が説明されています。
 {{< /hint >}}
 
 <!-- vale Google.Headings = NO -->
-## Create a usage
+## 使用法の作成
 <!-- vale Google.Headings = YES -->
 
 <!-- vale write-good.Passive = NO -->
-A {{<hover label="protect" line="2">}}Usage{{</hover>}}
-{{<hover label="protect" line="5">}}spec{{</hover>}} has a mandatory
-{{<hover label="protect" line="6">}}of{{</hover>}} field for defining the resource
-in use or protected. The 
-{{<hover label="protect" line="11">}}reason{{</hover>}} field defines the reason
-for protection and the {{<hover label="order" line="11">}}by{{</hover>}} field
-defines the using resource. Both fields are optional, but at least one of them
-must be provided.
+{{<hover label="protect" line="2">}}Usage{{</hover>}}の{{<hover label="protect" line="5">}}spec{{</hover>}}には、使用中または保護されているリソースを定義するための必須の{{<hover label="protect" line="6">}}of{{</hover>}}フィールドがあります。 
+{{<hover label="protect" line="11">}}reason{{</hover>}}フィールドは保護の理由を定義し、{{<hover label="order" line="11">}}by{{</hover>}}フィールドは使用しているリソースを定義します。両方のフィールドはオプションですが、少なくとも1つは提供する必要があります。
 <!-- vale write-good.Passive = YES -->
 
 {{<hint "important" >}}
 <!-- vale write-good.Passive = NO -->
-Usage relationships can be defined between `Managed Resources` and `Composites`.
+Usage関係は`Managed Resources`と`Composites`の間で定義できます。
 <!-- vale write-good.TooWordy = NO -->
-However, a `Composite` as the using resource (`spec.by`) would be ineffective
-unless the `compositeDeletePolicy` `Foreground` is used because it wouldn't block
-deletion of its child resources before its own deletion with the default deletion
-policy `Background`.
+ただし、使用リソースとしての`Composite`（`spec.by`）は、`compositeDeletePolicy`が`Foreground`でない限り効果がなく、デフォルトの削除ポリシー`Background`では自身の削除前に子リソースの削除をブロックしないためです。
 <!-- vale write-good.TooWordy = YES -->
 <!-- vale write-good.Passive = YES -->
 {{< /hint >}}
 
-### Usage for deletion protection
+### 削除保護の使用法
 
-The following example prevents the deletion of the 
-{{<hover label="protect" line="10">}}my-database{{</hover>}} resource by rejecting
-any deletion request with the
-{{<hover label="protect" line="11">}}reason{{</hover>}} defined.
+以下の例では、{{<hover label="protect" line="10">}}my-database{{</hover>}}リソースの削除を防ぎ、
+{{<hover label="protect" line="11">}}reason{{</hover>}}が定義された削除リクエストを拒否します。
 
 ```yaml {label="protect"}
 apiVersion: apiextensions.crossplane.io/v1alpha1
@@ -98,12 +77,11 @@ spec:
   reason: "Production Database - should never be deleted!"
 ```
 
-### Usage for deletion ordering
+### 削除順序の使用法
 
-The following example prevents the deletion of
-{{<hover label="order" line="10">}}my-cluster{{</hover>}} resource by rejecting
-any deletion request before the deletion of 
-{{<hover label="order" line="15">}}my-prometheus-chart{{</hover>}} resource.
+以下の例では、{{<hover label="order" line="10">}}my-cluster{{</hover>}}リソースの削除を防ぎ、
+{{<hover label="order" line="15">}}my-prometheus-chart{{</hover>}}リソースの削除前に
+削除リクエストを拒否します。
 
 ```yaml {label="order"}
 apiVersion: apiextensions.crossplane.io/v1alpha1
@@ -123,13 +101,13 @@ spec:
       name: my-prometheus-chart
 ```
 
-### Using selectors with usages
+### 使用法にセレクタを使用する
 
-Usages can use {{<hover label="selectors" line="9">}}selectors{{</hover>}}
-to define the resource in use or the using one.
-This enables using {{<hover label="selectors" line="12">}}labels{{</hover>}} or
-{{<hover label="selectors" line="10">}}matching controller references{{</hover>}}
-to define resource instead of providing the resource name.
+使用法は、{{<hover label="selectors" line="9">}}selectors{{</hover>}}を使用して
+使用中のリソースまたは使用するリソースを定義できます。
+これにより、リソース名を提供する代わりに、{{<hover label="selectors" line="12">}}labels{{</hover>}}や
+{{<hover label="selectors" line="10">}}マッチングコントローラ参照{{</hover>}}を使用して
+リソースを定義できます。
 
 ```yaml {label="selectors"}
 apiVersion: apiextensions.crossplane.io/v1alpha1
@@ -152,16 +130,14 @@ spec:
           baz: qux
 ```
 
-After the `Usage` controller resolves the selectors, it persists the resource
-name in the 
-{{<hover label="selectors-resolved" line="10">}}resourceRef.name{{</hover>}}
-field. The following example shows the `Usage` resource after the resolution of
-selectors.
+`Usage`コントローラがセレクタを解決した後、リソース名は
+{{<hover label="selectors-resolved" line="10">}}resourceRef.name{{</hover>}}フィールドに
+永続化されます。以下の例は、セレクタの解決後の`Usage`リソースを示しています。
 
 {{<hint "important" >}}
 <!-- vale write-good.Passive = NO -->
-The selectors are resolved only once. If there are more than one matches, a
-random resource is selected from the list of matched resources.
+セレクタは一度だけ解決されます。マッチが複数ある場合は、マッチしたリソースのリストから
+ランダムにリソースが選択されます。
 <!-- vale write-good.Passive = YES -->
 {{< /hint >}}
 
@@ -189,12 +165,11 @@ spec:
           baz: qux
 ```
 
-### Replay blocked deletion attempt
+### ブロックされた削除試行の再実行
 
-By default, the deletion of a `Usage` resource doesn't trigger the deletion of
-the resource in use even if there were deletion attempts blocked by the `Usage`.
-Replaying the blocked deletion is possible by setting the
-{{<hover label="replay" line="6">}}replayDeletion{{</hover>}} field to `true`.
+デフォルトでは、`Usage`リソースの削除は、`Usage`によってブロックされた削除試行があっても、
+使用中のリソースの削除をトリガーしません。
+ブロックされた削除を再実行するには、{{<hover label="replay" line="6">}}replayDeletion{{</hover>}}フィールドを`true`に設定します。
 
 ```yaml {label="replay"}
 apiVersion: apiextensions.crossplane.io/v1alpha1
@@ -215,26 +190,20 @@ spec:
       name: my-prometheus-chart
 ```
 
+
 {{<hint "tip" >}}
 
-Replay deletion is useful when the used resource is part of a composition.
-This configuration radically decreases time for the deletion of the used
-resource, hence the composite owning it, by replaying the deletion of the
-used resource right after the using resource disappears instead of waiting
-for the long exponential backoff durations of the Kubernetes garbage collector.
+リプレイ削除は、使用されるリソースがコンポジションの一部である場合に便利です。
+この設定は、使用されるリソースが消失した直後にその削除をリプレイすることによって、使用されるリソースの削除時間を根本的に短縮します。これにより、Kubernetes ガーベジコレクタの長い指数バックオフ期間を待つ代わりに、所有するコンポジットも削除されます。
 {{< /hint >}}
 
-## Usage in a Composition
+## コンポジションでの使用
 
-A typical use case for Usages is to define a deletion ordering between the
-resources in a Composition. The Usages support
-[matching controller reference]({{<ref "./compositions#match-a-controller-reference" >}})
-in selectors to ensures that the matching resource is in the same composite
-resource in the same way as [cross-resource referencing]({{<ref "./compositions#cross-resource-references" >}}).
+Usages の典型的なユースケースは、コンポジション内のリソース間で削除の順序を定義することです。Usages は
+[コントローラー参照の一致]({{<ref "./compositions#match-a-controller-reference" >}})
+をサポートしており、セレクター内で一致するリソースが同じコンポジットリソースにあることを保証します。これは、[クロスリソース参照]({{<ref "./compositions#cross-resource-references" >}})と同様です。
 
-The following example shows a Composition that defines a deletion ordering
-between a `Cluster` and a `Release` resource. The `Usage` blocks deletion of
-the `Cluster` resource until the `Release` resource is successfully deleted.
+以下の例は、`Cluster` と `Release` リソース間で削除の順序を定義するコンポジションを示しています。`Usage` は、`Release` リソースが正常に削除されるまで `Cluster` リソースの削除をブロックします。
 
 ```yaml {label="composition"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -272,13 +241,6 @@ spec:
 {{<hint "tip" >}}
 
 <!-- vale write-good.Passive = NO -->
-When there are multiple resources of same type in a Composition, the
-{{<hover label="composition" line="18">}}Usage{{</hover>}} resource must
-uniquely identify the resource in use or the using one. This could be
-accomplished by using extra labels and combining
-{{<hover label="composition" line="24">}}matchControllerRef{{</hover>}}
-with a `matchLabels` selector. Another alternative is patching `resourceRef.name`
-directly with the help of `ToCompositeFieldPath` and `FromCompositeFieldPath`
-or `ToEnvironmentFieldPath` and `FromEnvironmentFieldPath` type patches. 
+コンポジション内に同じタイプのリソースが複数ある場合、{{<hover label="composition" line="18">}}Usage{{</hover>}} リソースは、使用中のリソースまたは使用するリソースを一意に識別する必要があります。これは、追加のラベルを使用し、{{<hover label="composition" line="24">}}matchControllerRef{{</hover>}} を `matchLabels` セレクターと組み合わせることで実現できます。別の選択肢として、`resourceRef.name` を直接パッチし、`ToCompositeFieldPath` および `FromCompositeFieldPath` または `ToEnvironmentFieldPath` および `FromEnvironmentFieldPath` タイプのパッチを使用することもできます。
 <!-- vale write-good.Passive = YES -->
 {{< /hint >}}

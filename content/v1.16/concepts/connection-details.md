@@ -1,56 +1,43 @@
 ---
-title: Connection Details
+title: 接続の詳細
 weight: 110
-description: "How to create and manage connection details across Crossplane managed resources, composite resources, Compositions and Claims"
+description: "Crossplane 管理リソース、複合リソース、コンポジション、およびクレーム全体で接続の詳細を作成および管理する方法"
 ---
 
-Using connection details in Crossplane requires the following components:
-* Defining the `writeConnectionSecretToRef.name` in a [Claim]({{<ref "/master/concepts/claims#claim-connection-secrets">}}).
-* Defining the `writeConnectionSecretsToNamespace` value in the [Composition]({{<ref "/master/concepts/compositions#composite-resource-combined-secret">}}).
-* Define the `writeConnectionSecretToRef` name and namespace for each resource in the
-  [Composition]({{<ref "/master/concepts/compositions#composed-resource-secrets">}}).
-* Define the list of secret keys produced by each composed resource with `connectionDetails` in the
-  [Composition]({{<ref "/master/concepts/compositions#define-secret-keys">}}).
-* Optionally, define the `connectionSecretKeys` in a 
-  [CompositeResourceDefinition]({{<ref "/master/concepts/composite-resource-definitions#manage-connection-secrets">}}).
+Crossplane で接続の詳細を使用するには、以下のコンポーネントが必要です：
+* [クレーム]({{<ref "/master/concepts/claims#claim-connection-secrets">}})で `writeConnectionSecretToRef.name` を定義します。
+* [コンポジション]({{<ref "/master/concepts/compositions#composite-resource-combined-secret">}})で `writeConnectionSecretsToNamespace` の値を定義します。
+* 各リソースの `writeConnectionSecretToRef` 名と名前空間を
+  [コンポジション]({{<ref "/master/concepts/compositions#composed-resource-secrets">}})で定義します。
+* 各構成リソースによって生成される秘密鍵のリストを `connectionDetails` で
+  [コンポジション]({{<ref "/master/concepts/compositions#define-secret-keys">}})で定義します。
+* 必要に応じて、[CompositeResourceDefinition]({{<ref "/master/concepts/composite-resource-definitions#manage-connection-secrets">}})で `connectionSecretKeys` を定義します。
 
 {{<hint "note">}}
-This guide discusses creating Kubernetes secrets.  
-Crossplane also supports using external secret stores like [HashiCorp Vault](https://www.vaultproject.io/). 
+このガイドでは Kubernetes シークレットの作成について説明します。  
+Crossplane は [HashiCorp Vault](https://www.vaultproject.io/) のような外部シークレットストアの使用もサポートしています。
 
-Read the [external secrets store guide]({{<ref "../guides/vault-as-secret-store">}}) for more information on using Crossplane
-with an external secret store. 
+Crossplane を外部シークレットストアと一緒に使用する方法についての詳細は、[外部シークレットストアガイド]({{<ref "../guides/vault-as-secret-store">}})をお読みください。
 {{</hint >}}
 
-## Background
-When a [Provider]({{<ref "/master/concepts/providers">}}) creates a managed
-resource, the resource may generate resource-specific details. These details can include 
-usernames, passwords or connection details like an IP address.  
+## 背景
+[プロバイダー]({{<ref "/master/concepts/providers">}})が管理リソースを作成すると、そのリソースはリソース固有の詳細を生成する場合があります。これらの詳細には、ユーザー名、パスワード、または IP アドレスのような接続の詳細が含まれることがあります。
 
-Crossplane refers to this information as the _connection details_ or 
-_connection secrets_.   
+Crossplane はこの情報を _接続の詳細_ または _接続シークレット_ と呼びます。
 
-The Provider
-defines what information to present as a _connection
-detail_ from a managed resource. 
+プロバイダーは、管理リソースから _接続の詳細_ として表示する情報を定義します。
 
 <!-- vale gitlab.SentenceLength = NO -->
 <!-- wordy because of type names -->
-When a managed resource is part of a 
-[Composition]({{<ref "/master/concepts/compositions">}}), the Composition, 
-[Composite Resource Definition]({{<ref "/master/concepts/composite-resource-definitions">}}) 
-and optionally, the 
-[Claim]({{<ref "/master/concepts/claims">}}) define what details are visible
-and where they're stored. 
+管理リソースが [コンポジション]({{<ref "/master/concepts/compositions">}}) の一部である場合、コンポジション、[複合リソース定義]({{<ref "/master/concepts/composite-resource-definitions">}}) および必要に応じて [クレーム]({{<ref "/master/concepts/claims">}}) が、どの詳細が表示され、どこに保存されるかを定義します。
 <!-- vale gitlab.SentenceLength = YES -->
 
+```markdown
 {{<hint "note">}}
-All the following examples use the same set of Compositions,
-CompositeResourceDefinitions and Claims.
+以下のすべての例は、同じセットのコンポジション、コンポジットリソース定義、およびクレームを使用しています。
 
-All examples rely on 
-[Upbound provider-aws-iam](https://marketplace.upbound.io/providers/upbound/provider-aws-iam/)
-to create resources.
+すべての例は、リソースを作成するために
+[Upbound provider-aws-iam](https://marketplace.upbound.io/providers/upbound/provider-aws-iam/)に依存しています。
 
 {{<expand "Reference Composition" >}}
 ```yaml
@@ -184,35 +171,28 @@ spec:
 {{</expand >}}
 {{</hint >}}
 
-## Connection secrets in a managed resource
+## 管理されたリソースにおける接続シークレット
 
 <!-- vale gitlab.Substitutions = NO -->
 <!-- vale gitlab.SentenceLength = NO -->
-<!-- under 25 words -->
-When a managed resource creates connection secrets, Crossplane can write the 
-secrets to a 
-[Kubernetes secret]({{<ref "/master/concepts/managed-resources#publish-secrets-to-kubernetes">}})
-or an 
-[external secret store]({{<ref "/master/concepts/managed-resources#publish-secrets-to-an-external-secrets-store">}}).
+<!-- 25語未満 -->
+管理されたリソースが接続シークレットを作成すると、Crossplaneはシークレットを
+[Kubernetesシークレット]({{<ref "/master/concepts/managed-resources#publish-secrets-to-kubernetes">}})
+または
+[外部シークレットストア]({{<ref "/master/concepts/managed-resources#publish-secrets-to-an-external-secrets-store">}})に書き込むことができます。
 <!-- vale gitlab.SentenceLength = YES -->
 <!-- vale gitlab.Substitutions = YES -->
 
-Creating an individual managed resource shows the connection secrets the
-resource creates. 
+個々の管理リソースを作成すると、そのリソースが作成する接続シークレットが表示されます。
 
 {{<hint "note" >}}
-Read the [managed resources]({{<ref "/master/concepts/managed-resources">}})
-documentation for more information on configuring resources and storing
-connection secrets for individual resources. 
+[管理リソース]({{<ref "/master/concepts/managed-resources">}})
+のドキュメントを読んで、リソースの構成や個々のリソースの接続シークレットの保存に関する詳細情報を確認してください。
 {{< /hint >}}
 
-
-For example, create an
-{{<hover label="mr" line="2">}}AccessKey{{</hover>}} resource and save the
-connection secrets in a Kubernetes secret named 
-{{<hover label="mr" line="12">}}my-accesskey-secret{{</hover>}}
-in the 
-{{<hover label="mr" line="11">}}default{{</hover>}} namespace. 
+例えば、{{<hover label="mr" line="2">}}AccessKey{{</hover>}}リソースを作成し、接続シークレットを
+{{<hover label="mr" line="12">}}my-accesskey-secret{{</hover>}}という名前のKubernetesシークレットに保存します。
+これは、{{<hover label="mr" line="11">}}default{{</hover>}}名前空間にあります。
 
 ```yaml {label="mr"}
 apiVersion: iam.aws.upbound.io/v1beta1
@@ -229,13 +209,12 @@ spec:
         name: my-accesskey-secret
 ```
 
-View the Kubernetes secret to see the connection details from the managed
-resource.  
-This includes an 
-{{<hover label="mrSecret" line="11">}}attribute.secret{{</hover>}},
-{{<hover label="mrSecret" line="12">}}attribute.ses_smtp_password_v4{{</hover>}},
-{{<hover label="mrSecret" line="13">}}password{{</hover>}} and 
-{{<hover label="mrSecret" line="14">}}username{{</hover>}}
+Kubernetesシークレットを表示して、管理リソースからの接続詳細を確認します。  
+これには、{{<hover label="mrSecret" line="11">}}attribute.secret{{</hover>}}、
+{{<hover label="mrSecret" line="12">}}attribute.ses_smtp_password_v4{{</hover>}}、
+{{<hover label="mrSecret" line="13">}}password{{</hover>}}および
+{{<hover label="mrSecret" line="14">}}username{{</hover>}}が含まれます。
+```
 
 ```yaml {label="mrSecret",copy-lines="1"}
 kubectl describe secret my-accesskey-secret
@@ -254,30 +233,24 @@ password:                        40 bytes
 username:                        20 bytes
 ```
 
-Compositions and CompositeResourceDefinitions require the exact names of the
-secrets generated by a resource. 
+Composition と CompositeResourceDefinitions は、リソースによって生成されたシークレットの正確な名前を必要とします。
 
-## Connection secrets in Compositions
+## Composition における接続シークレット
 
-Resources in a Composition that create connection details still create a
-secret object containing their connection details.  
-Crossplane also generates
-another secret object for each composite resource, 
-containing the secrets from all the defined resources.
+接続詳細を作成する Composition 内のリソースは、接続詳細を含むシークレットオブジェクトを作成します。  
+Crossplane はまた、すべての定義されたリソースからのシークレットを含む、各コンポジットリソースのための別のシークレットオブジェクトを生成します。
 
-For example, a Composition defines two 
+例えば、Composition は二つの 
 {{<hover label="comp1" line="9">}}AccessKey{{</hover>}}
-objects.  
-Each {{<hover label="comp1" line="9">}}AccessKey{{</hover>}} writes a
-connection secrets to the {{<hover label="comp1" line="15">}}name{{</hover>}}
-inside the {{<hover label="comp1" line="14">}}namespace{{</hover>}} defined by
-the resource 
-{{<hover label="comp1" line="13">}}writeConnectionSecretToRef{{</hover>}}.
+オブジェクトを定義します。  
+各 {{<hover label="comp1" line="9">}}AccessKey{{</hover>}} は、リソースによって定義された 
+{{<hover label="comp1" line="14">}}namespace{{</hover>}} 内の 
+{{<hover label="comp1" line="15">}}name{{</hover>}} に接続シークレットを書き込みます。 
+リソース 
+{{<hover label="comp1" line="13">}}writeConnectionSecretToRef{{</hover>}} によって。
 
-Crossplane also creates a secret object for the entire Composition 
-saved in the namespace defined by 
-{{<hover label="comp1" line="4">}}writeConnectionSecretsToNamespace{{</hover>}}
-with a Crossplane generated name. 
+Crossplane はまた、 
+{{<hover label="comp1" line="4">}}writeConnectionSecretsToNamespace{{</hover>}} によって定義された名前空間に保存された、全体の Composition のためのシークレットオブジェクトを作成します。 
 
 ```yaml {label="comp1",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -308,19 +281,16 @@ spec:
     # Removed for brevity
 ```
 
-After applying a Claim, view the Kubernetes secrets to see three secret objects
-created. 
+Claim を適用した後、Kubernetes シークレットを表示して、作成された三つのシークレットオブジェクトを確認します。
 
-The secret 
-{{<hover label="compGetSec" line="3">}}key1-secret{{</hover>}} is from the resource 
-{{<hover label="comp1" line="6">}}key1{{</hover>}}, 
-{{<hover label="compGetSec" line="4">}}key2-secret{{</hover>}} is from the resource 
-{{<hover label="comp1" line="16">}}key2{{</hover>}}.
+シークレット 
+{{<hover label="compGetSec" line="3">}}key1-secret{{</hover>}} はリソース 
+{{<hover label="comp1" line="6">}}key1{{</hover>}} から、 
+{{<hover label="compGetSec" line="4">}}key2-secret{{</hover>}} はリソース 
+{{<hover label="comp1" line="16">}}key2{{</hover>}} からです。
 
-Crossplane creates another secret in the namespace 
-{{<hover label="compGetSec" line="5">}}other-namespace{{</hover>}} with the
-secrets from resource in the Composition. 
-
+Crossplane は、Composition 内のリソースからのシークレットを持つ 
+{{<hover label="compGetSec" line="5">}}other-namespace{{</hover>}} に別のシークレットを作成します。 
 
 ```shell {label="compGetSec",copy-lines="1"}
 kubectl get secrets -A
@@ -330,8 +300,7 @@ docs                key2-secret                            connection.crossplane
 other-namespace     70975471-c44f-4f6d-bde6-6bbdc9de1eb8   connection.crossplane.io/v1alpha1   0      6s
 ```
 
-Although Crossplane creates a secret object, by default, Crossplane doesn't add
-any data to the object. 
+Crossplane はシークレットオブジェクトを作成しますが、デフォルトでは、Crossplane はオブジェクトにデータを追加しません。 
 
 ```yaml {copy-lines="none"}
 kubectl describe secret 70975471-c44f-4f6d-bde6-6bbdc9de1eb8 -n other-namespace
@@ -344,19 +313,17 @@ Data
 ====
 ```
 
-The Composition must list the connection secrets to store for each resource.  
-Use the 
-{{<hover label="comp2" line="16">}}connectionDetails{{</hover>}} object under
-each resource and define the secret keys the resource creates.  
-
+Composition は、各リソースのために保存する接続シークレットをリストする必要があります。  
+各リソースの下にある 
+{{<hover label="comp2" line="16">}}connectionDetails{{</hover>}} オブジェクトを使用して、リソースが生成するシークレットキーを定義します。  
 
 {{<hint "warning">}}
-You can't change the 
+Compositionの
 {{<hover label="comp2" line="16">}}connectionDetails{{</hover>}} 
-of a Composition.  
-You must delete and
-recreate the Composition to change the 
-{{<hover label="comp2" line="16">}}connectionDetails{{</hover>}}.  
+を変更することはできません。  
+変更するにはCompositionを削除して
+再作成する必要があります。
+{{<hover label="comp2" line="16">}}connectionDetails{{</hover>}}を変更するには、  
 {{</hint >}}
 
 ```yaml {label="comp2",copy-lines="16-20"}
@@ -383,9 +350,9 @@ spec:
     # Removed for brevity
 ```
 
-After applying a Claim the composite resource secret object contains the list of
-keys listed in the
-{{<hover label="comp2" line="16">}}connectionDetails{{</hover>}}.
+Claimを適用した後、合成リソースのシークレットオブジェクトには
+{{<hover label="comp2" line="16">}}connectionDetails{{</hover>}}にリストされた
+キーのリストが含まれます。
 
 ```shell {copy-lines="1"}
 kubectl describe secret -n other-namespace
@@ -403,15 +370,15 @@ password:                        40 bytes
 ```
 
 {{<hint "important">}}
-If a key isn't listed in the 
-{{<hover label="comp2" line="16">}}connectionDetails{{</hover>}}
-it isn't stored in the secret object.
+キーが
+{{<hover label="comp2" line="16">}}connectionDetails{{</hover>}}にリストされていない場合、
+シークレットオブジェクトには保存されません。
 {{< /hint >}}
 
-### Managing conflicting secret keys 
-If resources produce conflicting keys, create a unique name with a connection
-details
-{{<hover label="comp3" line="25">}}name{{</hover>}}.
+### 競合するシークレットキーの管理 
+リソースが競合するキーを生成する場合、接続の詳細を持つ
+ユニークな名前を作成します
+{{<hover label="comp3" line="25">}}name{{</hover>}}。
 
 ```yaml {label="comp3",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -442,9 +409,9 @@ spec:
           fromConnectionSecretKey: username
 ```
 
-The secret object contains both keys, 
+シークレットオブジェクトには両方のキーが含まれます、
 {{<hover label="comp3Sec" line="9">}}username{{</hover>}}
-and
+と
 {{<hover label="comp3Sec" line="10">}}key2-user{{</hover>}}
 
 ```shell {label="comp3Sec",copy-lines="1"}
@@ -461,33 +428,33 @@ key2-user:                       20 bytes
 # Removed for brevity.
 ```
 
-## Connection secrets in Composite Resource Definitions
+## 合成リソース定義における接続シークレット
 
-The CompositeResourceDefinition (`XRD`), can restrict which secrets keys are 
-put in the combined secret and provided to a Claim. 
+合成リソース定義（`XRD`）は、どのシークレットキーが
+結合されたシークレットに入れられ、Claimに提供されるかを制限できます。
 
-By default an XRD writes all secret keys listed in the composed resource 
-`connectionDetails` to the combined secret object.
+デフォルトでは、XRDは合成リソースの
+`connectionDetails`にリストされたすべてのシークレットキーを
+結合されたシークレットオブジェクトに書き込みます。
 
-Limit the keys passed to the combined secret object and Claims with a
-{{<hover label="xrd" line="4">}}connectionSecretKeys{{</hover>}} object.
+{{<hover label="xrd" line="4">}}connectionSecretKeys{{</hover>}}オブジェクトを使用して、
+結合されたシークレットオブジェクトとClaimに渡されるキーを制限します。
 
-Inside the {{<hover label="xrd" line="4">}}connectionSecretKeys{{</hover>}} list
-the secret key names to create. Crossplane only adds the keys listed to the
-combined secret.
+{{<hover label="xrd" line="4">}}connectionSecretKeys{{</hover>}}リスト内に
+作成するシークレットキー名をリストします。Crossplaneは、リストされたキーのみを
+結合されたシークレットに追加します。
 
 {{<hint "warning">}}
-You can't change the 
-{{<hover label="xrd" line="4">}}connectionSecretKeys{{</hover>}} of an XRD. 
-You must delete and
-recreate the XRD to change the 
-{{<hover label="xrd" line="4">}}connectionSecretKeys{{</hover>}}.
+XRDの
+{{<hover label="xrd" line="4">}}connectionSecretKeys{{</hover>}}を変更することはできません。 
+変更するにはXRDを削除して
+再作成する必要があります。
 {{</hint >}}
 
-For example, an XRD may restrict the secrets to only the 
+例えば、XRDは秘密を以下のみに制限することがあります。
 {{<hover label="xrd" line="5">}}username{{</hover>}},
-{{<hover label="xrd" line="6">}}password{{</hover>}} and custom named
-{{<hover label="xrd" line="7">}}key2-user{{</hover>}} keys. 
+{{<hover label="xrd" line="6">}}password{{</hover>}} およびカスタム名の
+{{<hover label="xrd" line="7">}}key2-user{{</hover>}} キー。
 
 ```yaml {label="xrd",copy-lines="4-12"}
 kind: CompositeResourceDefinition
@@ -499,8 +466,7 @@ spec:
     - key2-user
 ```
 
-The secret from an individual resource contains all the resources detailed in
-the Composition's `connectionDetails`. 
+個々のリソースからの秘密は、Compositionの `connectionDetails` に詳細が記載されているすべてのリソースを含みます。
 
 ```shell {label="xrdSec",copy-lines="1"}
 kubectl describe secret key1 -n docs
@@ -515,10 +481,9 @@ attribute.secret:                40 bytes
 attribute.ses_smtp_password_v4:  44 bytes
 ```
 
-The Claim's secret only contains the
-keys allowed by the XRD 
+Claimの秘密は、XRDによって許可された
 {{<hover label="xrd" line="4">}}connectionSecretKeys{{</hover>}} 
-fields. 
+フィールドのキーのみを含みます。
 
 ```shell {label="xrdSec2",copy-lines="2"}
 kubectl describe secret my-access-key-secret
@@ -531,17 +496,14 @@ password:   40 bytes
 username:   20 bytes
 ```
 
-## Secret objects
-Compositions create a secret object for each resource and an extra secret
-containing all the secrets from all resources. 
+## 秘密オブジェクト
+Compositionは各リソースのために秘密オブジェクトを作成し、すべてのリソースからの秘密を含む追加の秘密を作成します。
 
-Crossplane saves the resource secret objects in the location defined by the
-resource's 
-{{<hover label="comp4" line="11">}}writeConnectionSecretToRef{{</hover>}}.
+Crossplaneはリソースの秘密オブジェクトをリソースの
+{{<hover label="comp4" line="11">}}writeConnectionSecretToRef{{</hover>}} で定義された場所に保存します。
 
-Crossplane saves the combined secret with a Crossplane generated name in the
-namespace defined in the Composition's 
-{{<hover label="comp4" line="4">}}writeConnectionSecretsToNamespace{{</hover>}}.
+CrossplaneはCompositionの
+{{<hover label="comp4" line="4">}}writeConnectionSecretsToNamespace{{</hover>}} で定義された名前空間に、Crossplane生成の名前で結合された秘密を保存します。
 
 ```yaml {label="comp4",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -572,9 +534,8 @@ spec:
           fromConnectionSecretKey: username
 ```
 
-If a Claim uses a secret, it's stored in the same namespace as the Claim with
-the name defined in the Claim's 
-{{<hover label="claim3" line="7">}}writeConnectionSecretToRef{{</hover>}}.
+Claimが秘密を使用する場合、それはClaimの
+{{<hover label="claim3" line="7">}}writeConnectionSecretToRef{{</hover>}} で定義された名前でClaimと同じ名前空間に保存されます。
 
 ```yaml {label="claim3",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -587,15 +548,13 @@ spec:
     name: my-access-key-secret
 ```
 
-After applying the Claim Crossplane creates the following secrets:
-* The Claim's secret, {{<hover label="allSec" line="3">}}my-access-key-secret{{</hover>}} 
-  in the Claim's {{<hover label="claim3" line="5">}}namespace{{</hover>}}.
-* The first resource's secret object, {{<hover label="allSec" line="4">}}key1{{</hover>}}.
-* The second resource's secret object, {{<hover label="allSec" line="5">}}key2{{</hover>}}.
-* The composite resource secret object in the 
-  {{<hover label="allSec" line="6">}}other-namespace{{</hover>}} defined by the
-  Composition's `writeConnectionSecretsToNamespace`.
-  
+Claimを適用した後、Crossplaneは以下の秘密を作成します：
+* Claimの秘密、{{<hover label="allSec" line="3">}}my-access-key-secret{{</hover>}} 
+  Claimの {{<hover label="claim3" line="5">}}namespace{{</hover>}} に。
+* 最初のリソースの秘密オブジェクト、{{<hover label="allSec" line="4">}}key1{{</hover>}}。
+* 2番目のリソースの秘密オブジェクト、{{<hover label="allSec" line="5">}}key2{{</hover>}}。
+* Compositionの `writeConnectionSecretsToNamespace` で定義された
+  {{<hover label="allSec" line="6">}}other-namespace{{</hover>}} にある複合リソース秘密オブジェクト。
 
 ```shell {label="allSec",copy-lines="none"}
  kubectl get secret -A

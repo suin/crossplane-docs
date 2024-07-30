@@ -1,5 +1,5 @@
 ---
-title: Guides
+title: ガイド
 weight: 100
-description: Crossplane integrations and detailed examples.
+description: Crossplaneの統合と詳細な例。
 ---

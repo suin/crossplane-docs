@@ -1,20 +1,16 @@
 ---
-title: Providers
+title: プロバイダー
 weight: 5
-description: "Providers connect Crossplane to external APIs"
+description: "プロバイダーはCrossplaneを外部APIに接続します"
 ---
 
-Providers enable Crossplane to provision infrastructure on an
-external service. Providers create new Kubernetes APIs and map them to external
-APIs.
+プロバイダーはCrossplaneが外部サービス上にインフラストラクチャをプロビジョニングできるようにします。プロバイダーは新しいKubernetes APIを作成し、それを外部APIにマッピングします。
 
-Providers are responsible for all aspects of connecting to non-Kubernetes
-resources. This includes authentication, making external API calls and
-providing
-[Kubernetes Controller](https://kubernetes.io/docs/concepts/architecture/controller/)
-logic for any external resources.
+プロバイダーは非Kubernetesリソースへの接続に関するすべての側面を担当します。これには、認証、外部API呼び出しの実行、および外部リソースに対する
+[Kubernetesコントローラー](https://kubernetes.io/docs/concepts/architecture/controller/)
+ロジックの提供が含まれます。
 
-Examples of providers include:
+プロバイダーの例には以下が含まれます：
 
 * [Provider AWS](https://github.com/upbound/provider-aws)
 * [Provider Azure](https://github.com/upbound/provider-azure)
@@ -22,42 +18,33 @@ Examples of providers include:
 * [Provider Kubernetes](https://github.com/crossplane-contrib/provider-kubernetes)
 
 {{< hint "tip" >}}
-Find more providers in the [Upbound Marketplace](https://marketplace.upbound.io).
+[Upbound Marketplace](https://marketplace.upbound.io)で他のプロバイダーを見つけてください。
 {{< /hint >}}
 
 <!-- vale write-good.Passive = NO -->
 <!-- "are Managed" isn't passive in this context -->
-Providers define every external resource they can create in Kubernetes as a
-Kubernetes API endpoint.  
-These endpoints are
-[_Managed Resources_]({{<ref "managed-resources" >}}).
+プロバイダーは、Kubernetesで作成できるすべての外部リソースをKubernetes APIエンドポイントとして定義します。  
+これらのエンドポイントは
+[_Managed Resources_]({{<ref "managed-resources" >}})です。
 <!-- vale write-good.Passive = YES -->
 
 
-## Install a Provider
+## プロバイダーのインストール
 
-Installing a provider creates new Kubernetes resources representing the 
-Provider's APIs. Installing a provider also creates a Provider pod that's 
-responsible for reconciling the Provider's APIs into the Kubernetes cluster. 
-Providers constantly watch the state of the desired managed resources and create 
-any external resources that are missing.
+プロバイダーをインストールすると、プロバイダーのAPIを表す新しいKubernetesリソースが作成されます。プロバイダーをインストールすると、プロバイダーのAPIをKubernetesクラスターに調整する責任を持つプロバイダーポッドも作成されます。プロバイダーは常に希望する管理リソースの状態を監視し、欠落している外部リソースを作成します。
 
-Install a Provider with a Crossplane
-{{<hover label="install" line="2">}}Provider{{</hover >}} object setting the
-{{<hover label="install" line="6">}}spec.package{{</hover >}} value to the
-location of the provider package.
+プロバイダーをインストールするには、Crossplane
+{{<hover label="install" line="2">}}Provider{{</hover >}}オブジェクトを使用し、
+{{<hover label="install" line="6">}}spec.package{{</hover >}}の値をプロバイダー パッケージの場所に設定します。
 
 {{< hint "important" >}}
-Beginning with Crossplane version 1.15.0 Crossplane uses the Upbound Marketplace
-Crossplane package registry at `xpkg.upbound.io` by default for downloading and
-installing packages. 
+Crossplaneバージョン1.15.0以降、Crossplaneはデフォルトで`xpkg.upbound.io`のUpbound Marketplace
+Crossplaneパッケージレジストリを使用してパッケージをダウンロードおよびインストールします。
 
-Specify the full domain name with the `package` or change the default Crossplane
-registry with the `--registry` flag on the [Crossplane pod]({{<ref "./pods">}})
+`package`で完全なドメイン名を指定するか、[Crossplaneポッド]({{<ref "./pods">}})で`--registry`フラグを使用してデフォルトのCrossplaneレジストリを変更します。
 {{< /hint >}}
 
-For example, to install the
-[AWS Community Provider](https://github.com/crossplane-contrib/provider-aws),
+例えば、[AWS Community Provider](https://github.com/crossplane-contrib/provider-aws)をインストールするには、
 
 ```yaml {label="install"}
 apiVersion: pkg.crossplane.io/v1
@@ -68,24 +55,17 @@ spec:
   package: xpkg.upbound.io/crossplane-contrib/provider-aws:v0.39.0
 ```
 
-By default, the Provider pod installs in the same namespace as Crossplane
-(`crossplane-system`).
+デフォルトでは、ProviderポッドはCrossplaneと同じ名前空間（`crossplane-system`）にインストールされます。
 
 {{<hint "note" >}}
-Providers are part of the 
-{{<hover label="install" line="1">}}pkg.crossplane.io{{</hover>}} group.  
+Providersは{{<hover label="install" line="1">}}pkg.crossplane.io{{</hover>}}グループの一部です。  
 
-The {{<hover label="meta-pkg" line="1">}}meta.pkg.crossplane.io{{</hover>}}
-group is for creating Provider packages. 
+{{<hover label="meta-pkg" line="1">}}meta.pkg.crossplane.io{{</hover>}}グループはProviderパッケージを作成するためのものです。 
 
-Instructions on building Providers are outside of the scope of this
-document.  
-Read the Crossplane contributing 
-[Provider Development Guide](https://github.com/crossplane/crossplane/blob/master/contributing/guide-provider-development.md)
-for more information.
+Providerのビルドに関する指示はこの文書の範囲外です。  
+詳細については、Crossplaneの貢献ガイド[Provider Development Guide](https://github.com/crossplane/crossplane/blob/master/contributing/guide-provider-development.md)をお読みください。
 
-For information on the specification of Provider packages read the 
-[Crossplane Provider Package specification](https://github.com/crossplane/crossplane/blob/master/contributing/specifications/xpkg.md#provider-package-requirements).
+Providerパッケージの仕様については、[Crossplane Provider Package specification](https://github.com/crossplane/crossplane/blob/master/contributing/specifications/xpkg.md#provider-package-requirements)をお読みください。
 
 ```yaml {label="meta-pkg"}
 apiVersion: meta.pkg.crossplane.io/v1
@@ -97,16 +77,13 @@ spec:
 ```
 {{</hint >}}
 
-### Install with Helm
+### Helmでインストール
 
-Crossplane supports installing Providers during an initial Crossplane
-installation with the Crossplane Helm chart.
+Crossplaneは、Crossplane Helmチャートを使用して初期のCrossplaneインストール中にProvidersをインストールすることをサポートしています。
 
-Use the
-{{<hover label="helm" line="5" >}}--set provider.packages{{</hover >}}
-argument with `helm install`.
+`helm install`で{{<hover label="helm" line="5" >}}--set provider.packages{{</hover >}}引数を使用します。
 
-For example, to install the AWS Community Provider,
+例えば、AWS Community Providerをインストールするには、
 
 ```shell {label="helm"}
 helm install crossplane \
@@ -116,46 +93,36 @@ crossplane-stable/crossplane \
 --set provider.packages='{xpkg.upbound.io/crossplane-contrib/provider-aws:v0.39.0}'
 ```
 
-### Install offline
+### オフラインでインストール
 
-Installing Crossplane Providers offline requires a local container registry like 
-[Harbor](https://goharbor.io/) to host Provider packages. Crossplane only
-supports installing Provider packages from a container registry. 
+Crossplane Providersをオフラインでインストールするには、Providerパッケージをホストするための[Harbor](https://goharbor.io/)のようなローカルコンテナレジストリが必要です。CrossplaneはコンテナレジストリからのProviderパッケージのインストールのみをサポートしています。
 
-Crossplane doesn't support installing Provider packages directly from Kubernetes
-volumes.
+CrossplaneはKubernetesボリュームから直接Providerパッケージをインストールすることをサポートしていません。
 
-### Installation options
+### インストールオプション
 
-Providers support multiple configuration options to change installation related
-settings. 
+Providersは、インストール関連の設定を変更するための複数の構成オプションをサポートしています。
 
-#### Provider pull policy
+#### Providerプルポリシー
 
-Use a {{<hover label="pullpolicy" line="6">}}packagePullPolicy{{</hover>}} to
-define when Crossplane should download the Provider package to the local
-Crossplane package cache.
+{{<hover label="pullpolicy" line="6">}}packagePullPolicy{{</hover>}}を使用して、CrossplaneがProviderパッケージをローカルのCrossplaneパッケージキャッシュにダウンロードするタイミングを定義します。
 
-The `packagePullPolicy` options are: 
-* `IfNotPresent` - (**default**) Only download the package if it isn't in the cache.
-* `Always` - Check for new packages every minute and download any matching
-  package that isn't in the cache.
-* `Never` - Never download the package. Packages are only installed from the
-  local package cache. 
+`packagePullPolicy` オプションは次のとおりです：
+* `IfNotPresent` - (**デフォルト**) キャッシュにパッケージがない場合のみ、パッケージをダウンロードします。
+* `Always` - 毎分新しいパッケージをチェックし、キャッシュにない一致するパッケージをダウンロードします。
+* `Never` - パッケージを決してダウンロードしません。パッケージはローカルパッケージキャッシュからのみインストールされます。
 
 {{<hint "tip" >}}
-The Crossplane 
-{{<hover label="pullpolicy" line="6">}}packagePullPolicy{{</hover>}} works
-like the Kubernetes container image 
-[image pull policy](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy).  
+Crossplane 
+{{<hover label="pullpolicy" line="6">}}packagePullPolicy{{</hover>}} は Kubernetes コンテナイメージの 
+[image pull policy](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy) のように機能します。  
 
-Crossplane supports the use of tags and package digest hashes like
-Kubernetes images. 
+Crossplane は Kubernetes イメージのようにタグとパッケージダイジェストハッシュの使用をサポートしています。
 {{< /hint >}}
 
-For example, to `Always` download a given Provider package use the 
-{{<hover label="pullpolicy" line="6">}}packagePullPolicy: Always{{</hover>}}
-configuration. 
+たとえば、特定のプロバイダー パッケージを `Always` ダウンロードするには、 
+{{<hover label="pullpolicy" line="6">}}packagePullPolicy: Always{{</hover>}} 
+設定を使用します。
 
 ```yaml {label="pullpolicy",copy-lines="6"}
 apiVersion: pkg.crossplane.io/v1
@@ -167,24 +134,22 @@ spec:
 # Removed for brevity
 ```
 
-#### Revision activation policy
+#### リビジョンアクティベーションポリシー
 
-The `Active` package revision
-is the package controller actively reconciling resources. 
+`Active` パッケージリビジョンは、パッケージコントローラーがリソースを積極的に調整している状態です。
 
-By default Crossplane sets the most recently installed package revision as 
-`Active`.
+デフォルトでは、Crossplane は最も最近インストールされたパッケージリビジョンを `Active` として設定します。
 
-Control the Provider upgrade behavior with a
-{{<hover label="revision" line="6">}}revisionActivationPolicy{{</hover>}}.
+プロバイダーのアップグレード動作を制御するには、 
+{{<hover label="revision" line="6">}}revisionActivationPolicy{{</hover>}} を使用します。
 
-The {{<hover label="revision" line="6">}}revisionActivationPolicy{{</hover>}} 
-options are:
-* `Automatic` - (**default**) Automatically activate the last installed Provider.
-* `Manual` - Don't automatically activate a Provider.
+{{<hover label="revision" line="6">}}revisionActivationPolicy{{</hover>}} 
+オプションは次のとおりです：
+* `Automatic` - (**デフォルト**) 最後にインストールされたプロバイダーを自動的にアクティブ化します。
+* `Manual` - プロバイダーを自動的にアクティブ化しません。
 
-For example, to change the upgrade behavior to require manual upgrades, set 
-{{<hover label="revision" line="6">}}revisionActivationPolicy: Manual{{</hover>}}.
+たとえば、アップグレード動作を手動アップグレードを必要とするように変更するには、 
+{{<hover label="revision" line="6">}}revisionActivationPolicy: Manual{{</hover>}} を設定します。
 
 ```yaml {label="revision"}
 apiVersion: pkg.crossplane.io/v1
@@ -196,29 +161,28 @@ spec:
 # Removed for brevity
 ```
 
-#### Package revision history limit
+#### パッケージリビジョン履歴制限
 
-When Crossplane installs a different version of the same Provider package 
-Crossplane creates a new _revision_. 
+Crossplane が同じプロバイダー パッケージの異なるバージョンをインストールすると、Crossplane は新しい _revision_ を作成します。
 
-By default Crossplane maintains one _Inactive_ revision. 
+デフォルトでは、Crossplane は 1 つの _Inactive_ リビジョンを維持します。
 
 {{<hint "note" >}}
-Read the [Provider upgrade](#upgrade-a-provider) section for
-more information on the use of package revisions.
+パッケージリビジョンの使用に関する詳細情報は、[プロバイダーのアップグレード](#upgrade-a-provider) セクションをお読みください。
 {{< /hint >}}
 
-Change the number of revisions Crossplane maintains with a Provider Package 
-{{<hover label="revHistoryLimit" line="6">}}revisionHistoryLimit{{</hover>}}. 
 
-The {{<hover label="revHistoryLimit" line="6">}}revisionHistoryLimit{{</hover>}}
-field is an integer.  
-The default value is `1`.  
-Disable storing revisions by setting 
-{{<hover label="revHistoryLimit" line="6">}}revisionHistoryLimit{{</hover>}} to `0`.
+プロバイダーパッケージでCrossplaneが保持するリビジョンの数を変更します  
+{{<hover label="revHistoryLimit" line="6">}}revisionHistoryLimit{{</hover>}}。  
 
-For example, to change the default setting and store 10 revisions use 
-{{<hover label="revHistoryLimit" line="6">}}revisionHistoryLimit: 10{{</hover>}}.
+{{<hover label="revHistoryLimit" line="6">}}revisionHistoryLimit{{</hover>}}  
+フィールドは整数です。  
+デフォルト値は `1` です。  
+{{<hover label="revHistoryLimit" line="6">}}revisionHistoryLimit{{</hover>}} を `0` に設定することで  
+リビジョンの保存を無効にします。  
+
+例えば、デフォルト設定を変更して10のリビジョンを保存するには  
+{{<hover label="revHistoryLimit" line="6">}}revisionHistoryLimit: 10{{</hover>}} を使用します。  
 
 ```yaml {label="revHistoryLimit"}
 apiVersion: pkg.crossplane.io/v1
@@ -230,26 +194,24 @@ spec:
 # Removed for brevity
 ```
 
-#### Install a provider from a private registry
+#### プライベートレジストリからプロバイダーをインストールする
 
-Like Kubernetes uses `imagePullSecrets` to 
-[install images from private registries](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/), 
-Crossplane uses `packagePullSecrets` to install Provider packages from a private
-registry. 
+Kubernetesが `imagePullSecrets` を使用して  
+[プライベートレジストリからイメージをインストールする](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)のと同様に、  
+Crossplaneは `packagePullSecrets` を使用してプライベートレジストリからプロバイダーパッケージをインストールします。  
 
-Use {{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}} to provide a
-Kubernetes secret to use for authentication when downloading a Provider package. 
+{{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}} を使用して、  
+プロバイダーパッケージをダウンロードする際の認証に使用するKubernetesシークレットを提供します。  
 
-{{<hint "important" >}}
-The Kubernetes secret must be in the same namespace as Crossplane.
-{{</hint >}}
+{{<hint "important" >}}  
+KubernetesシークレットはCrossplaneと同じ名前空間に存在する必要があります。  
+{{</hint >}}  
 
-The {{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}} is a list of
-secrets.
+{{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}} はシークレットのリストです。  
 
-For example, to use the secret named
-{{<hover label="pps" line="6">}}example-secret{{</hover>}} configure a 
-{{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}}.
+例えば、  
+{{<hover label="pps" line="6">}}example-secret{{</hover>}} という名前のシークレットを使用するには、  
+{{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}} を設定します。  
 
 ```yaml {label="pps"}
 apiVersion: pkg.crossplane.io/v1
@@ -262,21 +224,22 @@ spec:
 # Removed for brevity
 ```
 
-{{<hint "note" >}}
-Configured `packagePullSecrets` aren't passed to any Provider package
-dependencies. 
-{{< /hint >}}
+{{<hint "note" >}}  
+設定された `packagePullSecrets` は、  
+いかなるプロバイダーパッケージの依存関係にも渡されません。  
+{{< /hint >}}  
 
-#### Ignore dependencies
+#### 依存関係を無視する
 
-By default Crossplane installs any [dependencies](#manage-dependencies) listed
-in a Provider package. 
+デフォルトでは、Crossplaneはプロバイダーパッケージにリストされた  
+[依存関係](#manage-dependencies)をインストールします。  
 
-Crossplane can ignore a Provider package's dependencies with 
-{{<hover label="pkgDep" line="6" >}}skipDependencyResolution{{</hover>}}.
+Crossplaneは、  
+{{<hover label="pkgDep" line="6" >}}skipDependencyResolution{{</hover>}} を使用して  
+プロバイダーパッケージの依存関係を無視できます。  
 
-For example, to disable dependency resolution configure 
-{{<hover label="pkgDep" line="6" >}}skipDependencyResolution: true{{</hover>}}.
+例えば、依存関係の解決を無効にするには、  
+{{<hover label="pkgDep" line="6" >}}skipDependencyResolution: true{{</hover>}} を設定します。
 
 ```yaml {label="pkgDep"}
 apiVersion: pkg.crossplane.io/v1
@@ -288,18 +251,13 @@ spec:
 # Removed for brevity
 ```
 
-#### Ignore Crossplane version requirements
+#### Crossplaneのバージョン要件を無視する
 
-A Provider package may require a specific or minimum Crossplane version before
-installing. By default, Crossplane doesn't install a Provider if the Crossplane
-version doesn't meet the required version. 
+プロバイダーパッケージは、インストール前に特定のまたは最小のCrossplaneバージョンを必要とする場合があります。デフォルトでは、CrossplaneはCrossplaneバージョンが必要なバージョンを満たさない場合、プロバイダーをインストールしません。
 
-Crossplane can ignore the required version with 
-{{<hover label="xpVer" line="6">}}ignoreCrossplaneConstraints{{</hover>}}.
+Crossplaneは、{{<hover label="xpVer" line="6">}}ignoreCrossplaneConstraints{{</hover>}}を使用して、必要なバージョンを無視できます。
 
-For example, to install a Provider package into an unsupported Crossplane
-version, configure 
-{{<hover label="xpVer" line="6">}}ignoreCrossplaneConstraints: true{{</hover>}}.
+たとえば、サポートされていないCrossplaneバージョンにプロバイダーパッケージをインストールするには、{{<hover label="xpVer" line="6">}}ignoreCrossplaneConstraints: true{{</hover>}}を設定します。
 
 ```yaml {label="xpVer"}
 apiVersion: pkg.crossplane.io/v1
@@ -311,16 +269,13 @@ spec:
 # Removed for brevity
 ```
 
-### Manage dependencies
+### 依存関係の管理
 
-Providers packages may include dependencies on other packages including
-Configurations or other Providers. 
+プロバイダーパッケージには、他のパッケージや構成、または他のプロバイダーへの依存関係が含まれる場合があります。
 
-If Crossplane can't meet the dependencies of a Provider package the Provider
-reports `HEALTHY` as `False`. 
+Crossplaneがプロバイダーパッケージの依存関係を満たせない場合、プロバイダーは`HEALTHY`を`False`として報告します。
 
-For example, this installation of the Upbound AWS reference platform is
-`HEALTHY: False`.
+たとえば、Upbound AWSリファレンスプラットフォームのこのインストールは`HEALTHY: False`です。
 
 ```shell {copy-lines="1"}
 kubectl get providers
@@ -328,8 +283,7 @@ NAME              INSTALLED   HEALTHY   PACKAGE                                 
 provider-aws-s3   True        False     xpkg.upbound.io/upbound/provider-aws-s3:v0.41.0   12s
 ```
 
-To see more information on why the Provider isn't `HEALTHY` use 
-{{<hover label="depend" line="1">}}kubectl describe providerrevisions{{</hover>}}.
+プロバイダーが`HEALTHY`でない理由に関する詳細情報を表示するには、{{<hover label="depend" line="1">}}kubectl describe providerrevisions{{</hover>}}を使用します。
 
 ```yaml {copy-lines="1",label="depend"}
 kubectl describe providerrevisions
@@ -354,23 +308,18 @@ Events:
   Warning  LintPackage        41s (x3 over 47s)  packages/providerrevision.pkg.crossplane.io  incompatible Crossplane version: package is not compatible with Crossplane version (v1.10.0)
 ```
 
-The {{<hover label="depend" line="17">}}Events{{</hover>}} show a 
-{{<hover label="depend" line="20">}}Warning{{</hover>}} with a message that the
-current version of Crossplane doesn't meet the Configuration package 
-requirements.
+{{<hover label="depend" line="17">}}イベント{{</hover>}}は、現在のCrossplaneバージョンが構成パッケージの要件を満たしていないというメッセージを伴う{{<hover label="depend" line="20">}}警告{{</hover>}}を示します。
 
-## Upgrade a Provider
+## プロバイダーのアップグレード
 
-To upgrade an existing Provider edit the installed Provider Package by either
-applying a new Provider manifest or with `kubectl edit providers`.
+既存のプロバイダーをアップグレードするには、新しいプロバイダーマニフェストを適用するか、`kubectl edit providers`を使用してインストールされたプロバイダーパッケージを編集します。
 
-Update the version number in the Provider's `spec.package` and apply the change.
-Crossplane installs the new image and creates a new `ProviderRevision`.
+プロバイダーの`spec.package`内のバージョン番号を更新し、変更を適用します。Crossplaneは新しいイメージをインストールし、新しい`ProviderRevision`を作成します。
 
-The `ProviderRevision` allows Crossplane to store deprecated Provider CRDs
-without removing them until you decide.
+`ProviderRevision`により、Crossplaneは非推奨のプロバイダーCRDを削除することなく保存できるようになります。
 
-View the `ProviderRevisions` with 
+
+`ProviderRevisions` を表示するには 
 {{<hover label="getPR" line="1">}}kubectl get providerrevisions{{</hover>}}
 
 ```shell {label="getPR",copy-lines="1"}
@@ -382,42 +331,36 @@ provider-nop-7e62d2a1a709                  True      1          xpkg.upbound.io/
 upbound-provider-family-aws-710d8cfe9f53   True      1          xpkg.upbound.io/upbound/provider-family-aws:v0.40.0      Active                                 10d
 ```
 
-By default Crossplane keeps a single 
-{{<hover label="getPR" line="5">}}Inactive{{</hover>}} Provider.
+デフォルトでは、Crossplane は単一の 
+{{<hover label="getPR" line="5">}}Inactive{{</hover>}} プロバイダーを保持します。
 
-Read the [revision history limit](#package-revision-history-limit) section to
-change the default value. 
+デフォルト値を変更するには、[revision history limit](#package-revision-history-limit) セクションを参照してください。
 
-Only a single revision of a Provider is 
-{{<hover label="getPR" line="4">}}Active{{</hover>}} at a time.
+プロバイダーの単一のリビジョンは 
+{{<hover label="getPR" line="4">}}Active{{</hover>}} である必要があります。
 
-## Remove a Provider
+## プロバイダーの削除
 
-Remove a Provider by deleting the Provider object with 
-`kubectl delete provider`.
+`kubectl delete provider` を使用してプロバイダーオブジェクトを削除することで、プロバイダーを削除します。
 
 {{< hint "warning" >}}
-Removing a Provider without first removing the Provider's managed resources
-may abandon the resources. The external resources aren't deleted.
+プロバイダーの管理リソースを最初に削除せずにプロバイダーを削除すると、リソースが放棄される可能性があります。外部リソースは削除されません。
 
-If you remove the Provider first, you must manually delete external resources
-through your cloud provider. Managed resources must be manually deleted by
-removing their finalizers.
+最初にプロバイダーを削除した場合は、クラウドプロバイダーを通じて外部リソースを手動で削除する必要があります。管理リソースは、ファイナライザーを削除することで手動で削除する必要があります。
 
-For more information on deleting abandoned resources read the [Crossplane troubleshooting guide]({{<ref "../guides/troubleshoot-crossplane#deleting-when-a-resource-hangs" >}}).
+放棄されたリソースの削除に関する詳細は、[Crossplane troubleshooting guide]({{<ref "../guides/troubleshoot-crossplane#deleting-when-a-resource-hangs" >}})を参照してください。
 {{< /hint >}}
 
-## Verify a Provider
+## プロバイダーの確認
 
-Providers install their own APIs representing the managed resources they support.
-Providers may also create Deployments, Service Accounts or RBAC configuration.
+プロバイダーは、サポートする管理リソースを表す独自のAPIをインストールします。
+プロバイダーは、デプロイメント、サービスアカウント、またはRBAC構成を作成することもあります。
 
-View the status of a Provider with
+プロバイダーのステータスを表示するには
 
 `kubectl get providers`
 
-During the install a Provider report `INSTALLED` as `True` and `HEALTHY` as
-`Unknown`.
+インストール中、プロバイダーは `INSTALLED` を `True` として、`HEALTHY` を `Unknown` として報告します。
 
 ```shell {copy-lines="1"}
 kubectl get providers
@@ -425,8 +368,7 @@ NAME                              INSTALLED   HEALTHY   PACKAGE                 
 crossplane-contrib-provider-aws   True        Unknown   xpkg.upbound.io/crossplane-contrib/provider-aws:v0.39.0   63s
 ```
 
-After the Provider install completes and it's ready for use the `HEALTHY` status
-reports `True`.
+プロバイダーのインストールが完了し、使用可能になると、`HEALTHY` ステータスは `True` を報告します。
 
 ```shell {copy-lines="1"}
 kubectl get providers
@@ -434,20 +376,19 @@ NAME                              INSTALLED   HEALTHY   PACKAGE                 
 crossplane-contrib-provider-aws   True        True      xpkg.upbound.io/crossplane-contrib/provider-aws:v0.39.0   88s
 ```
 
-{{<hint "important" >}}
-Some Providers install hundreds of Kubernetes Custom Resource Definitions (`CRDs`).
-This can create significant strain on undersized API Servers, impacting Provider
-install times.
 
-The Crossplane community has more
-[details on scaling CRDs](https://github.com/crossplane/crossplane/blob/master/design/one-pager-crd-scaling.md).
+{{<hint "important" >}}
+いくつかのプロバイダーは、数百のKubernetesカスタムリソース定義（`CRDs`）をインストールします。  
+これは、サイズが不十分なAPIサーバーに大きな負担をかけ、プロバイダーのインストール時間に影響を与える可能性があります。
+
+Crossplaneコミュニティには、  
+[CRDsのスケーリングに関する詳細](https://github.com/crossplane/crossplane/blob/master/design/one-pager-crd-scaling.md)があります。
 {{< /hint >}}
 
-### Provider conditions
+### プロバイダーの状態
 
-Crossplane uses a standard set of `Conditions` for Providers.  
-View the conditions of a provider under their `Status` with
-`kubectl describe provider`.
+Crossplaneは、プロバイダー用の標準的な`Conditions`セットを使用します。  
+`kubectl describe provider`を使用して、プロバイダーの`Status`の下にある状態を表示します。
 
 ```yaml
 kubectl describe provider
@@ -466,23 +407,21 @@ Status:
 # Removed for brevity
 ```
 
-#### Types
+#### タイプ
 
-Provider `Conditions` support two `Types`:
+プロバイダー`Conditions`は、2つの`Types`をサポートしています：
 
-* `Type: Installed` - the Provider package installed but isn't ready for use.
-* `Type: Healthy` - The Provider package is ready to use.
+* `Type: Installed` - プロバイダーのパッケージはインストールされていますが、使用する準備ができていません。
+* `Type: Healthy` - プロバイダーのパッケージは使用する準備ができています。
 
-#### Reasons
+#### 理由
 
-Each `Reason` relates to a specific `Type` and `Status`. Crossplane uses the
-following `Reasons` for Provider `Conditions`.
+各`Reason`は特定の`Type`および`Status`に関連しています。Crossplaneは、プロバイダー`Conditions`に対して以下の`Reasons`を使用します。
 
 <!-- vale Google.Headings = NO -->
 ##### InactivePackageRevision
 
-`Reason: InactivePackageRevision` indicates the Provider Package is using an
-inactive Provider Package Revision.
+`Reason: InactivePackageRevision`は、プロバイダーのパッケージが非アクティブなプロバイダーのパッケージリビジョンを使用していることを示します。
 
 <!-- vale Google.Headings = YES -->
 ```yaml
@@ -494,13 +433,12 @@ Reason: InactivePackageRevision
 <!-- vale Google.Headings = NO -->
 ##### ActivePackageRevision
 <!-- vale Google.Headings = YES -->
-The Provider Package is the current Package Revision, but Crossplane hasn't
-finished installing the Package Revision yet.
+プロバイダーのパッケージは現在のパッケージリビジョンですが、Crossplaneはまだパッケージリビジョンのインストールを完了していません。
 
 {{< hint "tip" >}}
-Providers stuck in this state are because of a problem with Package Revisions.
+この状態にあるプロバイダーは、パッケージリビジョンに問題があるためです。
 
-Use `kubectl describe providerrevisions` for more details.
+詳細については、`kubectl describe providerrevisions`を使用してください。
 {{< /hint >}}
 
 ```yaml
@@ -512,10 +450,10 @@ Reason: ActivePackageRevision
 <!-- vale Google.Headings = NO -->
 ##### HealthyPackageRevision
 
-The Provider is fully installed and ready to use.
+プロバイダーは完全にインストールされ、使用する準備ができています。
 
 {{<hint "tip" >}}
-`Reason: HealthyPackageRevision` is the normal state of a working Provider.
+`Reason: HealthyPackageRevision`は、正常に動作しているプロバイダーの通常の状態です。
 {{< /hint >}}
 
 <!-- vale Google.Headings = YES -->
@@ -529,12 +467,12 @@ Reason: HealthyPackageRevision
 ##### UnhealthyPackageRevision
 <!-- vale Google.Headings = YES -->
 
-There was an error installing the Provider Package Revision, preventing
-Crossplane from installing the Provider Package.
+
+プロバイダーパッケージリビジョンのインストール中にエラーが発生し、
+Crossplaneがプロバイダーパッケージをインストールできませんでした。
 
 {{<hint "tip" >}}
-Use `kubectl describe providerrevisions` for more details on why the Package
-Revision failed.
+`kubectl describe providerrevisions`を使用して、パッケージリビジョンが失敗した理由の詳細を確認してください。
 {{< /hint >}}
 
 ```yaml
@@ -546,12 +484,10 @@ Reason: UnhealthyPackageRevision
 ##### UnknownPackageRevisionHealth
 <!-- vale Google.Headings = YES -->
 
-The status of the Provider Package Revision is `Unknown`. The Provider Package
-Revision may be installing or has an issue.
+プロバイダーパッケージリビジョンのステータスは`Unknown`です。プロバイダーパッケージリビジョンはインストール中であるか、問題があります。
 
 {{<hint "tip" >}}
-Use `kubectl describe providerrevisions` for more details on why the Package
-Revision failed.
+`kubectl describe providerrevisions`を使用して、パッケージリビジョンが失敗した理由の詳細を確認してください。
 {{< /hint >}}
 
 ```yaml
@@ -560,79 +496,61 @@ Status: Unknown
 Reason: UnknownPackageRevisionHealth
 ```
 
-## Configure a Provider
+## プロバイダーの設定
 
-Providers have two different types of configurations:
+プロバイダーには2種類の設定があります：
 
-* _Controller configurations_ that change the settings of the Provider pod
-  running inside the Kubernetes cluster. For example, setting a `toleration` on
-  the Provider pod.
+* _コントローラー設定_は、Kubernetesクラスター内で実行されているプロバイダーポッドの設定を変更します。たとえば、プロバイダーポッドに`toleration`を設定することです。
 
-* _Provider configurations_ that change settings used when communicating with
-  an external provider. For example, cloud provider authentication.
+* _プロバイダー設定_は、外部プロバイダーとの通信に使用される設定を変更します。たとえば、クラウドプロバイダーの認証です。
 
 {{<hint "important" >}}
-Apply `ControllerConfig` objects to Providers.  
+`ControllerConfig`オブジェクトをプロバイダーに適用します。  
 
-Apply `ProviderConfig` objects to managed resources.
+`ProviderConfig`オブジェクトを管理リソースに適用します。
 {{< /hint >}}
 
-### Controller configuration
+### コントローラー設定
 
 {{< hint "important" >}}
 <!-- vale write-good.Passive = NO -->
 <!-- vale gitlab.FutureTense = NO -->
-The `ControllerConfig` type was deprecated in v1.11 and will be removed in
-a future release.
+`ControllerConfig`タイプはv1.11で非推奨となり、将来のリリースで削除されます。
 <!-- vale write-good.Passive = YES -->
 <!-- vale gitlab.FutureTense = YES -->
 
-[`DeploymentRuntimeConfig`]({{<ref "#runtime-configuration" >}}) is the
-replacement for Controller configuration and is available in v1.14+.
+[`DeploymentRuntimeConfig`]({{<ref "#runtime-configuration" >}})は
+コントローラー設定の代替であり、v1.14+で利用可能です。
 {{< /hint >}}
 
-Applying a Crossplane `ControllerConfig` to a Provider changes the settings of
-the Provider's pod. The
-[Crossplane ControllerConfig schema]({{< ref "../api#ControllerConfig-spec" >}})
-defines the supported set of ControllerConfig settings.
+Crossplaneの`ControllerConfig`をプロバイダーに適用すると、
+プロバイダーのポッドの設定が変更されます。
+[Crossplane ControllerConfigスキーマ]({{< ref "../api#ControllerConfig-spec" >}})
+は、サポートされているControllerConfig設定のセットを定義しています。
 
-The most common use case for ControllerConfigs are providing `args` to a
-Provider's pod enabling optional services. For example, enabling
-[external secret stores]({{< ref "../guides/vault-as-secret-store#enable-external-secret-stores-in-the-provider" >}})
-for a Provider.
+ControllerConfigsの最も一般的な使用例は、プロバイダーのポッドに`args`を提供してオプションサービスを有効にすることです。たとえば、
+[外部シークレットストア]({{< ref "../guides/vault-as-secret-store#enable-external-secret-stores-in-the-provider" >}})
+をプロバイダーに対して有効にすることです。
 
-Each Provider determines their supported set of `args`.
+各プロバイダーは、サポートされている `args` のセットを決定します。
 
-### Runtime configuration
+### ランタイム構成
 
-{{<hint "important" >}}
-`DeploymentRuntimeConfigs` is a beta feature. 
+{{<hint "重要" >}}
+`DeploymentRuntimeConfigs` はベータ機能です。
 
-It's on by default, and you can disable it by passing
-`--enable-deployment-runtime-configs=false` to the Crossplane deployment.
+デフォルトでオンになっており、Crossplane デプロイメントに `--enable-deployment-runtime-configs=false` を渡すことで無効にできます。
 {{< /hint >}}
 
-Runtime configuration is a generalized mechanism for configuring the runtime for
-Crossplane packages with a runtime, namely `Providers` and `Functions`. It
-replaces the deprecated `ControllerConfig` type and is available in v1.14+.
+ランタイム構成は、ランタイムを持つ Crossplane パッケージのための一般化された構成メカニズムであり、具体的には `Providers` と `Functions` です。これは、非推奨の `ControllerConfig` タイプに代わるもので、v1.14+ で利用可能です。
 
-With its default configuration, Crossplane uses Kubernetes Deployments to
-deploy runtime for packages, more specifically, a controller for a `Provider`
-or a gRPC server for a `Function`. It's possible to configure the runtime
-manifest by applying a `DeploymentRuntimeConfig` and referencing it in the
-`Provider` or `Function` object.
+デフォルトの構成では、Crossplane は Kubernetes Deployment を使用してパッケージのランタイムをデプロイします。具体的には、`Provider` のためのコントローラーまたは `Function` のための gRPC サーバーです。`DeploymentRuntimeConfig` を適用し、それを `Provider` または `Function` オブジェクトで参照することで、ランタイムマニフェストを構成することが可能です。
 
-{{<hint "note" >}}
-Different from `ControllerConfig`, `DeploymentRuntimeConfig` embed the whole
-Kubernetes Deployment spec, which allows for more flexibility in configuring
-the runtime. Refer to the [design document](https://github.com/crossplane/crossplane/blob/2c5e7f07ba9e3d83d1c85169bbde685de8514ab8/design/one-pager-package-runtime-config.md)
-for more details.
+{{<hint "注意" >}}
+`ControllerConfig` とは異なり、`DeploymentRuntimeConfig` は Kubernetes Deployment スペック全体を埋め込んでおり、ランタイムの構成においてより柔軟性を提供します。詳細については、[設計文書](https://github.com/crossplane/crossplane/blob/2c5e7f07ba9e3d83d1c85169bbde685de8514ab8/design/one-pager-package-runtime-config.md)を参照してください。
 {{< /hint >}}
 
-
-As an example, to enable the external secret stores alpha feature for a `Provider`
-by adding the `--enable-external-secret-stores` argument to the controller,
-one can apply the following:
+例として、`Provider` に対して外部シークレットストアのアルファ機能を有効にするために、コントローラーに `--enable-external-secret-stores` 引数を追加するには、次のように適用できます。
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1
@@ -660,35 +578,25 @@ spec:
                 - --enable-external-secret-stores
 ```
 
-Please note that the packages manager uses  `package-runtime` as the name of
-the runtime container. When you use a different container name, the package
-manager introduces it as a sidecar container instead of modifying the
-package runtime container.
+パッケージマネージャーは、ランタイムコンテナの名前として `package-runtime` を使用することに注意してください。異なるコンテナ名を使用する場合、パッケージマネージャーはそれをサイドカーコンテナとして導入し、パッケージランタイムコンテナを変更することはありません。
 
 <!-- vale write-good.Passive = NO -->
-The package manager is opinionated about some fields to ensure
+パッケージマネージャーは、ランタイムが正常に動作することを保証するためにいくつかのフィールドに対して意見を持っており、
 <!-- vale write-good.Passive = YES -->
-the runtime is working and overlay them on top of the values
-in the runtime configuration. For example, it defaults the replica count
-to 1 if not set and overrides the label selectors to make sure the Deployment
-and Service match. It also injects any necessary environment variables,
-ports as well as volumes and volume mounts.
+ランタイム構成の値の上にそれらをオーバーレイします。たとえば、設定されていない場合、レプリカ数をデフォルトで 1 にし、Deployment と Service が一致するようにラベルセレクターを上書きします。また、必要な環境変数、ポート、ボリュームおよびボリュームマウントを注入します。
 
-The `Provider` or `Functions`'s `spec.runtimeConfigRef.name` field defaults
-to value `default`, which means Crossplane uses the default runtime configuration
-if not specified. Crossplane ensures there is always a default runtime
+`Provider` または `Functions` の `spec.runtimeConfigRef.name` フィールドはデフォルトで値 `default` に設定されており、指定されていない場合は Crossplane がデフォルトのランタイム構成を使用します。Crossplane は常にクラスター内にデフォルトのランタイム
 <!-- vale gitlab.FutureTense = NO -->
-configuration in the cluster, but won't change it if it already exists. This
+構成が存在することを保証しますが、既に存在する場合は変更しません。これにより
 <!-- vale gitlab.FutureTense = YES -->
-allows users to customize the default runtime configuration to their needs.
+ユーザーはデフォルトのランタイム構成を自分のニーズに合わせてカスタマイズできます。
 
 {{<hint "tip" >}}
 <!-- vale gitlab.SubstitutionWarning = NO -->
-Since `DeploymentRuntimeConfig` uses the same schema as Kubernetes `Deployment`
+`DeploymentRuntimeConfig` は Kubernetes の `Deployment`
 <!-- vale gitlab.SubstitutionWarning = YES -->
-spec, you may need to pass empty values to bypass the schema validation.
-For example, if you just want to change the `replicas` field, you would
-need to pass the following:
+spec と同じスキーマを使用しているため、スキーマ検証を回避するために空の値を渡す必要があるかもしれません。
+たとえば、`replicas` フィールドだけを変更したい場合は、次のように渡す必要があります：
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1beta1
@@ -705,23 +613,20 @@ spec:
 
 {{< /hint >}}
 
-#### Configuring runtime deployment spec
+#### ランタイムデプロイメント spec の構成
 
-Using the Deployment spec provided in the `DeploymentRuntimeConfig` as a base,
-the package manager builds the Deployment spec for the package runtime with
-the following rules:
-- Injects the package runtime container as the first container in the
-  `containers` array, with name `package-runtime`.
-- If not provided, defaults with the following:
-  - `spec.replicas` as 1.
-  - Image pull policy as `IfNotPresent`.
-  - Pod Security Context as:
+`DeploymentRuntimeConfig` で提供されるデプロイメント spec をベースにして、パッケージマネージャーは次のルールに従ってパッケージランタイムのデプロイメント spec を構築します：
+- パッケージランタイムコンテナを `containers` 配列の最初のコンテナとして注入し、名前を `package-runtime` とします。
+- 提供されていない場合は、次のようにデフォルト設定します：
+  - `spec.replicas` を 1 に設定。
+  - イメージプルポリシーを `IfNotPresent` に設定。
+  - Pod セキュリティコンテキストを次のように設定：
     ```yaml
     runAsNonRoot: true
     runAsUser: 2000
     runAsGroup: 2000
     ```
-  - Security Context for the runtime container as:
+  - ランタイムコンテナのセキュリティコンテキストを次のように設定：
     ```yaml
     allowPrivilegeEscalation: false
     privileged: false
@@ -729,27 +634,25 @@ the following rules:
     runAsNonRoot: true
     runAsUser: 2000
     ```
-- Applies the following:
-  - **Sets** `metadata.namespace` as Crossplane namespace.
-  - **Sets** `metadata.ownerReferences` such that the deployment owned by the package revision.
-  - **Sets** `spec.selectors` using generated labels.
-  - **Sets** `spec.serviceAccount` with the created **Service Account**.
-  - **Adds** pull secrets provided in the Package spec as image pull secrets, `spec.packagePullSecrets`.
-  - **Sets** the **Image Pull Policy** with the value provided in the Package spec, `spec.packagePullPolicy`.
-  - **Adds** necessary **Ports** to the runtime container.
-  - **Adds** necessary **Environments** to the runtime container.
-  - Mounts TLS secrets by **adding** necessary **Volumes**, **Volume Mounts** and **Environments** to the runtime container.
+- 次のことを適用します：
+  - **metadata.namespace** を Crossplane 名前空間として設定します。
+  - **metadata.ownerReferences** を設定し、デプロイメントがパッケージリビジョンに所有されるようにします。
+  - **spec.selectors** を生成されたラベルを使用して設定します。
+  - **spec.serviceAccount** を作成された **Service Account** で設定します。
+  - パッケージ spec で提供されたプルシークレットをイメージプルシークレット `spec.packagePullSecrets` として追加します。
+  - パッケージ spec で提供された値 `spec.packagePullPolicy` で **Image Pull Policy** を設定します。
+  - ランタイムコンテナに必要な **Ports** を追加します。
+  - ランタイムコンテナに必要な **Environments** を追加します。
+  - TLS シークレットをマウントするために、ランタイムコンテナに必要な **Volumes**、**Volume Mounts** および **Environments** を追加します。
 
-#### Configuring metadata of runtime resources
+#### ランタイムリソースのメタデータの設定
 
-`DeploymentRuntimeConfig` also enables configuring the following metadata of
-Runtime resources, namely `Deployment`, `ServiceAccount` and `Service`:
-- name
-- labels
-- annotations
+`DeploymentRuntimeConfig` は、次のランタイムリソースのメタデータを設定することも可能です。すなわち、`Deployment`、`ServiceAccount`、および `Service`：
+- 名前
+- ラベル
+- アノテーション
 
-The following example shows how to configure the name of the ServiceAccount
-and the labels of the Deployment:
+以下の例は、ServiceAccountの名前とDeploymentのラベルを設定する方法を示しています：
 
 ```yaml
 apiVersion: pkg.crossplane.io/v1beta1
@@ -766,24 +669,20 @@ spec:
       name: my-service-account
 ```
 
-### Provider configuration
+### プロバイダーの設定
 
-The `ProviderConfig` determines settings the Provider uses communicating to the
-external provider. Each Provider determines available settings of their
-`ProviderConfig`.
+`ProviderConfig` は、プロバイダーが外部プロバイダーと通信する際に使用する設定を決定します。各プロバイダーは、その `ProviderConfig` の利用可能な設定を決定します。
 
 <!-- vale write-good.Weasel = NO -->
 <!-- allow "usually" -->
-Provider authentication is usually configured with a `ProviderConfig`. For
-example, to use basic key-pair authentication with Provider AWS a
-{{<hover label="providerconfig" line="2" >}}ProviderConfig{{</hover >}}
-{{<hover label="providerconfig" line="5" >}}spec{{</hover >}}
-defines the
-{{<hover label="providerconfig" line="6" >}}credentials{{</hover >}} and that
-the Provider pod should look in the Kubernetes
-{{<hover label="providerconfig" line="7" >}}Secrets{{</hover >}} objects and use
-the key named
-{{<hover label="providerconfig" line="10" >}}aws-creds{{</hover >}}.
+プロバイダーの認証は通常 `ProviderConfig` で設定されます。たとえば、AWSプロバイダーで基本的なキー・ペア認証を使用するには、{{<hover label="providerconfig" line="2" >}}ProviderConfig{{</hover >}} 
+{{<hover label="providerconfig" line="5" >}}spec{{</hover >}} 
+が
+{{<hover label="providerconfig" line="6" >}}credentials{{</hover >}} 
+を定義し、プロバイダーのポッドがKubernetesの
+{{<hover label="providerconfig" line="7" >}}Secrets{{</hover >}} 
+オブジェクトを探し、次の名前のキーを使用する必要があります：
+{{<hover label="providerconfig" line="10" >}}aws-creds{{</hover >}}。
 <!-- vale write-good.Weasel = YES -->
 ```yaml {label="providerconfig"}
 apiVersion: aws.crossplane.io/v1beta1
@@ -800,26 +699,23 @@ spec:
 ```
 
 {{< hint "important" >}}
-Authentication configuration may be different across Providers.
+認証設定はプロバイダーによって異なる場合があります。
 
-Read the documentation on a specific Provider for instructions on configuring
-authentication for that Provider.
+特定のプロバイダーの認証設定に関する指示については、そのプロバイダーのドキュメントを参照してください。
 {{< /hint >}}
 
 <!-- vale write-good.TooWordy = NO -->
 <!-- allow multiple -->
-ProviderConfig objects apply to individual Managed Resources. A single
-Provider can authenticate with multiple users or accounts through
-ProviderConfigs.
+ProviderConfigオブジェクトは、個々のマネージドリソースに適用されます。単一のプロバイダーは、複数のユーザーまたはアカウントを通じてProviderConfigsで認証できます。
 <!-- vale write-good.TooWordy = YES -->
 
-Each account's credentials tie to a unique ProviderConfig. When creating a
-managed resource, attach the desired ProviderConfig.
+各アカウントの認証情報は、ユニークなProviderConfigに結びついています。マネージドリソースを作成する際には、希望するProviderConfigを添付してください。
 
-For example, two AWS ProviderConfigs, named
-{{<hover label="user" line="4">}}user-keys{{</hover >}} and
-{{<hover label="admin" line="4">}}admin-keys{{</hover >}}
-use different Kubernetes secrets.
+たとえば、2つのAWS ProviderConfigs、名前が
+{{<hover label="user" line="4">}}user-keys{{</hover >}} 
+と
+{{<hover label="admin" line="4">}}admin-keys{{</hover >}} 
+は異なるKubernetesシークレットを使用します。
 
 ```yaml {label="user"}
 apiVersion: aws.crossplane.io/v1beta1
@@ -849,11 +745,10 @@ spec:
       key: admin-secret-key
 ```
 
-Apply the ProviderConfig when creating a managed resource.
+管理リソースを作成する際に ProviderConfig を適用します。
 
-This creates an AWS {{<hover label="user-bucket" line="2" >}}Bucket{{< /hover >}}
-resource using the
-{{<hover label="user-bucket" line="9" >}}user-keys{{< /hover >}} ProviderConfig.
+これにより、AWS {{<hover label="user-bucket" line="2" >}}Bucket{{< /hover >}} リソースが
+{{<hover label="user-bucket" line="9" >}}user-keys{{< /hover >}} ProviderConfig を使用して作成されます。
 
 ```yaml {label="user-bucket"}
 apiVersion: s3.aws.upbound.io/v1beta1
@@ -867,9 +762,8 @@ spec:
     name: user-keys
 ```
 
-This creates a second {{<hover label="admin-bucket" line="2" >}}Bucket{{< /hover >}}
-resource using the
-{{<hover label="admin-bucket" line="9" >}}admin-keys{{< /hover >}} ProviderConfig.
+これにより、2 番目の {{<hover label="admin-bucket" line="2" >}}Bucket{{< /hover >}} リソースが
+{{<hover label="admin-bucket" line="9" >}}admin-keys{{< /hover >}} ProviderConfig を使用して作成されます。
 
 ```yaml {label="admin-bucket"}
 apiVersion: s3.aws.upbound.io/v1beta1

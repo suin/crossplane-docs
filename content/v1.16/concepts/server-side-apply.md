@@ -1,64 +1,48 @@
 ---
-title: Server-Side Apply
+title: サーバーサイドアプライ
 state: alpha
 alphaVersion: "1.15"
 weight: 300
 ---
 
-Crossplane can use server-side apply to sync claims with composite resources
-(XRs), and to sync composite resources with composed resources.
+Crossplaneは、サーバーサイドアプライを使用して、クレームを複合リソース（XR）と同期させたり、複合リソースを構成リソースと同期させたりできます。
 
-When Crossplane uses server-side apply, the Kubernetes API server helps sync
-resources. Using server-side apply makes syncing more predictable and less
-buggy.
+Crossplaneがサーバーサイドアプライを使用すると、Kubernetes APIサーバーがリソースの同期を支援します。サーバーサイドアプライを使用することで、同期がより予測可能でバグが少なくなります。
 
 {{<hint "tip">}}
-Server-side apply is a Kubernetes feature. Read more about server-side apply in
-the [Kubernetes documentation](https://kubernetes.io/docs/reference/using-api/server-side-apply/).
+サーバーサイドアプライはKubernetesの機能です。サーバーサイドアプライの詳細については、[Kubernetesのドキュメント](https://kubernetes.io/docs/reference/using-api/server-side-apply/)をお読みください。
 {{</hint>}}
 
-## Use server-side apply to sync claims with composite resources
+## サーバーサイドアプライを使用してクレームを複合リソースと同期させる
 
-When you create a claim, Crossplane creates a corresponding composite resource.
-Crossplane keeps the claim in sync with the composite resource. When you change
-the claim, Crossplane reflects those changes on the composite resource.
+クレームを作成すると、Crossplaneは対応する複合リソースを作成します。Crossplaneは、クレームを複合リソースと同期させます。クレームを変更すると、Crossplaneはその変更を複合リソースに反映します。
 
-Read the [claims documentation]({{<ref "./claims">}}) to learn more about claims
-and how they relate to composite resources.
+クレームと複合リソースの関係について詳しくは、[クレームのドキュメント]({{<ref "./claims">}})をお読みください。
 
-Crossplane can use server-side apply to keep the claim in sync with the
-composite resource.
+Crossplaneは、サーバーサイドアプライを使用して、クレームを複合リソースと同期させることができます。
 
-Use the `--enable-ssa-claims` feature flag to enable using server-side apply.
-Read the [Install Crossplane documentation]({{<ref "../software/install#feature-flags">}})
-to learn about feature flags.
+`--enable-ssa-claims`フィーチャーフラグを使用して、サーバーサイドアプライの使用を有効にします。フィーチャーフラグについては、[Crossplaneのインストールドキュメント]({{<ref "../software/install#feature-flags">}})をお読みください。
 
-If you see fields reappearing after you delete them from a claim's `spec`,
-enable server-side apply to fix the problem. Enabling server-side apply also
-fixes the problem where Crossplane doesn't delete labels and annotations from
-the composite resource when you delete them from the claim.
+クレームの`spec`からフィールドを削除した後に再び表示される場合は、サーバーサイドアプライを有効にして問題を修正してください。サーバーサイドアプライを有効にすると、クレームから削除したときにCrossplaneが複合リソースからラベルや注釈を削除しない問題も修正されます。
 
 {{<hint "important">}}
-When you enable server-side apply, Crossplane is stricter about how it syncs
-a claim with its counterpart composite resource:
+サーバーサイドアプライを有効にすると、Crossplaneはクレームとその対応する複合リソースの同期方法に対してより厳格になります：
 
-- The claim's `metadata` syncs to the composite resource's `metadata`.
-- The claim's `spec` syncs to the composite resource's `spec`.
-- The composite resource's `status` syncs to the claim's `status`.
+- クレームの`metadata`は複合リソースの`metadata`と同期します。
+- クレームの`spec`は複合リソースの`spec`と同期します。
+- 複合リソースの`status`はクレームの`status`と同期します。
 
-When you enable server-side apply Crossplane doesn't sync the composite resource's `metadata`
-and `spec` back to the claim's `metadata` and `spec`. It also doesn't sync the
-claim's `status` to the composite resource's `status`.
+サーバーサイドアプライを有効にすると、Crossplaneは複合リソースの`metadata`と`spec`をクレームの`metadata`と`spec`に戻して同期しません。また、クレームの`status`を複合リソースの`status`に同期することもありません。
 {{</hint>}}
 
-## Use server-side apply to sync claims end-to-end
+## サーバーサイドアプライを使用してクレームをエンドツーエンドで同期する
 
-To get the full benefit of server-side apply, use the `--enable-ssa-claims`
-feature flag together with composition functions.
+サーバーサイドアプライの完全な利点を得るには、`--enable-ssa-claims`
+フィーチャーフラグをコンポジション関数と一緒に使用してください。
 
-When you use composition functions, Crossplane uses server side apply to sync
-composite resources with composed resources. Read more about this in the
-[composition functions documentation]({{<ref "./composition-functions#how-composition-functions-work">}}).
+コンポジション関数を使用すると、Crossplaneはサーバーサイドアプライを使用して
+合成リソースを構成されたリソースと同期します。これについての詳細は
+[コンポジション関数のドキュメント]({{<ref "./composition-functions#how-composition-functions-work">}})をお読みください。
 
 ```mermaid
 graph LR
@@ -68,38 +52,37 @@ graph LR
   B -- function server-side apply --> E(Composed Resource)
 ```
 
-When you use server-side apply end-to-end there is a clear, predictable
-propagation of fields from claim to composed resources, and back:
+サーバーサイドアプライをエンドツーエンドで使用すると、クレームから構成されたリソース、
+そしてその逆へのフィールドの明確で予測可能な伝播があります：
 
-* `metadata` and `spec` flow forwards, from claim to XR to composed resources.
-* `status` flows backwards, from composed resources to XR to claim.
+* `metadata` と `spec` は、クレームからXR、そして構成されたリソースへと前方に流れます。
+* `status` は、構成されたリソースからXR、そしてクレームへと後方に流れます。
 
 {{<hint "important">}}
-When you use composition functions, Crossplane is stricter about how it syncs
-composite resources (XRs) with composed resources:
+コンポジション関数を使用すると、Crossplaneは合成リソース（XR）と構成されたリソースの同期方法に対してより厳格になります：
 
-- The XR's `metadata` syncs to the composed resource's `metadata`.
-- The XR's `spec` syncs to the composed resource's `spec`.
-- The composed resource's `status` syncs to the XR's `status`.
+- XRの `metadata` は構成されたリソースの `metadata` に同期されます。
+- XRの `spec` は構成されたリソースの `spec` に同期されます。
+- 構成されたリソースの `status` はXRの `status` に同期されます。
 
-When you use composition functions Crossplane doesn't sync the composed resource's `metadata`
-and `spec` back to the XR's `metadata` and `spec`.
+コンポジション関数を使用すると、Crossplaneは構成されたリソースの `metadata`
+および `spec` をXRの `metadata` および `spec` に戻して同期しません。
 {{</hint>}}
 
-When Crossplane uses server-side apply end-to-end to sync claims with composed
-resources, it deletes fields from a composed resource's `spec` when you
-delete fields from the claim's `spec`.
+Crossplaneがサーバーサイドアプライをエンドツーエンドで使用してクレームを構成された
+リソースと同期するとき、クレームの `spec` からフィールドを削除すると、構成されたリソースの
+`spec` からもフィールドが削除されます。
 
-When Crossplane uses server-side apply end-to-end it's also able to merge claim
-fields into complex composed resource fields. Objects and arrays of objects are
-examples of complex composed resource fields.
+Crossplaneがサーバーサイドアプライをエンドツーエンドで使用すると、クレームの
+フィールドを複雑な構成されたリソースのフィールドにマージすることもできます。
+オブジェクトやオブジェクトの配列は、複雑な構成されたリソースのフィールドの例です。
 
 {{<hint "tip">}}
-Crossplane can only merge complex fields for resources that use server-side
-apply merge strategy OpenAPI extensions. Read about these extensions in the
-Kubernetes [server-side apply documentation](https://kubernetes.io/docs/reference/using-api/server-side-apply/#merge-strategy).
+Crossplaneは、サーバーサイドアプライマージ戦略OpenAPI拡張を使用するリソースの
+複雑なフィールドのみをマージできます。これらの拡張についてはKubernetesの
+[サーバーサイドアプライのドキュメント](https://kubernetes.io/docs/reference/using-api/server-side-apply/#merge-strategy)をお読みください。
 
-If you find that Crossplane isn't merging managed resource fields, raise an
-issue against the relevant provider. Ask the provider maintainer to add
-server-side apply merge strategy extensions to the managed resource.
+Crossplaneが管理リソースのフィールドをマージしていない場合は、関連するプロバイダーに
+問題を提起してください。プロバイダーのメンテナーに、管理リソースにサーバーサイドアプライ
+マージ戦略拡張を追加するよう依頼してください。
 {{</hint>}}

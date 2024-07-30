@@ -1,47 +1,39 @@
 ---
-title: Environment Configurations
+title: 環境設定
 weight: 75
 state: alpha
 alphaVersion: "1.11"
-description: "Environment Configurations or EnvironmentConfigs are an in-memory datastore used in patching Compositions"
+description: "環境設定または EnvironmentConfigs は、Composition のパッチ処理に使用されるメモリ内データストアです"
 ---
 
 <!--
-TODO: Add Policies
+TODO: ポリシーを追加
 -->
 
 
-A Crossplane EnvironmentConfig is a cluster scoped 
-[ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/)-like 
-resource used
-by Compositions. Compositions can use the environment to store information from
-individual resources or to apply [patches]({{<ref "patch-and-transform">}}).
+Crossplane の EnvironmentConfig は、クラスター スコープの 
+[ConfigMap](https://kubernetes.io/docs/concepts/configuration/configmap/)-のような 
+リソースで、Composition によって使用されます。Composition は、個々のリソースからの情報を保存するためや、[パッチ]({{<ref "patch-and-transform">}})を適用するために環境を使用できます。
 
-Crossplane supports multiple EnvironmentConfigs, each acting as a unique
-data store. 
+Crossplane は複数の EnvironmentConfigs をサポートしており、それぞれがユニークなデータストアとして機能します。
 
-When Crossplane creates a composite resource, Crossplane merges all the 
-EnvironmentConfigs referenced in the associated Composition and creates a unique
-in-memory environment for that composite resource.
+Crossplane が複合リソースを作成すると、Crossplane は関連する Composition で参照されているすべての 
+EnvironmentConfigs をマージし、その複合リソースのためのユニークなメモリ内環境を作成します。
 
-The composite resource can read and write data to their unique 
-in-memory environment.
+複合リソースは、そのユニークなメモリ内環境にデータを読み書きできます。
 
 {{<hint "important" >}}
-The in-memory environment is unique to each composite resource.  
-A composite resource can't read data in another composite resource's
-environment. 
+メモリ内環境は各複合リソースに固有です。  
+複合リソースは、他の複合リソースの環境内のデータを読み取ることはできません。 
 {{< /hint >}}
 
-## Enable EnvironmentConfigs
-EnvironmentConfigs are an alpha feature. Alpha features aren't enabled by
-default.
+## EnvironmentConfigs を有効にする
+EnvironmentConfigs はアルファ機能です。アルファ機能はデフォルトでは有効になっていません。
 
-Enable EnvironmentConfig support by 
-[changing the Crossplane pod setting]({{<ref "./pods#change-pod-settings">}})
-and enabling  
-{{<hover label="deployment" line="12">}}--enable-environment-configs{{</hover>}}
-argument.
+[Crossplane ポッド設定を変更する]({{<ref "./pods#change-pod-settings">}})ことで 
+EnvironmentConfig サポートを有効にし、  
+{{<hover label="deployment" line="12">}}--enable-environment-configs{{</hover>}} 
+引数を有効にします。
 
 ```yaml {label="deployment",copy-lines="12"}
 $ kubectl edit deployment crossplane --namespace crossplane-system
@@ -60,25 +52,25 @@ spec:
 
 {{<hint "tip" >}}
 
-The [Crossplane install guide]({{<ref "../software/install#feature-flags">}}) 
-describes enabling feature flags like 
-{{<hover label="deployment" line="12">}}--enable-environment-configs{{</hover>}}
-with Helm.
+[Crossplane インストールガイド]({{<ref "../software/install#feature-flags">}}) 
+では、Helm を使用して 
+{{<hover label="deployment" line="12">}}--enable-environment-configs{{</hover>}} 
+のような機能フラグを有効にする方法が説明されています。
 {{< /hint >}}
 
 <!-- vale Google.Headings = NO -->
-## Create an EnvironmentConfig
+## EnvironmentConfig を作成する
 <!-- vale Google.Headings = YES -->
 
-An {{<hover label="env1" line="2">}}EnvironmentConfig{{</hover>}} has a single
-object field,
-{{<hover label="env1" line="5">}}data{{</hover>}}.
+{{<hover label="env1" line="2">}}EnvironmentConfig{{</hover>}} には、単一の
+オブジェクトフィールド、 
+{{<hover label="env1" line="5">}}data{{</hover>}} があります。
 
-An EnvironmentConfig supports any data inside the 
-{{<hover label="env1" line="5">}}data{{</hover>}} field.
+EnvironmentConfig は、 
+{{<hover label="env1" line="5">}}data{{</hover>}} フィールド内の任意のデータをサポートします。
 
-Here an example 
-{{<hover label="env1" line="2">}}EnvironmentConfig{{</hover>}}.
+ここに例があります 
+{{<hover label="env1" line="2">}}EnvironmentConfig{{</hover>}}。
 
 ```yaml {label="env1"}
 apiVersion: apiextensions.crossplane.io/v1alpha1
@@ -97,29 +89,22 @@ data:
 ```
 
 <!-- vale Google.Headings = NO -->
-## Select an EnvironmentConfig
+## 環境構成を選択
 <!-- vale Google.Headings = YES -->
 
-Select the EnvironmentConfigs to use
-inside a Composition's 
-{{<hover label="comp" line="6">}}environment{{</hover>}} field.
+Compositionの 
+{{<hover label="comp" line="6">}}environment{{</hover>}} フィールドで使用する
+EnvironmentConfigsを選択します。
 
-The {{<hover label="comp" line="7">}}environmentConfigs{{</hover>}} field is a
-list of environments this Composition can use. 
+{{<hover label="comp" line="7">}}environmentConfigs{{</hover>}} フィールドは、このCompositionが使用できる環境のリストです。
 
-Select an environment by 
-{{<hover label="comp" line="8">}}Reference{{</hover>}} or 
-by 
-{{<hover label="comp" line="11">}}Selector{{</hover>}}.
+{{<hover label="comp" line="8">}}Reference{{</hover>}} または 
+{{<hover label="comp" line="11">}}Selector{{</hover>}}によって環境を選択します。
 
-A 
-{{<hover label="comp" line="8">}}Reference{{</hover>}}
-selects an environment by 
-{{<hover label="comp" line="10">}}name{{</hover>}}.  
-The 
-{{<hover label="comp" line="11">}}Selector{{</hover>}} selects an environment
-based on the 
-{{<hover label="comp" line="13">}}Labels{{</hover>}} applied to the environment. 
+{{<hover label="comp" line="8">}}Reference{{</hover>}}は、 
+{{<hover label="comp" line="10">}}name{{</hover>}}によって環境を選択します。  
+{{<hover label="comp" line="11">}}Selector{{</hover>}}は、環境に適用された 
+{{<hover label="comp" line="13">}}Labels{{</hover>}}に基づいて環境を選択します。
 
 ```yaml {label="comp",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -138,31 +123,24 @@ spec:
       # Removed for brevity
 ```
 
-If a Composition uses multiple 
-{{<hover label="comp" line="7">}}environmentConfigs{{</hover>}}
-Crossplane merges them together in the order they're listed. 
+Compositionが複数の 
+{{<hover label="comp" line="7">}}environmentConfigs{{</hover>}}を使用する場合、Crossplaneはそれらをリストに表示された順序で統合します。
 
 {{<hint "note" >}}
-If multiple 
-{{<hover label="comp" line="7">}}environmentConfigs{{</hover>}}
-use the same key, the Composition uses the value of the last environment listed.
+複数の 
+{{<hover label="comp" line="7">}}environmentConfigs{{</hover>}}が同じキーを使用する場合、Compositionはリストの最後に表示された環境の値を使用します。
 {{</hint >}}
 
-### Select by name
+### 名前で選択
 
-Select an environment by name with
-{{<hover label="byName" line="8">}}type: Reference{{</hover>}}. 
+{{<hover label="byName" line="8">}}type: Reference{{</hover>}}を使用して名前で環境を選択します。
 
-Define the
-{{<hover label="byName" line="9">}}ref{{</hover>}} object and the 
-{{<hover label="byName" line="10">}}name{{</hover>}} matching the exact name of
-the environment.
+{{<hover label="byName" line="9">}}ref{{</hover>}}オブジェクトと、環境の正確な名前に一致する 
+{{<hover label="byName" line="10">}}name{{</hover>}}を定義します。
 
-
-For example, select the 
-{{<hover label="byName" line="7">}}environmentConfig{{</hover>}}
-named
-{{<hover label="byName" line="10">}}example-environment{{</hover>}}
+例えば、次の 
+{{<hover label="byName" line="7">}}environmentConfig{{</hover>}}を選択します
+{{<hover label="byName" line="10">}}example-environment{{</hover>}}という名前の。
 
 ```yaml {label="byName",copy-lines="all"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -177,31 +155,26 @@ spec:
         name: example-environment
 ```
 
-### Select by label
+### ラベルで選択
 
-Select an environment by labels with a
-{{<hover label="byLabel" line="8">}}type: Selector{{</hover>}}.  
+{{<hover label="byLabel" line="8">}}type: Selector{{</hover>}}を使用してラベルで環境を選択します。
 
-Define the {{<hover label="byLabel" line="9">}}selector{{</hover>}} object.  
+{{<hover label="byLabel" line="9">}}selector{{</hover>}}オブジェクトを定義します。
 
-The
-{{<hover label="byLabel" line="10">}}matchLabels{{</hover>}} object contains a
-list of labels to match on. 
 
-Selecting a label requires matching both the label 
+{{<hover label="byLabel" line="10">}}matchLabels{{</hover>}} オブジェクトには、一致させるラベルのリストが含まれています。 
+
+ラベルを選択するには、ラベルの 
 {{<hover label="byLabel" line="11">}}key{{</hover>}} 
-and the value of key. 
+とキーの値の両方を一致させる必要があります。 
 
-When matching the label's value, provide an exact value with a 
-{{<hover label="byLabel" line="12">}}type: Value{{</hover>}} and provide the value
-to match in the 
-{{<hover label="byLabel" line="13">}}value{{</hover>}} field.
+ラベルの値を一致させる際には、 
+{{<hover label="byLabel" line="12">}}type: Value{{</hover>}} を指定し、 
+{{<hover label="byLabel" line="13">}}value{{</hover>}} フィールドに一致させる値を提供します。
 
-Crossplane can also match a label's value based on an input in the composite
-resource. Use 
-{{<hover label="byLabel" line="15">}}type: FromCompositeFieldPath{{</hover>}} 
-and provide the field to match in the 
-{{<hover label="byLabel" line="16">}}valueFromFieldPath{{</hover>}} field.
+Crossplane は、複合リソース内の入力に基づいてラベルの値を一致させることもできます。 
+{{<hover label="byLabel" line="15">}}type: FromCompositeFieldPath{{</hover>}} を使用し、 
+{{<hover label="byLabel" line="16">}}valueFromFieldPath{{</hover>}} フィールドに一致させるフィールドを提供します。
 
 ```yaml {label="byLabel",copy-lines="all"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -224,26 +197,25 @@ spec:
   # Removed for brevity
 ```
 
-#### Manage selector results
+#### セレクター結果の管理
 
-Selecting environments by labels may return more than one environment.  
-The Composition sorts all the results by the name of the environments and
-only uses the first environment in the sorted list. 
+ラベルによって環境を選択すると、複数の環境が返される場合があります。  
+Composition は、環境の名前で結果をすべてソートし、ソートされたリストの最初の環境のみを使用します。 
 
-Set the {{<hover label="selectResults" line="10">}}mode{{</hover>}} as 
-{{<hover label="selectResults" line="10">}}mode: Multiple{{</hover>}} to return
-all matched environments. Use 
-{{<hover label="selectResults" line="19">}}mode: Single{{</hover>}} to 
-return a single environment.
+{{<hover label="selectResults" line="10">}}mode{{</hover>}} を 
+{{<hover label="selectResults" line="10">}}mode: Multiple{{</hover>}} に設定すると、 
+一致したすべての環境が返されます。 
+{{<hover label="selectResults" line="19">}}mode: Single{{</hover>}} を使用すると、 
+単一の環境が返されます。
 
 {{<hint "note" >}}
-Sorting and the selection 
-{{<hover label="selectResults" line="10">}}mode{{</hover>}}
-only applies to a single 
-{{<hover label="selectResults" line="8">}}type: Selector{{</hover>}}. 
+ソートと選択 
+{{<hover label="selectResults" line="10">}}mode{{</hover>}} は、 
+単一の 
+{{<hover label="selectResults" line="8">}}type: Selector{{</hover>}} にのみ適用されます。 
 
-This doesn't change how Compositions merge multiple
-{{<hover label="selectResults" line="7">}}environmentConfigs{{</hover>}}.
+これは、Compositions が複数の 
+{{<hover label="selectResults" line="7">}}environmentConfigs{{</hover>}} をマージする方法を変更するものではありません。
 {{< /hint >}}
 
 
@@ -277,19 +249,16 @@ spec:
             valueFromFieldPath: spec.parameters.deploy
 ```
 
-When using 
-{{<hover label="maxMatch" line="10">}}mode: Multiple{{</hover>}} limit the
-number of returned environments with
-{{<hover label="maxMatch" line="11">}}maxMatch{{</hover>}} and define the
-maximum number of environments returned. 
+{{<hover label="maxMatch" line="10">}}mode: Multiple{{</hover>}} を使用する場合、 
+{{<hover label="maxMatch" line="11">}}maxMatch{{</hover>}} を使用して返される環境の数を制限し、 
+返される環境の最大数を定義します。 
 
-Use `minMatch` and define the minimum 
-number of environments returned.
+`minMatch` を使用して、返される環境の最小数を定義します。
 
-The Composition sorts the returned environments alphabetically by name. Sort the
-environments on a different field with 
-{{<hover label="maxMatch" line="12">}}sortByFieldPath{{</hover>}} and define
-the field to sort by. 
+
+Compositionは、返された環境を名前でアルファベット順にソートします。 
+{{<hover label="maxMatch" line="12">}}sortByFieldPath{{</hover>}}を使用して
+異なるフィールドで環境をソートし、ソートするフィールドを定義します。 
 
 
 ```yaml {label="maxMatch"}
@@ -314,20 +283,18 @@ spec:
             valueFromFieldPath: spec.parameters.deploy
 ```
 
-The environments selected by
-{{<hover label="maxMatch" line="18">}}matchLabels{{</hover>}} are then merged
-into any other environments listed in the 
-{{<hover label="maxMatch" line="7">}}environmentConfigs{{</hover>}}.
+{{<hover label="maxMatch" line="18">}}matchLabels{{</hover>}}によって選択された環境は、
+{{<hover label="maxMatch" line="7">}}environmentConfigs{{</hover>}}にリストされている
+他の環境にマージされます。
 
-#### Optional selector labels
-By default, Crossplane issues an error if a
+#### オプションのセレクタラベル
+デフォルトでは、Crossplaneは
 {{<hover label="byLabelOptional" line="16">}}valueFromFieldPath{{</hover>}}
-field doesn't exist in the composite resource.  
+フィールドが合成リソースに存在しない場合、エラーを発行します。  
 
-Add
-{{<hover label="byLabelOptional" line="17">}}fromFieldPathPolicy{{</hover>}}
-as {{<hover label="byLabelOptional" line="17">}}Optional{{</hover>}} 
-to ignore a field if it doesn't exist.
+フィールドが存在しない場合に無視するために、
+{{<hover label="byLabelOptional" line="17">}}fromFieldPathPolicy{{</hover>}}を
+{{<hover label="byLabelOptional" line="17">}}Optional{{</hover>}}として追加します。
 
 ```yaml {label="byLabelOptional",copy-lines="all"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -352,18 +319,17 @@ spec:
 ```
 
 
-Set a default value for an optional label by setting the default
-{{<hover label="byLabelOptionalDefault" line="15">}}value{{</hover>}} for the
-{{<hover label="byLabelOptionalDefault" line="14">}}key{{</hover>}} first, then
-define the
-{{<hover label="byLabelOptionalDefault" line="20">}}Optional{{</hover>}} label.
+オプションのラベルのデフォルト値を設定するには、まず
+{{<hover label="byLabelOptionalDefault" line="15">}}value{{</hover>}}のデフォルトを設定し、
+次に
+{{<hover label="byLabelOptionalDefault" line="20">}}Optional{{</hover>}}ラベルを定義します。
 
-For example, this Composition defines
+例えば、このCompositionは
 {{<hover label="byLabelOptionalDefault" line="16">}}value: my-default-value{{</hover>}}
-for the key {{<hover label="byLabelOptionalDefault" line="14">}}my-second-label-key{{</hover>}}.
-If the label
+をキー{{<hover label="byLabelOptionalDefault" line="14">}}my-second-label-key{{</hover>}}に対して定義します。
+ラベル
 {{<hover label="byLabelOptionalDefault" line="17">}}my-second-label-key{{</hover>}}
-exists, Crossplane uses the value from the label instead.
+が存在する場合、Crossplaneはそのラベルから値を使用します。
 
 ```yaml {label="byLabelOptionalDefault",copy-lines="all"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -391,39 +357,32 @@ spec:
 ```
 
 {{<hint "warning" >}}
-Crossplane applies values in order. The value of the last key defined always takes precedence.
+Crossplaneは値を順番に適用します。定義された最後のキーの値が常に優先されます。
 
-Defining the default value _after_ the label always overwrites the label
-value.
+ラベルの後にデフォルト値を定義すると、常にラベルの値が上書きされます。
 {{< /hint >}}
 
-## Patching with EnvironmentConfigs
+## EnvironmentConfigsによるパッチ適用
 
-When Crossplane creates or updates a composite resource, Crossplane 
-merges all the specified EnvironmentConfigs into an in-memory environment.
+Crossplaneが合成リソースを作成または更新する際、Crossplaneは
+指定されたすべてのEnvironmentConfigsをメモリ内の環境にマージします。
 
-The composite resource can read or write data between the EnvironmentConfig and
-composite resource or between the EnvironmentConfig and individual resources
-defined inside the composite resource. 
+
+複合リソースは、EnvironmentConfig と複合リソースの間、または EnvironmentConfig と複合リソース内で定義された個々のリソースの間でデータを読み書きできます。
 
 {{<hint "tip" >}}
-Read about EnvironmentConfig patch types in the 
-[Patch and Transform]({{<ref "./patch-and-transform">}}) documentation.
+[Patch and Transform]({{<ref "./patch-and-transform">}}) ドキュメントで EnvironmentConfig パッチタイプについて読んでください。
 {{< /hint >}}
 
-<!-- these two sections are duplicated in the compositions doc with different header depths --> 
+<!-- これらの2つのセクションは、異なるヘッダーの深さで構成ドキュメントに重複しています --> 
 
-### Patch a composite resource
-To patch the composite resource use
-{{< hover label="xrpatch" line="7">}}patches{{</hover>}} inside of the 
-{{< hover label="xrpatch" line="5">}}environment{{</hover>}}.
+### 複合リソースをパッチする
+複合リソースをパッチするには、 
+{{< hover label="xrpatch" line="7">}}patches{{</hover>}} を 
+{{< hover label="xrpatch" line="5">}}environment{{</hover>}} 内で使用します。
 
-Use the 
-{{< hover label="xrpatch" line="5">}}ToCompositeFieldPath{{</hover>}} to copy
-data from the in-memory environment to the composite resource.  
-Use the 
-{{< hover label="xrpatch" line="5">}}FromCompositeFieldPath{{</hover>}} to copy
-data from the composite resource to the in-memory environment.
+{{< hover label="xrpatch" line="5">}}ToCompositeFieldPath{{</hover>}} を使用して、メモリ内の環境から複合リソースにデータをコピーします。  
+{{< hover label="xrpatch" line="5">}}FromCompositeFieldPath{{</hover>}} を使用して、複合リソースからメモリ内の環境にデータをコピーします。
 
 ```yaml {label="xrpatch",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -441,16 +400,13 @@ spec:
         toFieldPath: newEnvironmentKey
 ```
 
-Individual resources can use any data written to the in-memory environment.
+個々のリソースは、メモリ内の環境に書き込まれたデータを使用できます。
 
-### Patch an individual resource
-To patch an individual resource, inside the 
-{{<hover label="envpatch" line="16">}}patches{{</hover>}} of the 
-resource, use 
-{{<hover label="envpatch" line="17">}}ToEnvironmentFieldPath{{</hover>}} to copy
-data from the resource to the in-memory environment.  
-Use {{<hover label="envpatch" line="20">}}FromEnvironmentFieldPath{{</hover>}}
-to copy data to the resource from the in-memory environment.
+### 個々のリソースをパッチする
+個々のリソースをパッチするには、リソースの 
+{{<hover label="envpatch" line="16">}}patches{{</hover>}} 内で、 
+{{<hover label="envpatch" line="17">}}ToEnvironmentFieldPath{{</hover>}} を使用して、リソースからメモリ内の環境にデータをコピーします。  
+{{<hover label="envpatch" line="20">}}FromEnvironmentFieldPath{{</hover>}} を使用して、メモリ内の環境からリソースにデータをコピーします。
 
 ```yaml {label="envpatch",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -477,7 +433,6 @@ spec:
           toFieldPath: spec.forProvider.tags
 ```
 
-The [Patch and Transform]({{<ref "./patch-and-transform">}}) documentation has
-more information on patching individual resources.
+[Patch and Transform]({{<ref "./patch-and-transform">}}) ドキュメントには、個々のリソースをパッチするための詳細情報があります。
 
-<!-- End duplicated content -->
+<!-- 重複コンテンツの終了 -->

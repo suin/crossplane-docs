@@ -1,56 +1,34 @@
 ---
-title: Feature Lifecycle
+title: 機能ライフサイクル
 toc: true
 weight: 309
 indent: true
 ---
 
-# Feature Lifecycle
+# 機能ライフサイクル
 
-Crossplane follows a similar feature lifecycle to [upstream
-Kubernetes][kube-features]. All major new features must be added in alpha. Alpha
-features are expected to eventually graduate to beta, and then to general
-availability (GA). Features that languish at alpha or beta may be subject to
-deprecation.
+Crossplaneは、[アップストリームKubernetes][kube-features]と同様の機能ライフサイクルに従います。すべての主要な新機能はアルファで追加される必要があります。アルファ機能は最終的にベータに移行し、その後一般提供（GA）に移行することが期待されています。アルファまたはベータで停滞している機能は、非推奨の対象となる可能性があります。
 
-## Alpha Features
+## アルファ機能
 
-Alpha are off by default, and must be enabled by a feature flag, for example
-`--enable-composition-revisions`. API types pertaining to alpha features use a
-`vNalphaN` style API version, like `v1alpha`. **Alpha features are subject to
-removal or breaking changes without notice**, and generally not considered ready
-for use in production. 
+アルファはデフォルトでオフになっており、機能フラグによって有効にする必要があります。例えば、`--enable-composition-revisions`です。アルファ機能に関連するAPIタイプは、`vNalphaN`スタイルのAPIバージョンを使用します。例えば、`v1alpha`です。**アルファ機能は通知なしに削除または破壊的変更の対象となる可能性があり**、一般的に本番環境での使用には適していないと見なされます。
 
-In some cases alpha features require fields be added to existing beta or GA
-API types. In these cases fields must clearly be marked (i.e in their OpenAPI
-schema) as alpha and subject to alpha API constraints (or lack thereof).
+場合によっては、アルファ機能には既存のベータまたはGA APIタイプにフィールドを追加する必要があります。この場合、フィールドは明確にアルファとしてマークされ（つまり、OpenAPIスキーマ内で）、アルファAPI制約の対象であることを示す必要があります（またはその欠如）。
 
-All alpha features should have an issue tracking their graduation to beta.
+すべてのアルファ機能には、ベータへの移行を追跡するための問題が必要です。
 
-## Beta Features
+## ベータ機能
 
-Beta features are on by default, but may be disabled by a feature flag. API
-types pertaining to beta features use a `vNbetaN` style API version, like
-`v1beta1`. Beta features are considered to be well tested, and will not be
-removed completely without being marked deprecated for at least two releases.
+ベータ機能はデフォルトでオンになっていますが、機能フラグによって無効にすることができます。ベータ機能に関連するAPIタイプは、`vNbetaN`スタイルのAPIバージョンを使用します。例えば、`v1beta1`です。ベータ機能は十分にテストされていると見なされ、少なくとも2回のリリースで非推奨としてマークされることなく完全に削除されることはありません。
 
-The schema and/or semantics of objects may change in incompatible ways in a
-subsequent beta or stable release. When this happens, we will provide
-instructions for migrating to the next version. This may require deleting,
-editing, and re-creating API objects. The editing process may require some
-thought. This may require downtime for applications that rely on the feature.
+オブジェクトのスキーマおよび/またはセマンティクスは、次のベータまたは安定版リリースで互換性のない方法で変更される可能性があります。この場合、次のバージョンへの移行手順を提供します。これには、APIオブジェクトの削除、編集、および再作成が必要になる場合があります。編集プロセスには考慮が必要です。これにより、その機能に依存するアプリケーションにダウンタイムが必要になる場合があります。
 
-In some cases beta features require fields be added to existing GA API types. In
-these cases fields must clearly be marked (i.e in their OpenAPI schema) as beta
-and subject to beta API constraints (or lack thereof).
+場合によっては、ベータ機能には既存のGA APIタイプにフィールドを追加する必要があります。この場合、フィールドは明確にベータとしてマークされ（つまり、OpenAPIスキーマ内で）、ベータAPI制約の対象であることを示す必要があります（またはその欠如）。
 
-All beta features should have an issue tracking their graduation to GA.
+すべてのベータ機能には、GAへの移行を追跡するための問題が必要です。
 
-## GA Features
+## GA機能
 
-GA features are always enabled - they cannot be disabled. API types pertaining
-to GA features use `vN` style API versions, like `v1`. GA features are widely
-used and thoroughly tested. They guarantee API stability - only backward
-compatible changes are allowed.
+GA機能は常に有効であり、無効にすることはできません。GA機能に関連するAPIタイプは、`vN`スタイルのAPIバージョン（例：`v1`）を使用します。GA機能は広く使用されており、徹底的にテストされています。これらはAPIの安定性を保証し、後方互換性のある変更のみが許可されます。
 
 [kube-features]: https://kubernetes.io/docs/reference/command-line-tools-reference/feature-gates/#feature-stages

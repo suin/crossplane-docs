@@ -1,58 +1,57 @@
 ---
-title: Patch and Transforms
+title: パッチと変換
 weight: 70
-description: "Crossplane Compositions use patches and transforms to modify inputs from claims and composite resources before creating managed resources"
+description: "Crossplaneのコンポジションは、管理リソースを作成する前に、クレームや複合リソースからの入力を変更するためにパッチと変換を使用します"
 ---
 
-Crossplane Compositions allow for "patch and transform" operations. With patches
-a Composition can apply changes to the resources defined by the Composition. 
+Crossplaneのコンポジションは「パッチと変換」操作を可能にします。パッチを使用すると、
+コンポジションはコンポジションによって定義されたリソースに変更を適用できます。
 
-When users create Claims, Crossplane passes the settings in the Claim to
-the associated composite resource. Patches can use these settings to change the
-associated composite resource or managed resources. 
+ユーザーがクレームを作成すると、Crossplaneはクレーム内の設定を
+関連する複合リソースに渡します。パッチはこれらの設定を使用して
+関連する複合リソースや管理リソースを変更できます。
 
-Examples of using patch and transforms include:
- * changing the name of the external resource
- * mapping generic terms like "east" or "west" to specific provider locations
- * appending custom labels or strings to resource fields
+パッチと変換の使用例には以下が含まれます：
+ * 外部リソースの名前を変更する
+ * 「東」や「西」といった一般的な用語を特定のプロバイダーの場所にマッピングする
+ * リソースフィールドにカスタムラベルや文字列を追加する
 
 
 {{<hint "note" >}}
 <!-- vale alex.Condescending = NO -->
-Crossplane expects patch and transform operations to be simple changes.  
-Use [Composition Functions]({{<ref "./composition-functions">}}) for more
-complex or programmatic modifications.
+Crossplaneはパッチと変換操作が単純な変更であることを期待しています。  
+より複雑またはプログラム的な変更には、[Composition Functions]({{<ref "./composition-functions">}})を使用してください。
 <!-- vale  alex.Condescending = YES -->
 {{</hint >}}
 
 
-A Composition [patch](#create-a-patch) is the action of changing a field.  
-A Composition [transform](#transform-a-patch) modifies the values before 
-applying the patch.
+コンポジションの[パッチ](#create-a-patch)はフィールドを変更するアクションです。  
+コンポジションの[変換](#transform-a-patch)は、パッチを適用する前に
+値を修正します。
 
-## Create a patch
+## パッチを作成する
 
-Patches are part of an individual 
-{{<hover label="createComp" line="4">}}resource{{</hover>}} inside a 
-{{<hover label="createComp" line="2">}}Composition{{</hover>}}.
+パッチは個々の 
+{{<hover label="createComp" line="4">}}リソース{{</hover>}}の一部であり、
+{{<hover label="createComp" line="2">}}コンポジション{{</hover>}}内にあります。
 
-The {{<hover label="createComp" line="8">}}patches{{</hover>}} field takes a
-list of patches to apply to the individual resource. 
+{{<hover label="createComp" line="8">}}patches{{</hover>}}フィールドは、
+個々のリソースに適用するパッチのリストを取ります。
 
-Each patch has a {{<hover label="createComp" line="9">}}type{{</hover>}}, which
-defines what kind of patch action Crossplane applies. 
+各パッチには{{<hover label="createComp" line="9">}}type{{</hover>}}があり、
+これはCrossplaneが適用するパッチアクションの種類を定義します。
 
-Patches reference fields inside a composite resource or Composition differently
-depending on the patch type, but all patches reference a 
-{{<hover label="createComp" line="10">}}fromFieldPath{{</hover>}} and
-{{<hover label="createComp" line="11">}}toFieldPath{{</hover>}}.
+パッチは、パッチタイプに応じて複合リソースまたはコンポジション内のフィールドを
+異なる方法で参照しますが、すべてのパッチは
+{{<hover label="createComp" line="10">}}fromFieldPath{{</hover>}}と
+{{<hover label="createComp" line="11">}}toFieldPath{{</hover>}}を参照します。
 
-The {{<hover label="createComp" line="10">}}fromFieldPath{{</hover>}} defines
-the patch's input values. 
-The {{<hover label="createComp" line="11">}}toFieldPath{{</hover>}} defines the
-data to change with a patch.
+{{<hover label="createComp" line="10">}}fromFieldPath{{</hover>}}は
+パッチの入力値を定義します。 
+{{<hover label="createComp" line="11">}}toFieldPath{{</hover>}}は
+パッチで変更するデータを定義します。
 
-Here is an example patch applied to a resource in a Composition. 
+ここに、Composition内のリソースに適用されたパッチの例があります。  
 ```yaml {label="createComp",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
@@ -67,30 +66,29 @@ spec:
           toFieldPath: metadata.labels["patchLabel"]
 ```
 
-### Selecting fields
+### フィールドの選択
 
-Crossplane selects fields in a composite resource or managed
-resource with
-a subset of 
-[JSONPath selectors](https://kubernetes.io/docs/reference/kubectl/jsonpath/),
-called "field selectors."
+Crossplaneは、合成リソースまたは管理リソース内のフィールドを
+[JSONPathセレクタ](https://kubernetes.io/docs/reference/kubectl/jsonpath/)の
+サブセットを使用して選択します。
+これを「フィールドセレクタ」と呼びます。
 
-Field selectors can select any field in a composite resource or managed resource 
-object, including the `metadata`, `spec` or `status` fields. 
+フィールドセレクタは、合成リソースまたは管理リソースオブジェクト内の
+任意のフィールドを選択できます。これには、`metadata`、`spec`、または`status`フィールドが含まれます。
 
-Field selectors can be a string matching a field name or an array index, in
-brackets. Field names may use a `.` character to select child elements.
+フィールドセレクタは、フィールド名または配列インデックスを
+ブラケット内で指定する文字列であることができます。フィールド名は、子要素を選択するために`。`文字を使用できます。
 
-#### Example field selectors
-Here are some example selectors from a composite resource object.
-{{<table "table" >}}
-| Selector | Selected element | 
-| --- | --- |
-| `kind` | {{<hover label="select" line="3">}}kind{{</hover>}} |
-| `metadata.labels['crossplane.io/claim-name']` | {{<hover label="select" line="7">}}my-example-claim{{</hover>}} |
-| `spec.desiredRegion` | {{<hover label="select" line="11">}}eu-north-1{{</hover>}} |
-| `spec.resourceRefs[0].name` | {{<hover label="select" line="16">}}my-example-claim-978mh-r6z64{{</hover>}} |
-{{</table >}}
+#### フィールドセレクタの例
+合成リソースオブジェクトからのいくつかの例のセレクタを示します。  
+{{<table "table" >}}  
+| セレクタ | 選択された要素 |  
+| --- | --- |  
+| `kind` | {{<hover label="select" line="3">}}kind{{</hover>}} |  
+| `metadata.labels['crossplane.io/claim-name']` | {{<hover label="select" line="7">}}my-example-claim{{</hover>}} |  
+| `spec.desiredRegion` | {{<hover label="select" line="11">}}eu-north-1{{</hover>}} |  
+| `spec.resourceRefs[0].name` | {{<hover label="select" line="16">}}my-example-claim-978mh-r6z64{{</hover>}} |  
+{{</table >}}  
 
 ```yaml {label="select",copy-lines="none"}
 $ kubectl get composite -o yaml
@@ -118,33 +116,30 @@ spec:
   # Removed for brevity
 ```
 
-## Reuse a patch
+## パッチの再利用
 
-A Composition can reuse a patch object on multiple resources with a 
-PatchSet.
+Compositionは、複数のリソースに対してパッチオブジェクトを再利用することができます。
+これをPatchSetと呼びます。
 
-To create a PatchSet, define a 
-{{<hover label="patchset" line="5">}}PatchSets{{</hover>}} object inside the 
-Composition's
-{{<hover label="patchset" line="4">}}spec{{</hover>}}. 
+PatchSetを作成するには、Compositionの
+{{<hover label="patchset" line="5">}}PatchSets{{</hover>}}オブジェクトを定義します。  
 
-Each patch inside a PatchSet has a 
-{{<hover label="patchset" line="6">}}name{{</hover>}} and a list of
-{{<hover label="patchset" line="7">}}patches{{</hover>}}.  
+PatchSet内の各パッチには、  
+{{<hover label="patchset" line="6">}}name{{</hover>}}と
+{{<hover label="patchset" line="7">}}patches{{</hover>}}のリストがあります。  
 
-{{<hint "note" >}}
-For multiple PatchSets only use a single 
-{{<hover label="patchset" line="5">}}PatchSets{{</hover>}} object.  
+{{<hint "note" >}}  
+複数のPatchSetsを使用する場合は、単一の  
+{{<hover label="patchset" line="5">}}PatchSets{{</hover>}}オブジェクトのみを使用してください。  
 
-Identify each unique PatchSet with a unique 
-{{<hover label="patchset" line="6">}}name{{</hover>}}.
-{{</hint >}}
+各ユニークなPatchSetをユニークな  
+{{<hover label="patchset" line="6">}}name{{</hover>}}で識別します。  
+{{</hint >}}  
 
-Apply the PatchSet to a resource with a patch
-{{<hover label="patchset" line="16">}}type: PatchSet{{</hover>}}.  
-Set the 
-{{<hover label="patchset" line="17">}}patchSetName{{</hover>}} to the 
-{{<hover label="patchset" line="6">}}name{{</hover>}} of the PatchSet.
+PatchSetをリソースに適用するには、パッチ  
+{{<hover label="patchset" line="16">}}type: PatchSet{{</hover>}}を使用します。  
+{{<hover label="patchset" line="17">}}patchSetName{{</hover>}}をPatchSetの  
+{{<hover label="patchset" line="6">}}name{{</hover>}}に設定します。
 
 ```yaml {label="patchset"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -173,34 +168,34 @@ spec:
 ```
 
 {{<hint "important" >}}
-A PatchSet can't contain other PatchSets.  
+PatchSetには他のPatchSetを含めることはできません。  
 
-Crossplane ignores any [transforms](#transform-a-patch) or
-[policies](#patch-policies) in a PatchSet.
+CrossplaneはPatchSet内の[transform](#transform-a-patch)や
+[policies](#patch-policies)を無視します。
 {{< /hint >}}
 
-## Patching between resources
+## リソース間のパッチ適用
 
-Compositions can't directly patch between resources in the same Composition.  
-For example, generating a network resource and patching the resource name to 
-a compute resource. 
+Composition内のリソース間で直接パッチを適用することはできません。  
+例えば、ネットワークリソースを生成し、そのリソース名を
+コンピュートリソースにパッチ適用することです。
 
 {{<hint "important">}}
-The [ToEnvironmentFieldPath](#toenvironmentfieldpath) patch can't read from a
-`Status` field.
+[ToEnvironmentFieldPath](#toenvironmentfieldpath)パッチは
+`Status`フィールドから読み取ることができません。
 {{< /hint >}}
 
-A resource can patch to a user-defined 
+リソースは、合成リソース内のユーザー定義の
 {{<hover label="xrdPatch" line="13">}}Status{{</hover>}}
-field in the composite resource.
+フィールドにパッチを適用できます。
 
-A resource can then read from that 
+リソースはその
 {{<hover label="xrdPatch" line="13">}}Status{{</hover>}} 
-field to patch a field. 
+フィールドから読み取ってフィールドにパッチを適用できます。
 
-First, define a custom
+まず、Composite Resource Definitionでカスタム
 {{<hover label="xrdPatch" line="13">}}Status{{</hover>}}
-in the Composite Resource Definition and a custom field, for example
+とカスタムフィールドを定義します。例えば
 {{<hover label="xrdPatch" line="16">}}secondResource{{</hover>}}
 
 ```yaml {label="xrdPatch",copy-lines="13-17"}
@@ -223,19 +218,18 @@ spec:
                   type: string
 ```
 
-Inside the Composition the resource with the source data uses a
+Composition内で、ソースデータを持つリソースは
 {{<hover label="patchBetween" line="10">}}ToCompositeFieldPath{{</hover>}}
-patch to write data to the 
+パッチを使用して、合成リソース内の
 {{<hover label="patchBetween" line="12">}}status.secondResource{{</hover>}} 
-field in the composite resource. 
+フィールドにデータを書き込みます。
 
-The destination resource uses a 
+宛先リソースは
 {{<hover label="patchBetween" line="19">}}FromCompositeFieldPath{{</hover>}}
-patch to read data from the composite resource
+パッチを使用して、合成リソースの
 {{<hover label="patchBetween" line="20">}}status.secondResource{{</hover>}} 
-field in the composite resource and write it to a label named 
-{{<hover label="patchBetween" line="21">}}secondResource{{</hover>}} in the
-managed resource.
+フィールドからデータを読み取り、それを
+管理リソース内の{{<hover label="patchBetween" line="21">}}secondResource{{</hover>}}というラベルに書き込みます。
 
 ```yaml {label="patchBetween",copy-lines="9-11"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -261,10 +255,10 @@ kind: Composition
           toFieldPath: metadata.labels['secondResource']
 ```
 
-Describe the composite resource to view the 
-{{<hover label="descCompPatch" line="5">}}resources{{</hover>}} and the 
+合成リソースを記述して、 
+{{<hover label="descCompPatch" line="5">}}resources{{</hover>}}と
 {{<hover label="descCompPatch" line="11">}}status.secondResource{{</hover>}}
-value. 
+の値を表示します。
 
 ```yaml {label="descCompPatch",copy-lines="none"}
 $ kubectl describe composite
@@ -280,8 +274,8 @@ Status:
   Second Resource:         my-example-claim-jp7rx-gfg4m
 ```
 
-Describe the destination managed resource to see the label 
-{{<hover label="bucketlabel" line="5">}}secondResource{{</hover>}}.
+宛先の管理リソースを説明してラベルを確認します 
+{{<hover label="bucketlabel" line="5">}}secondResource{{</hover>}}。
 
 ```yaml {label="bucketlabel",copy-lines="none"}
 $ kubectl describe bucket
@@ -291,44 +285,41 @@ Labels:       crossplane.io/composite=my-example-claim-jp7rx
               secondResource=my-example-claim-jp7rx-gfg4m
 ```
 
-## Types of patches
-Crossplane supports multiple patch types, each using a different source for data
-and applying the patch to a different location. 
+## パッチの種類
+Crossplaneは複数のパッチタイプをサポートしており、それぞれ異なるデータソースを使用し、異なる場所にパッチを適用します。
 
 {{<hint "important" >}}
 
-This section describes patches applied to individual resources inside a
-Composition.  
+このセクションでは、Composition内の個々のリソースに適用されるパッチについて説明します。
 
-For information about applying patches to an entire composite resource with a
-Composition's `environment.patches` read the 
-[Environment Configurations]({{<ref "environment-configs" >}}) documentation.
+Compositionの`environment.patches`を使用して、全体の複合リソースにパッチを適用する方法については、 
+[環境設定]({{<ref "environment-configs" >}})のドキュメントを参照してください。
 
 {{< /hint >}}
 
-Summary of Crossplane patches
+Crossplaneパッチの概要
 {{< table "table table-hover" >}}
-| Patch Type | Data Source | Data Destination | 
+| パッチタイプ | データソース | データ宛先 | 
 | ---  | --- | --- | 
-| [FromCompositeFieldPath](#fromcompositefieldpath) | A field in the composite resource. | A field in the patched managed resource. | 
-| [ToCompositeFieldPath](#tocompositefieldpath) | A field in the patched managed resource. | A field in the composite resource. |  
-| [CombineFromComposite](#combinefromcomposite) | Multiple fields in the composite resource. | A field in the patched managed resource. | 
-| [CombineToComposite](#combinetocomposite) | Multiple fields in the patched managed resource. | A field in the composite resource. | 
-| [FromEnvironmentFieldPath](#fromenvironmentfieldpath) | Data in the in-memory EnvironmentConfig Environment | A field in the patched managed resource. | 
-| [ToEnvironmentFieldPath](#toenvironmentfieldpath) | A field in the patched managed resource. | The in-memory EnvironmentConfig Environment. | 
-| [CombineFromEnvironment](#combinefromenvironment) | Multiple fields in the in-memory EnvironmentConfig Environment. | A field in the patched managed resource. | 
-| [CombineToEnvironment](#combinetoenvironment) | Multiple fields in the patched managed resource. | A field in the in-memory EnvironmentConfig Environment. | 
+| [FromCompositeFieldPath](#fromcompositefieldpath) | 複合リソース内のフィールド。 | パッチを適用された管理リソース内のフィールド。 | 
+| [ToCompositeFieldPath](#tocompositefieldpath) | パッチを適用された管理リソース内のフィールド。 | 複合リソース内のフィールド。 |  
+| [CombineFromComposite](#combinefromcomposite) | 複合リソース内の複数のフィールド。 | パッチを適用された管理リソース内のフィールド。 | 
+| [CombineToComposite](#combinetocomposite) | パッチを適用された管理リソース内の複数のフィールド。 | 複合リソース内のフィールド。 | 
+| [FromEnvironmentFieldPath](#fromenvironmentfieldpath) | メモリ内のEnvironmentConfig環境のデータ | パッチを適用された管理リソース内のフィールド。 | 
+| [ToEnvironmentFieldPath](#toenvironmentfieldpath) | パッチを適用された管理リソース内のフィールド。 | メモリ内のEnvironmentConfig環境。 | 
+| [CombineFromEnvironment](#combinefromenvironment) | メモリ内のEnvironmentConfig環境の複数のフィールド。 | パッチを適用された管理リソース内のフィールド。 | 
+| [CombineToEnvironment](#combinetoenvironment) | パッチを適用された管理リソース内の複数のフィールド。 | メモリ内のEnvironmentConfig環境のフィールド。 | 
 {{< /table >}}
 
-{{<hint "note" >}}
-All the following examples use the same set of Compositions, 
-CompositeResourceDefinitions, Claims and EnvironmentConfigs.  
-Only the applied patches change between
-examples. 
 
-All examples rely on Upbound
+{{<hint "note" >}}
+以下のすべての例は、同じセットのコンポジション、 
+CompositeResourceDefinitions、Claims、およびEnvironmentConfigsを使用しています。  
+例の間で変更されるのは適用されたパッチのみです。 
+
+すべての例は、Upboundの
 [provider-aws-s3](https://marketplace.upbound.io/providers/upbound/provider-aws-s3/)
-to create resources.
+を使用してリソースを作成します。
 
 {{< expand "Reference Composition" >}}
 ```yaml {copy-lines="all"}
@@ -444,28 +435,26 @@ data:
 ### FromCompositeFieldPath
 <!-- vale Google.Headings = YES -->
 
-The 
 {{<hover label="fromComposite" line="12">}}FromCompositeFieldPath{{</hover>}}
-patch takes a value in a composite resource and applies it to a field in the 
-managed resource. 
+パッチは、コンポジットリソース内の値を取得し、それを
+管理リソースのフィールドに適用します。 
 
 {{< hint "tip" >}}
-Use the 
 {{<hover label="fromComposite" line="12">}}FromCompositeFieldPath{{</hover>}}
-patch to apply options from users in their Claims to settings in managed
-resource `forProvider` settings. 
+パッチを使用して、ユーザーのClaimsから管理リソースの
+`forProvider`設定にオプションを適用します。 
 {{< /hint >}}
 
-For example, to use the value 
-{{<hover label="fromComposite" line="13">}}desiredRegion{{</hover>}} provided by
-a user in a composite resource to a managed resource's
-{{<hover label="fromComposite" line="10">}}region{{</hover>}}. 
+例えば、ユーザーがコンポジットリソースで提供した値
+{{<hover label="fromComposite" line="13">}}desiredRegion{{</hover>}}を
+管理リソースの
+{{<hover label="fromComposite" line="10">}}region{{</hover>}}に使用します。 
 
-The {{<hover label="fromComposite" line="13">}}fromFieldPath{{</hover>}} value
-is a field in the composite resource. 
+{{<hover label="fromComposite" line="13">}}fromFieldPath{{</hover>}}の値は
+コンポジットリソース内のフィールドです。 
 
-The {{<hover label="fromComposite" line="14">}}toFieldPath{{</hover>}} value is
-the field in the managed resource to change. 
+{{<hover label="fromComposite" line="14">}}toFieldPath{{</hover>}}の値は
+変更する管理リソースのフィールドです。 
 
 ```yaml {label="fromComposite",copy-lines="9-11"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -484,8 +473,8 @@ kind: Composition
           toFieldPath: spec.forProvider.region
 ```
 
-View the managed resource to see the updated 
-{{<hover label="fromCompMR" line="6">}}region{{</hover>}}
+管理リソースを表示して、更新された
+{{<hover label="fromCompMR" line="6">}}region{{</hover>}}を確認します。
 
 ```yaml {label="fromCompMR",copy-lines="1"}
 $ kubectl describe bucket
@@ -500,22 +489,13 @@ Spec:
 ### ToCompositeFieldPath
 <!-- vale Google.Headings = YES -->
 
-The 
-{{<hover label="toComposite" line="12">}}ToCompositeFieldPath{{</hover>}} writes 
-data from an individual managed resource to
-the composite resource that created it.
+{{<hover label="toComposite" line="12">}}ToCompositeFieldPath{{</hover>}} は、個々の管理リソースからデータを取得し、それを作成した複合リソースに書き込みます。
 
 {{< hint "tip" >}}
-Use {{<hover label="toComposite" line="12">}}ToCompositeFieldPath{{</hover>}}
-patches to take data from one managed resource in a Composition and use it in a
-second managed resource in the same Composition. 
+{{<hover label="toComposite" line="12">}}ToCompositeFieldPath{{</hover>}} パッチを使用して、Composition内の1つの管理リソースからデータを取得し、同じComposition内の2つ目の管理リソースで使用します。
 {{< /hint >}}
 
-For example, after Crossplane creates a new managed resource, take the value 
-{{<hover label="toComposite" line="13">}}hostedZoneID{{</hover>}} and apply it
-as a 
-{{<hover label="toComposite" line="14">}}label{{</hover>}} in the composite
-resource.
+例えば、Crossplaneが新しい管理リソースを作成した後、値 {{<hover label="toComposite" line="13">}}hostedZoneID{{</hover>}} を取得し、それを複合リソースの {{<hover label="toComposite" line="14">}}label{{</hover>}} として適用します。
 
 ```yaml {label="toComposite",copy-lines="9-11"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -534,8 +514,7 @@ kind: Composition
           toFieldPath: metadata.labels['ZoneID']
 ```
 
-View the created managed resource to see the 
-{{<hover label="toCompMR" line="6">}}Hosted Zone Id{{</hover>}} field.
+作成された管理リソースを表示して、 {{<hover label="toCompMR" line="6">}}Hosted Zone Id{{</hover>}} フィールドを確認します。
 ```yaml {label="toCompMR",copy-lines="none"}
 $ kubectl describe bucket
 Name:         my-example-claim-p5pxf-5vnp8
@@ -546,8 +525,7 @@ Status:
     # Removed for brevity
 ```
 
-Next view the composite resource and confirm the patch applied the 
-{{<hover label="toCompositeXR" line="3">}}label{{</hover>}}
+次に、複合リソースを表示し、パッチが {{<hover label="toCompositeXR" line="3">}}label{{</hover>}} に適用されたことを確認します。
 ```yaml {label="toCompositeXR",copy-lines="none"}
 $ kubectl describe composite
 Name:         my-example-claim-p5pxf
@@ -555,9 +533,7 @@ Labels:       ZoneID=Z2O1EMRO9K5GLX
 ```
 
 {{<hint "important">}}
-Crossplane doesn't apply the patch to the composite resource until the next
-reconcile loop, after creating the managed resource. This creates a delay
-between a managed resource being Ready and applying the patch.
+Crossplaneは、管理リソースを作成した後、次のリコンシリエーションループまで複合リソースにパッチを適用しません。これにより、管理リソースがReadyになるのとパッチが適用されるのとの間に遅延が生じます。
 {{< /hint >}}
 
 
@@ -565,45 +541,33 @@ between a managed resource being Ready and applying the patch.
 ### CombineFromComposite
 <!-- vale Google.Headings = YES -->
 
-The 
-{{<hover label="combineFromComp" line="12">}}CombineFromComposite{{</hover>}}
-patch takes values from the composite resource, combines them and applies them
-to the managed resource. 
+{{<hover label="combineFromComp" line="12">}}CombineFromComposite{{</hover>}} パッチは、複合リソースから値を取得し、それらを組み合わせて管理リソースに適用します。
 
 {{< hint "tip" >}}
-Use the 
-{{<hover label="combineFromComp" line="12">}}CombineFromComposite{{</hover>}}
-patch to create complex strings, like security policies and apply them to
-a managed resource. 
+{{<hover label="combineFromComp" line="12">}}CombineFromComposite{{</hover>}} パッチを使用して、セキュリティポリシーのような複雑な文字列を作成し、それを管理リソースに適用します。
 {{< /hint >}}
 
-For example, use the Claim value 
-{{<hover label="combineFromComp" line="15">}}desiredRegion{{</hover>}} and 
-{{<hover label="combineFromComp" line="16">}}field2{{</hover>}} to generate the
-managed resource's
-{{<hover label="combineFromComp" line="20">}}name{{</hover>}}
+例えば、Claim値を使用します 
+{{<hover label="combineFromComp" line="15">}}desiredRegion{{</hover>}} と 
+{{<hover label="combineFromComp" line="16">}}field2{{</hover>}} を使用して、管理リソースの
+{{<hover label="combineFromComp" line="20">}}name{{</hover>}} を生成します。
 
-The 
 {{<hover label="combineFromComp" line="12">}}CombineFromComposite{{</hover>}}
-patch only supports the 
-{{<hover label="combineFromComp" line="13">}}combine{{</hover>}} option. 
+パッチは、{{<hover label="combineFromComp" line="13">}}combine{{</hover>}} オプションのみをサポートしています。
 
-The {{<hover label="combineFromComp" line="14">}}variables{{</hover>}} are the
-list of 
-{{<hover label="combineFromComp" line="15">}}fromFieldPath{{</hover>}} values
-from the composite resource to combine. 
+{{<hover label="combineFromComp" line="14">}}variables{{</hover>}} は、結合するための
+コンポジットリソースからの 
+{{<hover label="combineFromComp" line="15">}}fromFieldPath{{</hover>}} 値のリストです。
 
-The only supported 
-{{<hover label="combineFromComp" line="17">}}strategy{{</hover>}} is 
-{{<hover label="combineFromComp" line="17">}}strategy: string{{</hover>}}.
+サポートされている唯一の 
+{{<hover label="combineFromComp" line="17">}}strategy{{</hover>}} は 
+{{<hover label="combineFromComp" line="17">}}strategy: string{{</hover>}} です。
 
-Optionally you can apply a 
-{{<hover label="combineFromComp" line="19">}}string.fmt{{</hover>}}, based on 
-[Go string formatting](https://pkg.go.dev/fmt) to specify how to combine the 
-strings.
+オプションで、文字列を結合する方法を指定するために、 
+[Go文字列フォーマット](https://pkg.go.dev/fmt) に基づいて 
+{{<hover label="combineFromComp" line="19">}}string.fmt{{</hover>}} を適用できます。
 
-The {{<hover label="combineFromComp" line="20">}}toFieldPath{{</hover>}} is the
-field in the managed resource to apply the new string to. 
+{{<hover label="combineFromComp" line="20">}}toFieldPath{{</hover>}} は、管理リソースに新しい文字列を適用するフィールドです。
 
 ```yaml {label="combineFromComp",copy-lines="11-20"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -628,7 +592,7 @@ kind: Composition
           toFieldPath: metadata.name
 ```
 
-Describe the managed resource to see the applied patch.
+適用されたパッチを確認するために管理リソースを記述します。
 
 ```yaml {label="describeCombineFromComp",copy-lines="none"}
 $ kubectl describe bucket
@@ -639,51 +603,44 @@ Name:         my-resource-eu-north-1-field2-text
 ### CombineToComposite
 <!-- vale Google.Headings = YES -->
 
-The 
 {{<hover label="combineToComposite" line="12">}}CombineToComposite{{</hover>}}
-patch takes values from the managed resource, combines them and applies them
-to the composite resource. 
+パッチは、管理リソースから値を取得し、それらを結合してコンポジットリソースに適用します。
 
 {{<hint "tip" >}}
-Use {{<hover label="combineToComposite" line="12">}}CombineToComposite{{</hover>}}
-patches to create a single field like a URL from multiple fields in a managed
-resource. 
+{{<hover label="combineToComposite" line="12">}}CombineToComposite{{</hover>}} 
+パッチを使用して、管理リソース内の複数のフィールドからURLのような単一のフィールドを作成します。 
 {{< /hint >}}
 
-For example, use the managed resource 
-{{<hover label="combineToComposite" line="15">}}name{{</hover>}} and 
-{{<hover label="combineToComposite" line="16">}}region{{</hover>}} to generate a
-custom 
-{{<hover label="combineToComposite" line="20">}}url{{</hover>}}
-field. 
+例えば、管理リソースの 
+{{<hover label="combineToComposite" line="15">}}name{{</hover>}} と 
+{{<hover label="combineToComposite" line="16">}}region{{</hover>}} を使用して、カスタム 
+{{<hover label="combineToComposite" line="20">}}url{{</hover>}} フィールドを生成します。
 
-{{< hint "important" >}}
-Writing custom fields in the Status field of a composite resource requires
-defining the custom fields in the CompositeResourceDefinition first. 
+```markdown
+{{< hint "重要" >}}
+合成リソースのステータスフィールドにカスタムフィールドを書くには、
+最初にCompositeResourceDefinitionでカスタムフィールドを定義する必要があります。 
 
 {{< /hint >}}
 
-The 
 {{<hover label="combineToComposite" line="12">}}CombineToComposite{{</hover>}}
-patch only supports the 
-{{<hover label="combineToComposite" line="13">}}combine{{</hover>}} option. 
+パッチはのみ
+{{<hover label="combineToComposite" line="13">}}combine{{</hover>}}オプションをサポートしています。 
 
-The {{<hover label="combineToComposite" line="14">}}variables{{</hover>}} are the
-list of 
-{{<hover label="combineToComposite" line="15">}}fromFieldPath{{</hover>}} 
-the managed resource to combine. 
+{{<hover label="combineToComposite" line="14">}}variables{{</hover>}}は
+結合する管理リソースの
+{{<hover label="combineToComposite" line="15">}}fromFieldPath{{</hover>}}のリストです。 
 
-The only supported 
-{{<hover label="combineToComposite" line="17">}}strategy{{</hover>}} is 
-{{<hover label="combineToComposite" line="17">}}strategy: string{{</hover>}}.
+サポートされている唯一の
+{{<hover label="combineToComposite" line="17">}}strategy{{</hover>}}は
+{{<hover label="combineToComposite" line="17">}}strategy: string{{</hover>}}です。
 
-Optionally you can apply a 
-{{<hover label="combineToComposite" line="19">}}string.fmt{{</hover>}}, based on 
-[Go string formatting](https://pkg.go.dev/fmt) to specify how to combine the 
-strings.
+オプションで、文字列を結合する方法を指定するために
+[Go string formatting](https://pkg.go.dev/fmt)に基づいて
+{{<hover label="combineToComposite" line="19">}}string.fmt{{</hover>}}を適用できます。
 
-The {{<hover label="combineToComposite" line="20">}}toFieldPath{{</hover>}} is the
-field in the composite resource to apply the new string to. 
+{{<hover label="combineToComposite" line="20">}}toFieldPath{{</hover>}}は
+新しい文字列を適用する合成リソースのフィールドです。 
 
 ```yaml {label="combineToComposite",copy-lines="9-11"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -708,7 +665,7 @@ kind: Composition
           toFieldPath: status.url
 ```
 
-View the composite resource to verify the applied patch.
+適用されたパッチを確認するために合成リソースを表示します。
 
 ```yaml {copy-lines="none"}
 $ kubectl describe composite
@@ -725,28 +682,27 @@ Status:
 ### FromEnvironmentFieldPath
 <!-- vale Google.Headings = YES -->
 
-{{<hint "important" >}}
-EnvironmentConfigs are an alpha feature. They aren't enabled by default.  
+{{<hint "重要" >}}
+EnvironmentConfigsはアルファ機能です。デフォルトでは有効になっていません。  
 
-For more information about using an EnvironmentConfig, read the 
-[EnvironmentConfigs]({{<ref "./environment-configs">}}) documentation.
+EnvironmentConfigの使用に関する詳細は、
+[EnvironmentConfigs]({{<ref "./environment-configs">}})ドキュメントをお読みください。
 {{< /hint >}}
 
-The 
 {{<hover label="fromEnvField" line="12">}}FromEnvironmentFieldPath{{</hover>}}
-patch takes values from the in-memory EnvironmentConfig environment and applies
-them to the managed resource.
+パッチはメモリ内のEnvironmentConfig環境から値を取得し、
+それらを管理リソースに適用します。
 
-{{<hint "tip" >}}
-Use 
-{{<hover label="fromEnvField" line="12">}}FromEnvironmentFieldPath{{</hover>}}
-to apply custom managed resource settings based on the current environment.  
+{{<hint "ヒント" >}}
+現在の環境に基づいてカスタム管理リソース設定を適用するには、
+{{<hover label="fromEnvField" line="12">}}FromEnvironmentFieldPath{{</hover>}}を使用してください。  
 {{< /hint >}}
 
-For example, use the environment's 
-{{<hover label="fromEnvField" line="13">}}locations.eu{{</hover>}} value and
-apply it as the 
-{{<hover label="fromEnvField" line="14">}}region{{</hover>}}.
+例えば、環境の
+{{<hover label="fromEnvField" line="13">}}locations.eu{{</hover>}}の値を使用し、
+それを
+{{<hover label="fromEnvField" line="14">}}region{{</hover>}}として適用します。
+```
 
 ```yaml {label="fromEnvField",copy-lines="9-11"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -765,7 +721,7 @@ kind: Composition
           toFieldPath: spec.forProvider.region
 ```
 
-Verify managed resource to confirm the applied patch. 
+適用されたパッチを確認するために、管理リソースを検証します。 
 
 ```yaml {copy-lines="none"}
 kubectl describe bucket
@@ -783,28 +739,26 @@ Spec:
 <!-- vale Google.Headings = YES -->
 
 {{<hint "important" >}}
-EnvironmentConfigs are an alpha feature. They aren't enabled by default.  
+EnvironmentConfigsはアルファ機能です。デフォルトでは有効になっていません。  
 
-For more information about using an EnvironmentConfig, read the 
-[EnvironmentConfigs]({{<ref "./environment-configs">}}) documentation.
+EnvironmentConfigの使用に関する詳細は、 
+[EnvironmentConfigs]({{<ref "./environment-configs">}}) ドキュメントを参照してください。
 {{< /hint >}}
 
-The 
 {{<hover label="toEnvField" line="12">}}ToEnvironmentFieldPath{{</hover>}}
-patch takes values the managed resource and applies them to the in-memory 
-EnvironmentConfig environment.
+パッチは、管理リソースから値を取得し、それをメモリ内の 
+EnvironmentConfig環境に適用します。
 
 {{<hint "tip" >}}
-Use 
 {{<hover label="toEnvField" line="12">}}ToEnvironmentFieldPath{{</hover>}}
-write data to the environment that any FromEnvironmentFieldPath
-patch can access. 
+を使用して、任意のFromEnvironmentFieldPath
+パッチがアクセスできる環境にデータを書き込みます。 
 {{< /hint >}}
 
-For example, use the desired
-{{<hover label="toEnvField" line="13">}}region{{</hover>}} value and
-apply it as the environment's
-{{<hover label="toEnvField" line="14">}}key1{{</hover>}}.
+例えば、希望する
+{{<hover label="toEnvField" line="13">}}region{{</hover>}} 値を使用し、
+それを環境の
+{{<hover label="toEnvField" line="14">}}key1{{</hover>}}として適用します。
 
 
 ```yaml {label="toEnvField",copy-lines="9-11"}
@@ -824,8 +778,7 @@ kind: Composition
           toFieldPath: key1
 ```
 
-Because the environment is in-memory, there is no command to confirm the patch
-wrote the value to the environment.
+環境はメモリ内にあるため、パッチが値を環境に書き込んだことを確認するコマンドはありません。
 
 
 <!-- vale Google.Headings = NO -->
@@ -833,49 +786,44 @@ wrote the value to the environment.
 <!-- vale Google.Headings = YES -->
 
 {{<hint "important" >}}
-EnvironmentConfigs are an alpha feature. They aren't enabled by default.  
+EnvironmentConfigsはアルファ機能です。デフォルトでは有効になっていません。  
 
-For more information about using an EnvironmentConfig, read the 
-[EnvironmentConfigs]({{<ref "./environment-configs">}}) documentation.
+EnvironmentConfigの使用に関する詳細は、 
+[EnvironmentConfigs]({{<ref "./environment-configs">}}) ドキュメントを参照してください。
 {{< /hint >}}
 
-The 
 {{<hover label="combineFromEnv" line="12">}}CombineFromEnvironment{{</hover>}}
-patch combines multiple values from the in-memory EnvironmentConfig environment and applies
-them to the managed resource.
+パッチは、メモリ内のEnvironmentConfig環境から複数の値を結合し、
+それを管理リソースに適用します。
 
 {{<hint "tip" >}}
-Use 
 {{<hover label="combineFromEnv" line="12">}}CombineFromEnvironment{{</hover>}}
-patch to create complex strings, like security policies and apply them to
-a managed resource. 
+パッチを使用して、セキュリティポリシーのような複雑な文字列を作成し、
+それを管理リソースに適用します。 
 {{< /hint >}}
 
-For example, combine multiple fields in the environment to create a unique 
-{{<hover label="combineFromEnv" line="20">}}annotation{{</hover>}}
-. 
+例えば、環境内の複数のフィールドを組み合わせてユニークな 
+{{<hover label="combineFromEnv" line="20">}}アノテーション{{</hover>}}
+を作成します。 
 
-The 
 {{<hover label="combineFromEnv" line="12">}}CombineFromEnvironment{{</hover>}}
-patch only supports the 
-{{<hover label="combineFromEnv" line="13">}}combine{{</hover>}} option. 
+パッチは 
+{{<hover label="combineFromEnv" line="13">}}combine{{</hover>}} オプションのみをサポートしています。 
 
-The only supported 
-{{<hover label="combineFromEnv" line="14">}}strategy{{</hover>}} is 
-{{<hover label="combineFromEnv" line="14">}}strategy: string{{</hover>}}.
+サポートされている唯一の 
+{{<hover label="combineFromEnv" line="14">}}戦略{{</hover>}}は 
+{{<hover label="combineFromEnv" line="14">}}strategy: string{{</hover>}} です。
 
-The {{<hover label="combineFromEnv" line="15">}}variables{{</hover>}} are the
-list of 
-{{<hover label="combineFromEnv" line="16">}}fromFieldPath{{</hover>}} values
-from the in-memory environment to combine. 
+{{<hover label="combineFromEnv" line="15">}}変数{{</hover>}}は、結合するための
+メモリ内環境からの 
+{{<hover label="combineFromEnv" line="16">}}fromFieldPath{{</hover>}} 値のリストです。 
 
-Optionally you can apply a 
-{{<hover label="combineFromEnv" line="19">}}string.fmt{{</hover>}}, based on 
-[Go string formatting](https://pkg.go.dev/fmt) to specify how to combine the 
-strings.
+オプションで、 
+{{<hover label="combineFromEnv" line="19">}}string.fmt{{</hover>}} を適用して、 
+[Goの文字列フォーマット](https://pkg.go.dev/fmt) に基づいて文字列を結合する方法を指定できます。
 
-The {{<hover label="combineFromEnv" line="20">}}toFieldPath{{</hover>}} is the
-field in the managed resource to apply the new string to. 
+{{<hover label="combineFromEnv" line="20">}}toFieldPath{{</hover>}} は、 
+新しい文字列を適用するための管理リソース内のフィールドです。 
 
 
 ```yaml {label="combineFromEnv",copy-lines="11-20"}
@@ -901,8 +849,8 @@ kind: Composition
           toFieldPath: metadata.annotations[EnvironmentPatch]
 ```
 
-Describe the managed resource to see new 
-{{<hover label="combineFromEnvDesc" line="4">}}annotation{{</hover>}}.
+管理リソースを記述して、新しい 
+{{<hover label="combineFromEnvDesc" line="4">}}アノテーション{{</hover>}} を確認します。
 
 ```yaml {copy-lines="none",label="combineFromEnvDesc"}
 $ kubectl describe bucket
@@ -917,52 +865,48 @@ Annotations:  EnvironmentPatch: value1-value2
 <!-- vale Google.Headings = YES -->
 
 {{<hint "important" >}}
-EnvironmentConfigs are an alpha feature. They aren't enabled by default.  
+EnvironmentConfigs はアルファ機能です。デフォルトでは有効になっていません。  
 
-For more information about using an EnvironmentConfig, read the 
-[EnvironmentConfigs]({{<ref "./environment-configs">}}) documentation.
+EnvironmentConfig の使用に関する詳細は、 
+[EnvironmentConfigs]({{<ref "./environment-configs">}}) ドキュメントを参照してください。
 {{< /hint >}}
 
-The 
 {{<hover label="combineToEnv" line="12">}}CombineToEnvironment{{</hover>}}
-patch combines multiple values from the managed resource and applies them to the in-memory EnvironmentConfig environment.
+パッチは、管理リソースからの複数の値を結合し、それらをメモリ内の EnvironmentConfig 環境に適用します。
 
 {{<hint "tip" >}}
-Use 
 {{<hover label="combineToEnv" line="12">}}CombineToEnvironment{{</hover>}}
-patch to create complex strings, like security policies to use in other managed resources. 
+パッチを使用して、他の管理リソースで使用するセキュリティポリシーのような複雑な文字列を作成します。 
 {{< /hint >}}
 
-For example, combine multiple fields in the managed resource to create a unique
-string and store it in the environment's
-{{<hover label="combineToEnv" line="20">}}key2{{</hover>}} value. 
+例えば、管理リソース内の複数のフィールドを組み合わせて一意の
+文字列を作成し、それを環境の
+{{<hover label="combineToEnv" line="20">}}key2{{</hover>}} 値に保存します。 
 
-The string combines the
-managed resource 
-{{<hover label="combineToEnv" line="16">}}Kind{{</hover>}} and 
-{{<hover label="combineToEnv" line="17">}}region{{</hover>}}.
+この文字列は
+管理リソースの 
+{{<hover label="combineToEnv" line="16">}}Kind{{</hover>}} と 
+{{<hover label="combineToEnv" line="17">}}region{{</hover>}} を組み合わせたものです。
 
-The 
 {{<hover label="combineToEnv" line="12">}}CombineToEnvironment{{</hover>}}
-patch only supports the 
-{{<hover label="combineToEnv" line="13">}}combine{{</hover>}} option. 
+パッチは 
+{{<hover label="combineToEnv" line="13">}}combine{{</hover>}} オプションのみをサポートします。 
 
-The only supported 
-{{<hover label="combineToEnv" line="14">}}strategy{{</hover>}} is 
-{{<hover label="combineToEnv" line="14">}}strategy: string{{</hover>}}.
+サポートされている唯一の 
+{{<hover label="combineToEnv" line="14">}}strategy{{</hover>}} は 
+{{<hover label="combineToEnv" line="14">}}strategy: string{{</hover>}} です。
 
-The {{<hover label="combineToEnv" line="15">}}variables{{</hover>}} are the
-list of 
+{{<hover label="combineToEnv" line="15">}}variables{{</hover>}} は
+管理リソース内の 
 {{<hover label="combineToEnv" line="16">}}fromFieldPath{{</hover>}} 
-values in the managed resource to combine. 
+値のリストです。 
 
-Optionally you can apply a 
-{{<hover label="combineToEnv" line="19">}}string.fmt{{</hover>}}, based on 
-[Go string formatting](https://pkg.go.dev/fmt) to specify how to combine the 
-strings.
+オプションで、 
+{{<hover label="combineToEnv" line="19">}}string.fmt{{</hover>}} を適用して、 
+[Goの文字列フォーマット](https://pkg.go.dev/fmt) に基づいて文字列を組み合わせる方法を指定できます。
 
-The {{<hover label="combineToEnv" line="20">}}toFieldPath{{</hover>}} is the
-key in the environment to write the new string to. 
+{{<hover label="combineToEnv" line="20">}}toFieldPath{{</hover>}} は
+新しい文字列を書き込むための環境内のキーです。 
 
 ```yaml {label="combineToEnv",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -987,50 +931,47 @@ kind: Composition
           toFieldPath: key2
 ```
 
-Because the environment is in-memory, there is no command to confirm the patch
-wrote the value to the environment.
+環境はメモリ内にあるため、パッチが値を環境に書き込んだことを確認するコマンドはありません。
 
-## Transform a patch
+## パッチの変換
 
-When applying a patch, Crossplane supports modifying the data before applying it
-as a patch. Crossplane calls this a "transform" operation. 
+パッチを適用する際、Crossplaneはデータをパッチとして適用する前に変更することをサポートしています。Crossplaneはこれを「変換」操作と呼びます。 
 
-Summary of Crossplane transforms.
+Crossplaneの変換の概要。
 {{< table "table table-hover" >}}
-| Transform Type | Action |
+| 変換タイプ | アクション |
 | ---  | --- |
-| [convert](#convert-transforms) | Converts an input data type to a different type. Also called "casting." | 
-| [map](#map-transforms) | Selects a specific output based on a specific input. | 
-| [match](#match-transform) | Selects a specific output based on a string or regular expression. | 
-| [math](#math-transforms) | Applies a mathematical operation on the input. | 
-| [string](#string-transforms) | Change the input string using [Go string formatting](https://pkg.go.dev/fmt). | 
+| [convert](#convert-transforms) | 入力データ型を別の型に変換します。「キャスティング」とも呼ばれます。 | 
+| [map](#map-transforms) | 特定の入力に基づいて特定の出力を選択します。 | 
+| [match](#match-transform) | 文字列または正規表現に基づいて特定の出力を選択します。 | 
+| [math](#math-transforms) | 入力に対して数学的操作を適用します。 | 
+| [string](#string-transforms) | [Goの文字列フォーマット](https://pkg.go.dev/fmt) を使用して入力文字列を変更します。 | 
 {{< /table >}}
 
-Apply a transform directly to an individual patch with the 
-{{<hover label="transform1" line="15">}}transforms{{</hover>}} field. 
 
-A 
+個々のパッチに直接変換を適用するには、 
+{{<hover label="transform1" line="15">}}transforms{{</hover>}} フィールドを使用します。 
+
 {{<hover label="transform1" line="15">}}transform{{</hover>}} 
-requires a 
-{{<hover label="transform1" line="16">}}type{{</hover>}}, indicating the
-transform action to take. 
+には、実行する変換アクションを示す 
+{{<hover label="transform1" line="16">}}type{{</hover>}} が必要です。 
 
-The other transform field is the same as the 
-{{<hover label="transform1" line="16">}}type{{</hover>}}, in this example, 
-{{<hover label="transform1" line="17">}}map{{</hover>}}.
+他の変換フィールドは、 
+{{<hover label="transform1" line="16">}}type{{</hover>}} と同じで、この例では 
+{{<hover label="transform1" line="17">}}map{{</hover>}} です。
 
-The other fields depend on the patch type used. 
+他のフィールドは、使用されるパッチタイプによって異なります。 
 
-This example uses a 
-{{<hover label="transform1" line="16">}}type: map{{</hover>}} transform, taking 
-the input 
-{{<hover label="transform1" line="13">}}spec.desiredRegion{{</hover>}}, matching
-it to either 
-{{<hover label="transform1" line="18">}}us{{</hover>}} or 
-{{<hover label="transform1" line="19">}}eu{{</hover>}} and returning the
-corresponding AWS region for the 
-{{<hover label="transform1" line="14">}}spec.forProvider.region{{</hover>}}
-value. 
+この例では、 
+{{<hover label="transform1" line="16">}}type: map{{</hover>}} 変換を使用し、 
+入力の 
+{{<hover label="transform1" line="13">}}spec.desiredRegion{{</hover>}} を取得し、 
+それを 
+{{<hover label="transform1" line="18">}}us{{</hover>}} または 
+{{<hover label="transform1" line="19">}}eu{{</hover>}} に一致させ、 
+対応する AWS リージョンを 
+{{<hover label="transform1" line="14">}}spec.forProvider.region{{</hover>}} 
+値として返します。 
 
 ```yaml {label="transform1",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -1054,20 +995,20 @@ kind: Composition
                 eu: eu-north-1
 ```
 
-### Convert transforms
+### 変換の変換
 
-The {{<hover label="convert" line="6">}}convert{{</hover>}} transform type 
-changes the input data type to a different data type.
+{{<hover label="convert" line="6">}}convert{{</hover>}} 変換タイプは、 
+入力データタイプを別のデータタイプに変更します。
 
 {{< hint "tip" >}}
-Some provider APIs require a field to be a string. Use a 
-{{<hover label="convert" line="7">}}convert{{</hover>}} type to 
-change any boolean or integer fields to strings. 
+一部のプロバイダー API では、フィールドが文字列である必要があります。 
+{{<hover label="convert" line="7">}}convert{{</hover>}} タイプを使用して、 
+任意のブール値または整数フィールドを文字列に変更します。 
 {{< /hint >}}
 
-A {{<hover label="convert" line="6">}}convert{{</hover>}} 
-transform requires a {{<hover label="convert" line="8">}}toType{{</hover>}}, 
-defining the output data type. 
+{{<hover label="convert" line="6">}}convert{{</hover>}} 
+変換には、出力データタイプを定義する 
+{{<hover label="convert" line="8">}}toType{{</hover>}} が必要です。 
 
 ```yaml {label="convert",copy-lines="none"}
 patches:
@@ -1080,57 +1021,54 @@ patches:
           toType: string
 ```
 
-Supported `toType` values:
+サポートされている `toType` 値：
 {{< table "table table-sm table-hover" >}}
-| `toType` value | Description | 
+| `toType` 値 | 説明 | 
 | -- | -- |
-| `bool` | A boolean value of `true` or `false`. | 
-| `float64` | A 64-bit float value. | 
-| `int` | A 32-bit integer value. | 
-| `int64` | A 64-bit integer value. | 
-| `string` | A string value. | 
-| `object` | An object. |
-| `array` | An array. |
+| `bool` | `true` または `false` のブール値。 | 
+| `float64` | 64 ビット浮動小数点値。 | 
+| `int` | 32 ビット整数値。 | 
+| `int64` | 64 ビット整数値。 | 
+| `string` | 文字列値。 | 
+| `object` | オブジェクト。 |
+| `array` | 配列。 |
 {{< /table >}}
 
-#### Converting strings to booleans
-When converting from a string to a `bool` Crossplane considers the string values  
-`1`, `t`, `T`, `TRUE`, `True` and `true`  
-equal to the boolean value `True`.  
+#### 文字列をブール値に変換する
+文字列から `bool` への変換時に、Crossplane は文字列値  
+`1`、`t`、`T`、`TRUE`、`True` および `true`  
+をブール値 `True` と等しいと見なします。  
 
-The strings   
-`0`, `f`, `F`, `FALSE`, `False` and `false`   
-are equal to the boolean value `False`. 
+文字列  
+`0`、`f`、`F`、`FALSE`、`False` および `false`  
+はブール値 `False` と等しいです。  
 
-#### Converting numbers to booleans
-Crossplane considers the integer `1` and float `1.0` equal to the boolean
-value `True`.  
-Any other integer or float value is `False`.
+#### 数値をブール値に変換する
+Crossplane は整数 `1` および浮動小数点数 `1.0` をブール値
+`True` と等しいと見なします。  
+その他の整数または浮動小数点数の値は `False` です。  
 
-#### Converting booleans to numbers
-Crossplane converts the boolean value `True` to the integer `1` or float64
-`1.0`.  
+#### ブール値を数値に変換する
+Crossplane はブール値 `True` を整数 `1` または浮動小数点数 `1.0` に変換します。  
 
-The value `False` converts to the integer `0` or float64 `0.0`
+値 `False` は整数 `0` または浮動小数点数 `0.0` に変換されます。  
 
-#### Converting strings to float64
-When converting from a `string` to a 
-{{<hover label="format" line="3">}}float64{{</hover>}} Crossplane supports 
-an optional  
-{{<hover label="format" line="4">}}format: quantity{{</hover>}} field.
+#### 文字列を float64 に変換する
+`string` から 
+{{<hover label="format" line="3">}}float64{{</hover>}} への変換時に、Crossplane は 
+オプションの  
+{{<hover label="format" line="4">}}format: quantity{{</hover>}} フィールドをサポートしています。  
 
-Using {{<hover label="format" line="4">}}format: quantity{{</hover>}} translates 
-size suffixes like `M` for megabyte or `Mi` for megabit into the correct float64
-value. 
+{{<hover label="format" line="4">}}format: quantity{{</hover>}} を使用すると、  
+サイズの接尾辞 `M`（メガバイト）や `Mi`（メガビット）を正しい float64
+値に変換します。  
 
 {{<hint "note" >}}
-Refer to the [Go language docs](https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity) 
-for a full list of supported suffixes.
+サポートされている接尾辞の完全なリストについては、[Go 言語のドキュメント](https://pkg.go.dev/k8s.io/apimachinery/pkg/api/resource#Quantity)を参照してください。
 {{</hint >}}
 
-Add {{<hover label="format" line="4">}}format: quantity{{</hover>}} to the 
-{{<hover label="format" line="1">}}convert{{</hover>}} object to enable quantity
-suffix support. 
+{{<hover label="format" line="4">}}format: quantity{{</hover>}} を 
+{{<hover label="format" line="1">}}convert{{</hover>}} オブジェクトに追加して、数量接尾辞のサポートを有効にします。  
 
 ```yaml {label="format",copy-lines="all"}
 - type: convert
@@ -1139,13 +1077,12 @@ suffix support.
    format: quantity
 ```
 
-#### Converting strings to objects
+#### 文字列をオブジェクトに変換する
 
-Crossplane converts JSON strings to objects.
+Crossplane は JSON 文字列をオブジェクトに変換します。  
 
-Add {{<hover label="object" line="4">}}format: json{{</hover>}} to the 
-{{<hover label="object" line="1">}}convert{{</hover>}} object which is
-the only supported string format for this conversion.
+{{<hover label="object" line="4">}}format: json{{</hover>}} を 
+{{<hover label="object" line="1">}}convert{{</hover>}} オブジェクトに追加してください。これはこの変換に対して唯一サポートされている文字列形式です。  
 
 ```yaml {label="object",copy-lines="all"}
 - type: convert
@@ -1155,11 +1092,10 @@ the only supported string format for this conversion.
 ```
 
 {{< hint "tip" >}}
-This conversion is useful for patching keys in an object.
+この変換はオブジェクト内のキーをパッチするのに便利です。
 {{< /hint >}}
 
-The following example adds a tag to a resource with a
-{{<hover label="patch-key" line="8">}}customized key{{</hover>}}:
+次の例は、{{<hover label="patch-key" line="8">}}カスタマイズされたキー{{</hover>}}を持つリソースにタグを追加します。
 
 ```yaml {label="patch-key",copy-lines="all"}
     - type: FromCompositeFieldPath
@@ -1176,13 +1112,13 @@ The following example adds a tag to a resource with a
           format: json
 ```
 
-#### Converting strings to arrays
+#### 文字列を配列に変換する
 
-Crossplane converts JSON strings to arrays.
+CrossplaneはJSON文字列を配列に変換します。
 
-Add {{<hover label="array" line="4">}}format: json{{</hover>}} to the 
-{{<hover label="array" line="1">}}convert{{</hover>}} object which is
-the only supported string format for this conversion.
+{{<hover label="array" line="4">}}format: json{{</hover>}}を
+{{<hover label="array" line="1">}}convert{{</hover>}}オブジェクトに追加します。
+これはこの変換に対して唯一サポートされている文字列形式です。
 
 ```yaml {label="array",copy-lines="all"}
 - type: convert
@@ -1191,39 +1127,34 @@ the only supported string format for this conversion.
    format: json
 ```
 
-### Map transforms
-The {{<hover label="map" line="6">}}map{{</hover>}} transform type 
-_maps_ an input value to an output value. 
+### マップ変換
+{{<hover label="map" line="6">}}map{{</hover>}}変換タイプは
+入力値を出力値に_マッピング_します。
 
 {{< hint "tip" >}}
-The {{<hover label="map" line="6">}}map{{</hover>}} transform is useful for
-translating generic region names like `US` or `EU` to provider specific region
-names. 
+{{<hover label="map" line="6">}}map{{</hover>}}変換は、`US`や`EU`のような一般的な地域名をプロバイダー特有の地域名に翻訳するのに便利です。
 {{< /hint >}}
 
-The {{<hover label="map" line="6">}}map{{</hover>}} transform compares the value
-from the {{<hover label="map" line="3">}}fromFieldPath{{</hover>}} to the
-options listed in the {{<hover label="map" line="6">}}map{{</hover>}}.  
+{{<hover label="map" line="6">}}map{{</hover>}}変換は、{{<hover label="map" line="3">}}fromFieldPath{{</hover>}}からの値を
+{{<hover label="map" line="6">}}map{{</hover>}}にリストされているオプションと比較します。
 
-If Crossplane finds the value, Crossplane puts
-the mapped value in the {{<hover label="map" line="4">}}toFieldPath{{</hover>}}.
+Crossplaneが値を見つけると、Crossplaneは
+マッピングされた値を{{<hover label="map" line="4">}}toFieldPath{{</hover>}}に置きます。
 
 {{<hint "note" >}}
-Crossplane throws an error for the patch if the value isn't found.
+Crossplaneは、値が見つからない場合、パッチに対してエラーをスローします。
 {{< /hint >}}
 
-{{<hover label="map" line="3">}}spec.field1{{</hover>}} is the string
-{{<hover label="map" line="8">}}"field1-text"{{</hover>}} then Crossplane uses
-the string 
-{{<hover label="map" line="8">}}firstField{{</hover>}} for the 
-{{<hover label="map" line="4">}}annotation{{</hover>}}.  
+{{<hover label="map" line="3">}}spec.field1{{</hover>}}が文字列
+{{<hover label="map" line="8">}}"field1-text"{{</hover>}}の場合、Crossplaneは
+{{<hover label="map" line="8">}}firstField{{</hover>}}という文字列を
+{{<hover label="map" line="4">}}annotation{{</hover>}}に使用します。
 
-If
-{{<hover label="map" line="3">}}spec.field1{{</hover>}} is the string
-{{<hover label="map" line="8">}}"field2-text"{{</hover>}} then Crossplane uses
-the string 
-{{<hover label="map" line="8">}}secondField{{</hover>}} for the 
-{{<hover label="map" line="4">}}annotation{{</hover>}}.  
+もし
+{{<hover label="map" line="3">}}spec.field1{{</hover>}}が文字列
+{{<hover label="map" line="8">}}"field2-text"{{</hover>}}の場合、Crossplaneは
+{{<hover label="map" line="8">}}secondField{{</hover>}}という文字列を
+{{<hover label="map" line="4">}}annotation{{</hover>}}に使用します。
 
 ```yaml {label="map",copy-lines="none"}
 patches:
@@ -1236,9 +1167,8 @@ patches:
           "field1-text": "firstField"
           "field2-text": "secondField"
 ```
-In this example, the value of 
-{{<hover label="map" line="3">}}spec.field1{{</hover>}} is 
-{{<hover label="comositeMap" line="5">}}field1-text{{</hover>}}.
+この例では、{{<hover label="map" line="3">}}spec.field1{{</hover>}}の値は
+{{<hover label="comositeMap" line="5">}}field1-text{{</hover>}}です。
 
 ```yaml {label="comositeMap",copy-lines="none"}
 $ kubectl describe composite
@@ -1248,8 +1178,8 @@ Spec:
   field1:         field1-text
 ```
 
-The annotation applied to the managed resource is 
-{{<hover label="mrMap" line="4">}}firstField{{</hover>}}.
+管理リソースに適用されるアノテーションは 
+{{<hover label="mrMap" line="4">}}firstField{{</hover>}}です。
 
 ```yaml {label="mrMap",copy-lines="none"}
 $ kubectl describe bucket
@@ -1259,19 +1189,17 @@ Annotations:  crossplane.io/composition-resource-name: bucket1
 # Removed for brevity.
 ```
 
-### Match transform
-The {{<hover label="match" line="6">}}match{{</hover>}} transform is like the
-`map` transform.  
+### マッチ変換
+{{<hover label="match" line="6">}}match{{</hover>}} 変換は 
+`map` 変換のようなものです。  
 
-The {{<hover label="match" line="6">}}match{{</hover>}} 
-transform adds support for regular expressions along with exact
-strings and can provide default values if there isn't a match.
+{{<hover label="match" line="6">}}match{{</hover>}} 
+変換は、正確な文字列に加えて正規表現をサポートし、一致しない場合にはデフォルト値を提供できます。
 
-A {{<hover label="match" line="7">}}match{{</hover>}} object requires a 
-{{<hover label="match" line="8">}}patterns{{</hover>}} object.
+{{<hover label="match" line="7">}}match{{</hover>}} オブジェクトには 
+{{<hover label="match" line="8">}}patterns{{</hover>}} オブジェクトが必要です。
 
-The {{<hover label="match" line="8">}}patterns{{</hover>}} is a list of one or
-more patterns to attempt to match the input value against. 
+{{<hover label="match" line="8">}}patterns{{</hover>}} は、入力値に対して一致を試みる1つ以上のパターンのリストです。
 
 ```yaml {label="match",copy-lines="1-8"}
 patches:
@@ -1288,24 +1216,24 @@ patches:
               # Removed for brevity
 ```
 
-Match {{<hover label="match" line="8">}}patterns{{</hover>}} can be either 
-{{<hover label="match" line="9">}}type: literal{{</hover>}} to match an
-exact string or 
-{{<hover label="match" line="11">}}type: regexp{{</hover>}} to match a
-regular expression. 
+マッチ {{<hover label="match" line="8">}}patterns{{</hover>}} は、 
+{{<hover label="match" line="9">}}type: literal{{</hover>}} を使用して
+正確な文字列と一致させるか、 
+{{<hover label="match" line="11">}}type: regexp{{</hover>}} を使用して
+正規表現と一致させることができます。
 
 {{<hint "note" >}}
-Crossplane stops processing matches after the first pattern match.
+Crossplane は最初のパターン一致の後にマッチ処理を停止します。
 {{< /hint >}}
 
-#### Match an exact string
-Use a {{<hover label="matchLiteral" line="8">}}pattern{{</hover>}} with 
-{{<hover label="matchLiteral" line="9">}}type: literal{{</hover>}} to match an 
-exact string. 
+#### 正確な文字列と一致させる
+{{<hover label="matchLiteral" line="8">}}pattern{{</hover>}} を 
+{{<hover label="matchLiteral" line="9">}}type: literal{{</hover>}} とともに使用して
+正確な文字列と一致させます。
 
-On a successful match Crossplane provides the 
-{{<hover label="matchLiteral" line="11">}}result:{{</hover>}} to
-the patch {{<hover label="matchLiteral" line="4">}}toFieldPath{{</hover>}}. 
+一致が成功すると、Crossplane は 
+{{<hover label="matchLiteral" line="11">}}result:{{</hover>}} を
+パッチ {{<hover label="matchLiteral" line="4">}}toFieldPath{{</hover>}} に提供します。
 
 ```yaml {label="matchLiteral"}
 patches:
@@ -1321,17 +1249,16 @@ patches:
               result: "matchedLiteral"
 ```
 
-#### Match a regular expression
-Use a {{<hover label="matchRegex" line="8">}}pattern{{</hover>}} with 
-{{<hover label="matchRegex" line="9">}}type: regexp{{</hover>}} to match a regular
-expression.  
-Define a 
-{{<hover label="matchRegex" line="10">}}regexp{{</hover>}} key with the value of the
-regular expression to match.
+#### 正規表現と一致させる
+{{<hover label="matchRegex" line="8">}}pattern{{</hover>}} を 
+{{<hover label="matchRegex" line="9">}}type: regexp{{</hover>}} とともに使用して
+正規表現と一致させます。  
+一致させる正規表現の値を持つ 
+{{<hover label="matchRegex" line="10">}}regexp{{</hover>}} キーを定義します。
 
-On a successful match Crossplane provides the 
-{{<hover label="matchRegex" line="11">}}result:{{</hover>}} to
-the patch {{<hover label="matchRegex" line="4">}}toFieldPath{{</hover>}}. 
+一致が成功すると、Crossplane は 
+{{<hover label="matchRegex" line="11">}}result:{{</hover>}} を
+パッチ {{<hover label="matchRegex" line="4">}}toFieldPath{{</hover>}} に提供します。
 
 ```yaml {label="matchRegex"}
 patches:
@@ -1347,25 +1274,16 @@ patches:
               result: "foundField1"
 ```
 
-#### Using default values
+#### デフォルト値の使用
 
-Optionally you can provide a default value to use if there is no matching 
-pattern.  
+オプションで、一致するパターンがない場合に使用するデフォルト値を提供できます。  
 
-The default value can either be the original input value or a defined default
-value. 
+デフォルト値は、元の入力値または定義されたデフォルト値のいずれかであることができます。 
 
-Use
-{{<hover label="defaultValue" line="12">}}fallbackTo: Value{{</hover>}} to
-provide a default value if a match isn't found.
+一致が見つからない場合は、{{<hover label="defaultValue" line="12">}}fallbackTo: Value{{</hover>}}を使用してデフォルト値を提供します。
 
-For example if the string 
-{{<hover label="defaultValue" line="10">}}unknownString{{</hover>}} isn't
-matched, Crossplane provides the 
-{{<hover label="defaultValue" line="12">}}Value{{</hover>}} 
-{{<hover label="defaultValue" line="13">}}StringNotFound{{</hover>}} to the 
-{{<hover label="defaultValue" line="4">}}toFieldPath{{</hover>}} 
-
+例えば、文字列{{<hover label="defaultValue" line="10">}}unknownString{{</hover>}}が一致しない場合、Crossplaneは{{<hover label="defaultValue" line="12">}}Value{{</hover>}} 
+{{<hover label="defaultValue" line="13">}}StringNotFound{{</hover>}}を{{<hover label="defaultValue" line="4">}}toFieldPath{{</hover>}}に提供します。 
 
 ```yaml {label="defaultValue"}
 patches:
@@ -1383,12 +1301,9 @@ patches:
           fallbackValue: "StringNotFound"
 ```
 
-To use the original input as the fallback value use 
-{{<hover label="defaultInput" line="12">}}fallbackTo: Input{{</hover>}}.
+元の入力をフォールバック値として使用するには、{{<hover label="defaultInput" line="12">}}fallbackTo: Input{{</hover>}}を使用します。
 
-Crossplane uses the original 
-{{<hover label="defaultInput" line="3">}}fromFieldPath{{</hover>}} input for the 
-{{<hover label="defaultInput" line="4">}}toFieldPath{{</hover>}} value.
+Crossplaneは、元の{{<hover label="defaultInput" line="3">}}fromFieldPath{{</hover>}}入力を{{<hover label="defaultInput" line="4">}}toFieldPath{{</hover>}}値に使用します。
 ```yaml {label="defaultInput"}
 patches:
   - type: FromCompositeFieldPath
@@ -1404,14 +1319,12 @@ patches:
           fallbackTo: Input
 ```
 
-### Math transforms
+### 数学変換
 
-Use the {{<hover label="math" line="6">}}math{{</hover>}} transform to multiply
-an input or apply a minimum or maximum value. 
+入力を乗算したり、最小値または最大値を適用するには、{{<hover label="math" line="6">}}math{{</hover>}}変換を使用します。 
 
 {{<hint "important">}}
-A {{<hover label="math" line="6">}}math{{</hover>}} transform only supports
-integer inputs. 
+{{<hover label="math" line="6">}}math{{</hover>}}変換は整数入力のみをサポートします。 
 {{< /hint >}}
 
 ```yaml {label="math",copy-lines="1-7"}
@@ -1429,19 +1342,11 @@ patches:
 #### clampMin
 <!-- vale Google.Headings = YES -->
 
-The {{<hover label="clampMin" line="8">}}type: clampMin{{</hover>}} uses a defined 
-minimum value if an input is larger than the 
-{{<hover label="clampMin" line="8">}}type: clampMin{{</hover>}} value.
+{{<hover label="clampMin" line="8">}}type: clampMin{{</hover>}}は、入力が{{<hover label="clampMin" line="8">}}type: clampMin{{</hover>}}値より大きい場合に定義された最小値を使用します。
 
-For example, this 
-{{<hover label="clampMin" line="8">}}type: clampMin{{</hover>}} requires an
-input to be greater than 
-{{<hover label="clampMin" line="9">}}20{{</hover>}}.
+例えば、この{{<hover label="clampMin" line="8">}}type: clampMin{{</hover>}}は、入力が{{<hover label="clampMin" line="9">}}20{{</hover>}}より大きいことを要求します。
 
-If an input is lower than 
-{{<hover label="clampMin" line="9">}}20{{</hover>}}, Crossplane uses the 
-{{<hover label="clampMin" line="9">}}clampMin{{</hover>}} value for the 
-{{<hover label="clampMin" line="4">}}toFieldPath{{</hover>}}.
+入力が{{<hover label="clampMin" line="9">}}20{{</hover>}}より低い場合、Crossplaneは{{<hover label="clampMin" line="9">}}clampMin{{</hover>}}値を{{<hover label="clampMin" line="4">}}toFieldPath{{</hover>}}に使用します。
 
 ```yaml {label="clampMin"}
 patches:
@@ -1459,19 +1364,18 @@ patches:
 #### clampMax
 <!-- vale Google.Headings = YES -->
 
-The {{<hover label="clampMax" line="8">}}type: clampMax{{</hover>}} uses a defined 
-minimum value if an input is larger than the 
-{{<hover label="clampMax" line="8">}}type: clampMax{{</hover>}} value.
+{{<hover label="clampMax" line="8">}}type: clampMax{{</hover>}}は、入力が
+{{<hover label="clampMax" line="8">}}type: clampMax{{</hover>}}の値よりも大きい場合に
+定義された最小値を使用します。
 
-For example, this 
-{{<hover label="clampMax" line="8">}}type: clampMax{{</hover>}} requires an
-input to be less than 
-{{<hover label="clampMax" line="9">}}5{{</hover>}}.
+例えば、この
+{{<hover label="clampMax" line="8">}}type: clampMax{{</hover>}}は、入力が
+{{<hover label="clampMax" line="9">}}5{{</hover>}}未満であることを要求します。
 
-If an input is higher than 
-{{<hover label="clampMax" line="9">}}5{{</hover>}}, Crossplane uses the 
-{{<hover label="clampMax" line="9">}}clampMax{{</hover>}} value for the 
-{{<hover label="clampMax" line="4">}}toFieldPath{{</hover>}}.
+入力が
+{{<hover label="clampMax" line="9">}}5{{</hover>}}よりも高い場合、Crossplaneは
+{{<hover label="clampMax" line="9">}}clampMax{{</hover>}}の値を
+{{<hover label="clampMax" line="4">}}toFieldPath{{</hover>}}に使用します。
 
 ```yaml {label="clampMax"}
 patches:
@@ -1489,15 +1393,14 @@ patches:
 #### Multiply
 <!-- vale Google.Headings = YES -->
 
-The {{<hover label="multiply" line="8">}}type: multiply{{</hover>}} multiplies
-the input by the {{<hover label="multiply" line="9">}}multiply{{</hover>}} 
-value.
+{{<hover label="multiply" line="8">}}type: multiply{{</hover>}}は、入力を
+{{<hover label="multiply" line="9">}}multiply{{</hover>}}の値で
+乗算します。
 
-For example, this 
-{{<hover label="multiply" line="8">}}type: multiply{{</hover>}} multiplies the
-value from the {{<hover label="multiply" line="3">}}fromFieldPath{{</hover>}}
-value by {{<hover label="multiply" line="9">}}2{{</hover>}}
-
+例えば、この
+{{<hover label="multiply" line="8">}}type: multiply{{</hover>}}は、
+{{<hover label="multiply" line="3">}}fromFieldPath{{</hover>}}の値を
+{{<hover label="multiply" line="9">}}2{{</hover>}}で乗算します。
 
 ```yaml {label="multiply"}
 patches:
@@ -1512,14 +1415,14 @@ patches:
 ```
 
 {{<hint "note" >}}
-The {{<hover label="multiply" line="9">}}multiply{{</hover>}} value only
-supports integers.
+{{<hover label="multiply" line="9">}}multiply{{</hover>}}の値は整数のみを
+サポートします。
 {{< /hint >}}
 
 ### String transforms
 
-The {{<hover label="string" line="6">}}string{{</hover>}} transform applies
-string formatting or manipulation to string inputs.
+{{<hover label="string" line="6">}}string{{</hover>}}変換は、文字列入力に対して
+文字列のフォーマットや操作を適用します。
 
 ```yaml {label="string"}
 patches:
@@ -1532,8 +1435,8 @@ patches:
           type: ...
 ```
 
-String transforms support the following 
-{{<hover label="string" line="7">}}types{{</hover>}}
+文字列変換は以下の
+{{<hover label="string" line="7">}}types{{</hover>}}をサポートします。
 
 * [Convert](#string-convert)
 * [Format](#string-format)
@@ -1544,17 +1447,17 @@ String transforms support the following
 
 #### String convert
 
-The {{<hover label="stringConvert" line="9">}}type: convert{{</hover>}}
-converts the input based on one of the following conversion types:
-* `ToUpper` - Change the string to all upper case letters. 
-* `ToLower` - Change the string to all lower case letters.
-* `ToBase64` - Create a new base64 string from the input. 
-* `FromBase64` - Create a new text string from a base64 input.
-* `ToJson` - Convert the input string to valid JSON.
-* `ToSha1` - Create a SHA-1 hash of the input string.
-* `ToSha256` - Create a SHA-256 hash of the input string.
-* `ToSha512` - Create a SHA-512 hash of the input string.
-* `ToAdler32` - Create an Adler32 hash of the input string.
+{{<hover label="stringConvert" line="9">}}type: convert{{</hover>}}は、以下の
+変換タイプのいずれかに基づいて入力を変換します：
+* `ToUpper` - 文字列をすべて大文字に変更します。
+* `ToLower` - 文字列をすべて小文字に変更します。
+* `ToBase64` - 入力から新しいbase64文字列を作成します。
+* `FromBase64` - base64入力から新しいテキスト文字列を作成します。
+* `ToJson` - 入力文字列を有効なJSONに変換します。
+* `ToSha1` - 入力文字列のSHA-1ハッシュを作成します。
+* `ToSha256` - 入力文字列のSHA-256ハッシュを作成します。
+* `ToSha512` - 入力文字列のSHA-512ハッシュを作成します。
+* `ToAdler32` - 入力文字列のAdler32ハッシュを作成します。
 
 ```yaml {label="stringConvert"}
 patches:
@@ -1568,9 +1471,8 @@ patches:
           convert: "ToUpper"
 ```
 
-#### String format
-The {{<hover label="typeFormat" line="9">}}type: format{{</hover>}}
-applies [Go string formatting](https://pkg.go.dev/fmt) to the input. 
+#### 文字列形式
+{{<hover label="typeFormat" line="9">}}type: format{{</hover>}}は、入力に[Go文字列フォーマット](https://pkg.go.dev/fmt)を適用します。
 
 ```yaml {label="typeFormat"}
 patches:
@@ -1584,12 +1486,11 @@ patches:
           fmt: "the-field-%s"
 ```
 
-#### Join
+#### 結合
 
-The {{<hover label="typeJoin" line="8">}}type: Join{{</hover>}} joins all
-values in the input array into a string using the given separator.
+{{<hover label="typeJoin" line="8">}}type: Join{{</hover>}}は、指定された区切り文字を使用して、入力配列内のすべての値を文字列に結合します。
 
-This transform only works with array inputs.
+この変換は配列入力でのみ機能します。
 
 ```yaml {label="typeJoin"}
 patches:
@@ -1604,14 +1505,11 @@ patches:
             separator: ","
 ```
 
-#### Regular expression type
-The {{<hover label="typeRegex" line="8">}}type: Regexp{{</hover>}} extracts
-the part of the input matching a regular expression. 
+#### 正規表現タイプ
+{{<hover label="typeRegex" line="8">}}type: Regexp{{</hover>}}は、正規表現に一致する入力の部分を抽出します。
 
-Optionally use a 
-{{<hover label="typeRegex" line="11">}}group{{</hover>}} to match a regular
-expression capture group.  
-By default Crossplane matches the entire regular expression.
+オプションで、{{<hover label="typeRegex" line="11">}}group{{</hover>}}を使用して、正規表現キャプチャグループに一致させることができます。  
+デフォルトでは、Crossplaneは正規表現全体に一致します。
 
 ```yaml {label="typeRegex"}
 patches:
@@ -1627,11 +1525,9 @@ patches:
             group: 1
 ```
 
-#### Trim prefix
+#### プレフィックスのトリム
 
-The {{<hover label="typeTrimP" line="8">}}type: TrimPrefix{{</hover>}} uses 
-Go's [TrimPrefix](https://pkg.go.dev/strings#TrimPrefix) and removes characters 
-from the beginning of a line.
+{{<hover label="typeTrimP" line="8">}}type: TrimPrefix{{</hover>}}は、Goの[TrimPrefix](https://pkg.go.dev/strings#TrimPrefix)を使用して、行の先頭から文字を削除します。
 
 ```yaml {label="typeTrimP"}
 patches:
@@ -1645,11 +1541,9 @@ patches:
           trim: `eu-
 ```
 
-#### Trim suffix
+#### サフィックスのトリム
 
-The {{<hover label="typeTrimS" line="8">}}type: TrimSuffix{{</hover>}} uses 
-Go's [TrimSuffix](https://pkg.go.dev/strings#TrimSuffix) and removes characters 
-from the end of a line.
+{{<hover label="typeTrimS" line="8">}}type: TrimSuffix{{</hover>}}は、Goの[TrimSuffix](https://pkg.go.dev/strings#TrimSuffix)を使用して、行の末尾から文字を削除します。
 
 ```yaml {label="typeTrimS"}
 patches:
@@ -1663,32 +1557,26 @@ patches:
           trim: `-north-1'
 ```
 
-## Patch policies
+## パッチポリシー
 
-Crossplane supports two types of patch policies:
+Crossplaneは2種類のパッチポリシーをサポートしています：
 * `fromFieldPath`
 * `mergeOptions`
 
 <!-- vale Google.Headings = NO -->
-### fromFieldPath policy
+### fromFieldPathポリシー
 <!-- vale Google.Headings = YES -->
 
-Using a `fromFieldPath: Required` policy on a patch requires the
-`fromFieldPath` to exist in the composite resource.
+パッチに`fromFieldPath: Required`ポリシーを使用する場合、`fromFieldPath`は合成リソースに存在する必要があります。
 
 {{<hint "tip" >}}
-If a resource patch isn't working applying the `fromFieldPath: Required` policy
-may produce an error in the composite resource to help troubleshoot. 
+リソースパッチが機能しない場合、`fromFieldPath: Required`ポリシーを適用すると、合成リソースにエラーが発生し、トラブルシューティングに役立つ場合があります。 
 {{< /hint >}}
 
-By default, Crossplane applies the policy `fromFieldPath: Optional`. With
-`fromFieldPath: Optional` Crossplane 
-ignores a patch if the `fromFieldPath` doesn't exist.   
+デフォルトでは、Crossplaneは`fromFieldPath: Optional`ポリシーを適用します。`fromFieldPath: Optional`では、`fromFieldPath`が存在しない場合、Crossplaneはパッチを無視します。
 
-With 
-{{<hover label="required" line="6">}}fromFieldPath: Required{{</hover>}} 
-the composite resource produces an error if the
-{{<hover label="required" line="6">}}fromFieldPath{{</hover>}} doesn't exist. 
+
+`{{<hover label="required" line="6">}}fromFieldPath: Required{{</hover>}}`を使用すると、コンポジットリソースは`{{<hover label="required" line="6">}}fromFieldPath{{</hover>}}`が存在しない場合にエラーを生成します。
 
 ```yaml {label="required"}
 patches:
@@ -1699,20 +1587,13 @@ patches:
       fromFieldPath: Required
 ```
 
-### Merge options
+### マージオプション
 
-By default when applying a patch the destination data is overridden. Use 
-{{<hover label="merge" line="6">}}mergeOptions{{</hover>}} to allow patches to 
-merge arrays and objects without overwriting them. 
+デフォルトでは、パッチを適用する際に宛先データが上書きされます。`{{<hover label="merge" line="6">}}mergeOptions{{</hover>}}`を使用して、パッチが配列やオブジェクトを上書きすることなくマージできるようにします。
 
-With an array input, use 
-{{<hover label="merge" line="7">}}appendSlice: true{{</hover>}} to append the
-array data to the end of the existing array.
+配列入力の場合、`{{<hover label="merge" line="7">}}appendSlice: true{{</hover>}}`を使用して、配列データを既存の配列の末尾に追加します。
 
-With an object, use 
-{{<hover label="merge" line="8">}}keepMapValues: true{{</hover>}} to leave
-existing object keys in tact. The patch updates any matching keys between the
-input and destination data. 
+オブジェクトの場合、`{{<hover label="merge" line="8">}}keepMapValues: true{{</hover>}}`を使用して、既存のオブジェクトキーをそのままにします。パッチは、入力データと宛先データの間で一致するキーを更新します。
 
 ```yaml {label="merge"}
 patches:

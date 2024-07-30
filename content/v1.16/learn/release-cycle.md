@@ -1,95 +1,58 @@
 ---
-title: Release Cycle
+title: リリースサイクル
 weight: 308
 ---
 
-Starting with the v1.10.0 release, Crossplane is released on a quarterly (13
-week) cadence. A cycle is comprised of three general stages:
+v1.10.0リリース以降、Crossplaneは四半期ごと（13週間）のサイクルでリリースされます。サイクルは3つの一般的なステージで構成されています：
 
-- Weeks 1—11: [Active Development]
-- Week 12: [Feature Freeze]
-- Week 13: [Code Freeze]
+- 週間1〜11: [アクティブ開発]
+- 週間12: [機能凍結]
+- 週間13: [コード凍結]
 
-This results in four releases per year, with the most recent three releases
-being maintained at any given time. When a new release is cut, the fourth most
-recent release reaches end of life (EOL). Users can expect any given release to
-be maintained for nine months.
+これにより、年間4回のリリースが行われ、最新の3つのリリースが常に維持されます。新しいリリースが行われると、4番目に最近のリリースはサポート終了（EOL）となります。ユーザーは、特定のリリースが9ヶ月間維持されることを期待できます。
 
-### Definition of maintenance
+### メンテナンスの定義
 
-The Crossplane community defines maintenance in that relevant bug fixes that are
-merged to the main development branch will be eligible to be back-ported to the
-release branch of any currently maintained version, and patch releases will be
-cut appropriately. It's also possible that a fix may be merged directly to the
-release branch if no longer applicable on the main development branch.
-Maintenance doesn't indicate any SLA on response time for user support in the
-form of Slack messages or issues, but problems will be addressed on a best
-effort basis by maintainers and contributors for currently maintained releases.
+Crossplaneコミュニティは、関連するバグ修正がメインの開発ブランチにマージされると、それが現在維持されているバージョンのリリースブランチにバックポートされる資格があると定義しています。また、パッチリリースは適切に行われます。メインの開発ブランチで適用できなくなった場合、修正が直接リリースブランチにマージされる可能性もあります。メンテナンスは、Slackメッセージや問題に対するユーザーサポートの応答時間に関するSLAを示すものではありませんが、問題は現在維持されているリリースのメンテナや貢献者によって最善の努力で対処されます。
 
-### Patch releases
+### パッチリリース
 
-_This policy is subject to change in the future._
+_このポリシーは将来的に変更される可能性があります。_
 
-Patch releases are cut for currently maintained minor versions on an as-needed
-basis. Any critical back-ported fixes will be included in a patch release as
-soon as possible after merge.
+パッチリリースは、現在維持されているマイナーバージョンに対して必要に応じて行われます。重要なバックポートされた修正は、マージ後できるだけ早くパッチリリースに含まれます。
 
-### Pre-releases
+### プレリリース
 
-_This policy is subject to change in the future._
+_このポリシーは将来的に変更される可能性があります。_
 
-Alpha, Beta, and RC releases are cut for an upcoming release on an as-needed
-basis. As a policy, at least one pre-release will be cut prior to any minor
-release. Pre-releases won't be made on release branches.
+アルファ、ベータ、RCリリースは、必要に応じて今後のリリースのために行われます。ポリシーとして、マイナーリリースの前に少なくとも1つのプレリリースが行われます。プレリリースはリリースブランチでは行われません。
 
-### Provider releases
+### プロバイダーリリース
 
-The Crossplane release cycle isn't required to be adhered to by any other
-Crossplane projects, but a similar cadence is encouraged. Maintainers listed in
-each repository's `OWNERS.md` file are responsible for determining and
-publishing the release cycle for their project.
+Crossplaneのリリースサイクルは、他のCrossplaneプロジェクトに遵守される必要はありませんが、類似のサイクルが推奨されます。各リポジトリの`OWNERS.md`ファイルに記載されているメンテナは、自分のプロジェクトのリリースサイクルを決定し、公開する責任があります。
 
-## Release stages
+## リリースステージ
 
-The following stages are the main milestones in a Crossplane release.
+以下のステージは、Crossplaneリリースの主なマイルストーンです。
 
-### Active development
+### アクティブな開発
 
-During active development, any code that meets the requisite criteria (i.e.
-passing appropriate tests, approved by a maintainer, etc.) will be merged into
-the main development branch. At present, there is no requirement to formally
-submit an enhancement proposal prior to the start of the release cycle, but
-contributors are encouraged to open an issue and gather feedback before starting
-work on a major implementation (see [CONTRIBUTING.md] for more information).
+アクティブな開発中は、必要な基準を満たすコード（すなわち、適切なテストに合格し、メンテナーによって承認されたものなど）がメインの開発ブランチにマージされます。現在、リリースサイクルの開始前に正式に改善提案を提出する必要はありませんが、貢献者は主要な実装に取り掛かる前に問題を開いてフィードバックを集めることを推奨されています（詳細については[CONTRIBUTING.md]を参照してください）。
 
-### Feature freeze
+### 機能凍結
 
-During feature freeze, no new functionality should be merged into the main
-development branch. Bug fixes, documentation changes, and non-critical changes
-may be made. In the case that a new feature is deemed absolutely necessary for a
-release, the Crossplane maintainers will weigh the impact of the change and make
-a decision on whether it should be included. 
+機能凍結中は、新しい機能をメインの開発ブランチにマージしてはいけません。バグ修正、ドキュメントの変更、および非クリティカルな変更は行うことができます。リリースに新機能が絶対に必要と判断された場合、Crossplaneのメンテナーは変更の影響を考慮し、それを含めるべきかどうかを決定します。
 
-### Code freeze
+### コード凍結
 
-During code freeze, there should be no changes merged to the main development
-branch with the following exceptions:
-- Fixes to a failing test that's deemed to be incorrectly testing
-  functionality.
-- Documentation only changes. It's possible that a documentation freeze will be
-  implemented in the future, but it's not currently enforced.
-- Fixes to a critical bug that wasn't previously identified. Merging a bug fix
-  during code freeze requires application for and approval of an exception by
-  Crossplane maintainers. This process is currently informal, but may be
-  formalized in the future.
+コード凍結中は、以下の例外を除いてメインの開発ブランチに変更をマージしてはいけません：
+- 機能を不正にテストしていると見なされる失敗したテストの修正。
+- ドキュメントのみの変更。将来的にドキュメントの凍結が実施される可能性がありますが、現在は強制されていません。
+- 以前に特定されていなかった重大なバグの修正。コード凍結中にバグ修正をマージするには、Crossplaneのメンテナーによる例外の申請と承認が必要です。このプロセスは現在非公式ですが、将来的に正式化される可能性があります。
 
-## Release dates
+## リリース日
 
-Crossplane releases once a quarter (every 13 weeks). Typically, the release
-happens on the Tuesday of the last week of the quarter, as shown on the
-[community calendar][community calendar]. Keep in mind that the specific date is
-**approximate**. A lot of factors can alter the date slightly, such as code
-reviews, testing, and bug fixing to ensure a quality release.
+Crossplaneは四半期ごとに1回（13週間ごと）リリースされます。通常、リリースは四半期の最終週の火曜日に行われます（[コミュニティカレンダー][community calendar]に示されています）。特定の日付は**おおよそ**であることに注意してください。コードレビュー、テスト、バグ修正など、質の高いリリースを確保するために日付がわずかに変更される要因が多くあります。
 
 <!-- Named links -->
 
@@ -98,3 +61,5 @@ reviews, testing, and bug fixing to ensure a quality release.
 [Code Freeze]: #code-freeze
 [CONTRIBUTING.md]: https://github.com/crossplane/crossplane/blob/master/CONTRIBUTING.md
 [community calendar]: https://calendar.google.com/calendar/embed?src=c_2cdn0hs9e2m05rrv1233cjoj1k%40group.calendar.google.com
+
+It seems there was no content provided. Please paste the Markdown content you'd like me to translate into Japanese.

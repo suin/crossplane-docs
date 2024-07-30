@@ -1,58 +1,46 @@
 ---
-title: Claims
+title: クレーム
 weight: 60
-description: "Claims are a way to consume Crossplane resources with namespace scoping"
+description: "クレームは、名前空間スコープを持つCrossplaneリソースを消費する方法です"
 ---
 
-Claims represents a set of managed resources as a single
-Kubernetes object, inside a namespace. 
+クレームは、名前空間内の単一のKubernetesオブジェクトとして管理されたリソースのセットを表します。
 
-Users create claims when they access the
-custom API, defined in the CompositeResourceDefinition. 
+ユーザーは、CompositeResourceDefinitionで定義されたカスタムAPIにアクセスする際にクレームを作成します。
 
 {{< hint "tip" >}}
 
-Claims are like [composite resources]({{<ref "./composite-resources">}}). The
-difference between Claims and composite resources is Crossplane can create 
-Claims in a namespace, while composite resources are cluster scoped.
+クレームは[複合リソース]({{<ref "./composite-resources">}})のようなものです。クレームと複合リソースの違いは、Crossplaneが名前空間内にクレームを作成できるのに対し、複合リソースはクラスター全体にスコープされることです。
 {{< /hint >}}
 
-{{<expand "Confused about Compositions, XRDs, XRs and Claims?" >}}
-Crossplane has four core components that users commonly mix up:
+{{<expand "構成、XRD、XR、およびクレームについて混乱していますか？" >}}
+Crossplaneには、ユーザーが一般的に混同する4つのコアコンポーネントがあります：
 
-* [Compositions]({{<ref "./compositions">}}) - A template to define how to create resources.
-* [Composite Resource Definition]({{<ref "./composite-resource-definitions">}})
-  (`XRD`) - A custom API specification. 
-* [Composite Resources]({{<ref "./composite-resources">}}) (`XR`) - Created by
-  using the custom API defined in a Composite Resource Definition. XRs use the
-  Composition template to create new managed resources. 
-* Claims (`XRC`) - This page. Like a Composite Resource, but
-  with namespace scoping. 
+* [構成]({{<ref "./compositions">}}) - リソースを作成する方法を定義するテンプレート。
+* [複合リソース定義]({{<ref "./composite-resource-definitions">}}) 
+  (`XRD`) - カスタムAPI仕様。
+* [複合リソース]({{<ref "./composite-resources">}}) (`XR`) - 複合リソース定義で定義されたカスタムAPIを使用して作成されます。XRは、構成テンプレートを使用して新しい管理リソースを作成します。
+* クレーム (`XRC`) - このページ。複合リソースのようですが、名前空間スコープがあります。
 {{</expand >}}
 
-## Creating a Claim
+## クレームの作成
 
-Creating a Claim requires a 
-[Composition]({{<ref "./compositions">}}) and a 
-[CompositeResourceDefinition]({{<ref "./composite-resource-definitions">}}) 
-(`XRD`) already installed.  
+クレームを作成するには、 
+[構成]({{<ref "./compositions">}})と 
+[複合リソース定義]({{<ref "./composite-resource-definitions">}}) 
+(`XRD`)がすでにインストールされている必要があります。
 
 {{<hint "note" >}}
-The XRD must 
-[enable Claims]({{<ref "./composite-resource-definitions#enable-claims">}}).
+XRDは 
+[クレームを有効にする]({{<ref "./composite-resource-definitions#enable-claims">}})必要があります。
 {{< /hint >}}
 
-The Composition defines the set of resources to create.  
-The XRD defines the custom API users call to request the set of resources.
+構成は、作成するリソースのセットを定義します。  
+XRDは、ユーザーがリソースのセットを要求するために呼び出すカスタムAPIを定義します。
 
-![Diagram of the relationship of Crossplane components](/media/composition-how-it-works.svg)
+![Crossplaneコンポーネントの関係の図](/media/composition-how-it-works.svg)
 
-For example, 
-this {{<hover label="xrd1" line="2">}}CompositeResourceDefinition{{</hover>}}
-creates a composite resource API endpoint 
-{{<hover label="xrd1" line="4">}}xmydatabases.example.org{{</hover>}} and
-enables a Claim API endpoint 
-{{<hover label="xrd1" line="11">}}database.example.org{{</hover>}}
+例えば、この{{<hover label="xrd1" line="2">}}複合リソース定義{{</hover>}}は、複合リソースAPIエンドポイント{{<hover label="xrd1" line="4">}}xmydatabases.example.org{{</hover>}}を作成し、クレームAPIエンドポイント{{<hover label="xrd1" line="11">}}database.example.org{{</hover>}}を有効にします。
 
 ```yaml {label="xrd1",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -70,14 +58,14 @@ spec:
   # Removed for brevity
 ```
 
-The Claim uses the XRD's 
-{{<hover label="xrd1" line="11">}}kind{{</hover>}} API endpoint to request 
-resources.
+ClaimはXRDの 
+{{<hover label="xrd1" line="11">}}kind{{</hover>}} APIエンドポイントを使用して 
+リソースをリクエストします。
 
-The Claim's {{<hover label="xrd1" line="1">}}apiVersion{{</hover>}} matches
-the XRD {{<hover label="xrd1" line="6">}}group{{</hover>}} and the 
-{{<hover label="claim1" line="2">}}kind{{</hover>}} matches the XRD
-{{<hover label="xrd1" line="11">}}claimNames.kind{{</hover>}}
+Claimの{{<hover label="xrd1" line="1">}}apiVersion{{</hover>}}は
+XRDの{{<hover label="xrd1" line="6">}}group{{</hover>}}と一致し、 
+{{<hover label="claim1" line="2">}}kind{{</hover>}}はXRDの
+{{<hover label="xrd1" line="11">}}claimNames.kind{{</hover>}}と一致します。
 
 ```yaml {label="claim1",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -88,14 +76,13 @@ spec:
   # Removed for brevity
 ```
 
-When a user creates a Claim in a namespace Crossplane also creates a composite
-resource.
+ユーザーが名前空間にClaimを作成すると、Crossplaneはコンポジット
+リソースも作成します。
 
-Use {{<hover label="claimcomp" line="1">}}kubectl describe{{</hover>}} on the 
-Claim to view the related composite resource.
+Claimに対して{{<hover label="claimcomp" line="1">}}kubectl describe{{</hover>}}を使用して、関連するコンポジットリソースを表示します。
 
-The {{<hover label="claimcomp" line="6">}}Resource Ref{{</hover>}} is the
-composite resource Crossplane created for this Claim. 
+{{<hover label="claimcomp" line="6">}}Resource Ref{{</hover>}}は
+このClaimのためにCrossplaneが作成したコンポジットリソースです。
 
 ```shell {label="claimcomp",copy-lines="1"}
 kubectl describe database.example.org/my-claimed-database
@@ -110,10 +97,8 @@ Spec:
 # Removed for brevity.
 ```
 
-Use {{<hover label="getcomp" line="1">}}kubectl describe{{</hover>}} on the
-composite resource to view the 
-{{<hover label="getcomp" line="6">}}Claim Ref{{</hover>}} linking the
-composite resource to the original Claim.
+コンポジットリソースに対して{{<hover label="getcomp" line="1">}}kubectl describe{{</hover>}}を使用して、 
+コンポジットリソースを元のClaimにリンクする{{<hover label="getcomp" line="6">}}Claim Ref{{</hover>}}を表示します。
 
 ```shell {label="getcomp",copy-lines="1"}
 kubectl describe xmydatabase.example.org/my-claimed-database-rr4ll
@@ -129,24 +114,20 @@ Spec:
 ```
 
 {{<hint "note" >}}
-Crossplane supports directly creating composite resources. Claims allow
-namespace scoping and isolation for users consuming the custom APIs. 
+Crossplaneはコンポジットリソースを直接作成することをサポートしています。Claimは
+カスタムAPIを利用するユーザーのために名前空間のスコープと隔離を提供します。
 
-If you don't use namespaces in your Kubernetes deployment Claims aren't necessary.
+Kubernetesのデプロイメントで名前空間を使用しない場合、Claimは必要ありません。
 {{< /hint >}}
 
-### Claiming existing composite resources
+### 既存のコンポジットリソースの請求
 
-By default, creating a Claim creates a new composite resource. Claims can also
-link to existing composite resources. 
+デフォルトでは、Claimを作成すると新しいコンポジットリソースが作成されます。Claimは既存のコンポジットリソースにリンクすることもできます。
 
-A use case for claiming existing composite resources may be slow to provision
-resources. Composite resources can be pre-provisioned and a Claim can
-use those resources without waiting for their creation. 
+既存のコンポジットリソースを請求するユースケースは、リソースのプロビジョニングが遅い場合です。コンポジットリソースは事前にプロビジョニングされ、Claimはそれらのリソースを作成を待たずに使用できます。
 
-Set the Claim's {{<hover label="resourceref" line="6">}}resourceRef{{</hover>}}
-and match the pre-existing composite resource
-{{<hover label="resourceref" line="9">}}name{{</hover>}}.
+Claimの{{<hover label="resourceref" line="6">}}resourceRef{{</hover>}}を設定し、既存のコンポジットリソースの
+{{<hover label="resourceref" line="9">}}name{{</hover>}}と一致させます。
 
 ```yaml {label="resourceref",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -160,40 +141,31 @@ spec:
     name: my-pre-created-xr
 ```
 
-If a Claim specifies a 
-{{<hover label="resourceref" line="6">}}resourceRef{{</hover>}} that doesn't
-exist, Crossplane doesn't create a composite resource. 
+クレームが存在しない 
+{{<hover label="resourceref" line="6">}}resourceRef{{</hover>}}を指定した場合、Crossplaneは複合リソースを作成しません。
 
 {{<hint "note" >}}
-All Claims have a 
-{{<hover label="resourceref" line="6">}}resourceRef{{</hover>}}. Manually
-defining the 
-{{<hover label="resourceref" line="6">}}resourceRef{{</hover>}}
-isn't required. Crossplane fills in the
-{{<hover label="resourceref" line="6">}}resourceRef{{</hover>}}
-with the information from the composite resource created for the Claim.
+すべてのクレームには 
+{{<hover label="resourceref" line="6">}}resourceRef{{</hover>}}があります。手動で 
+{{<hover label="resourceref" line="6">}}resourceRef{{</hover>}}を定義する必要はありません。Crossplaneはクレームのために作成された複合リソースからの情報で 
+{{<hover label="resourceref" line="6">}}resourceRef{{</hover>}}を埋めます。
 {{< /hint >}}
 
-## Claim connection secrets
+## クレーム接続シークレット
 
-If a Claim expects connection secrets the Claim must define a 
-{{<hover label="claimSec" line="6">}}writeConnectionSecretToRef{{</hover>}}
-object. 
+クレームが接続シークレットを期待する場合、クレームは 
+{{<hover label="claimSec" line="6">}}writeConnectionSecretToRef{{</hover>}}オブジェクトを定義する必要があります。
 
-The 
-{{<hover label="claimSec" line="6">}}writeConnectionSecretToRef{{</hover>}}
-object defines the name of the Kubernetes secret object where Crossplane saves
-the connection details. 
+{{<hover label="claimSec" line="6">}}writeConnectionSecretToRef{{</hover>}}オブジェクトは、Crossplaneが接続の詳細を保存するKubernetesシークレットオブジェクトの名前を定義します。
 
 {{<hint "note" >}}
-The Crossplane creates the secret object in the same namespace as the Claim.
+Crossplaneはクレームと同じ名前空間にシークレットオブジェクトを作成します。
 {{< /hint >}}
 
-For example, to a new secret object named
-{{<hover label="claimSec" line="7">}}my-claim-secret{{</hover>}} use 
-{{<hover label="claimSec" line="6">}}writeConnectionSecretToRef{{</hover>}} with
-the 
-{{<hover label="claimSec" line="7">}}name: my-claim-secret{{</hover>}}.
+たとえば、新しいシークレットオブジェクトの名前を 
+{{<hover label="claimSec" line="7">}}my-claim-secret{{</hover>}}にするには、 
+{{<hover label="claimSec" line="6">}}writeConnectionSecretToRef{{</hover>}}を使用して 
+{{<hover label="claimSec" line="7">}}name: my-claim-secret{{</hover>}}を指定します。
 ```yaml {label="claimSec"}
 apiVersion: example.org/v1alpha1
 kind: database
@@ -204,4 +176,4 @@ spec:
     name: my-claim-secret
 ```
 
-For more information on connection secrets read the [Connection Secrets knowledge base article]({{<ref "connection-details">}}).
+接続シークレットに関する詳細は、[接続シークレットのナレッジベース記事]({{<ref "connection-details">}})をお読みください。

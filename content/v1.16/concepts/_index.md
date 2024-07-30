@@ -1,80 +1,37 @@
 ---
-title: Concepts
+title: 概念
 weight: 50
-description: Understand Crossplane's core components
+description: Crossplaneのコアコンポーネントを理解する
 ---
 
-Crossplane extends Kubernetes allowing it to create and manage
-resources external to the Kubernetes cluster. Crossplane enables platform 
-engineers to create custom APIs and abstractions combining both native 
-Kubernetes resources and cloud resources under a single control plane. 
+CrossplaneはKubernetesを拡張し、Kubernetesクラスター外のリソースを作成および管理できるようにします。Crossplaneはプラットフォームエンジニアが、ネイティブなKubernetesリソースとクラウドリソースを単一のコントロールプレーンの下で組み合わせてカスタムAPIと抽象化を作成できるようにします。
 
-With custom APIs, the platform users, like developers, don't need to know 
-any details about the underlying resources or requirements. 
+カスタムAPIを使用することで、プラットフォームユーザー（開発者など）は、基盤となるリソースや要件についての詳細を知る必要がありません。
 
-The platform users only need to know the details exposed by the platform, like
-`big` or `small` or `US` or `EU`. Platform users don't need to know any details
-about the underlying provider like instance type or region names. 
+プラットフォームユーザーは、プラットフォームによって公開された詳細（`big`や`small`、`US`や`EU`など）を知っていれば十分です。プラットフォームユーザーは、インスタンスタイプやリージョン名など、基盤となるプロバイダーについての詳細を知る必要はありません。
 
-Crossplane uses multiple core components to manage the various elements of
-building and managing external resources through Kubernetes. 
+Crossplaneは、Kubernetesを通じて外部リソースを構築および管理するさまざまな要素を管理するために、複数のコアコンポーネントを使用します。
 
-* [**The Crossplane pods**]({{<ref "./pods">}}) include the core Crossplane pod and
-  Crossplane RBAC manager pod. Together these pods manage all Crossplane
-  components and resources. 
+* [**Crossplaneポッド**]({{<ref "./pods">}})には、コアCrossplaneポッドとCrossplane RBACマネージャーポッドが含まれています。これらのポッドは、すべてのCrossplaneコンポーネントとリソースを管理します。
 
-* [**Providers**]({{<ref "./providers">}}) connect Kubernetes to any external
-  provider, like AWS, Azure or GCP. Providers translate Kubernetes native
-  manifests and API calls into external API calls. Providers are responsible for
-  creating, deleting and managing the lifecycle of their resources.
+* [**プロバイダー**]({{<ref "./providers">}})は、KubernetesをAWS、Azure、GCPなどの外部プロバイダーに接続します。プロバイダーは、KubernetesのネイティブマニフェストとAPI呼び出しを外部API呼び出しに変換します。プロバイダーは、自身のリソースの作成、削除、およびライフサイクル管理を担当します。
 
-* [**Managed resources**]({{<ref "./managed-resources">}}) are Kubernetes objects
-  representing things the Provider created outside of Kubernetes. Creating a
-  managed resource in Kubernetes requires a Provider to create a resource.
-  Deleting a managed resource requires a Provider to delete the associated
-  external resource.
+* [**管理リソース**]({{<ref "./managed-resources">}})は、プロバイダーがKubernetesの外部で作成したものを表すKubernetesオブジェクトです。Kubernetesで管理リソースを作成するには、プロバイダーがリソースを作成する必要があります。管理リソースを削除するには、プロバイダーが関連する外部リソースを削除する必要があります。
 
-* [**Compositions**]({{<ref "./compositions">}}) are a template of managed
-  resources. Compositions describe more complex deployments, combining multiple
-  managed resources and any resource customizations, like the size of a database
-  or the cloud provider region.
+* [**コンポジション**]({{<ref "./compositions">}})は、管理リソースのテンプレートです。コンポジションは、複数の管理リソースとデータベースのサイズやクラウドプロバイダーのリージョンなどのリソースカスタマイズを組み合わせた、より複雑なデプロイメントを説明します。
 
-* [**Composite Resource Definitions**]({{<ref "./composite-resource-definitions">}})
-  represent a custom API, created by platform engineers and consumed by
-  developers or end users. Composite resource definitions use an OpenAPIv3
-  schema to further extend Kubernetes with custom API endpoints, revisions and
-  more. 
+* [**複合リソース定義**]({{<ref "./composite-resource-definitions">}})は、プラットフォームエンジニアによって作成され、開発者やエンドユーザーによって利用されるカスタムAPIを表します。複合リソース定義は、OpenAPIv3スキーマを使用して、カスタムAPIエンドポイント、リビジョンなどでKubernetesをさらに拡張します。
 
-* [**Composite Resources**]({{<ref "./composite-resources">}}) represent all the
-  objects created by a user calling the custom API. Every time a user access the
-  custom API Crossplane creates a single Composite Resource and links all
-  the related managed resources to it. 
+* [**コンポジットリソース**]({{<ref "./composite-resources">}})は、ユーザーがカスタムAPIを呼び出すことによって作成されたすべてのオブジェクトを表します。ユーザーがカスタムAPIにアクセスするたびに、Crossplaneは単一のコンポジットリソースを作成し、すべての関連する管理リソースをそれにリンクします。
 
-* [**Claims**]({{<ref "./claims">}}) are like Composite Resources, but exist
-  in a Kubernetes namespace. Every Claim links to a single cluster scoped
-  Composite Resource. Platform users create Claims in their unique namespace,
-  isolating their resources from other teams in other namespaces. 
+* [**クレーム**]({{<ref "./claims">}})はコンポジットリソースに似ていますが、Kubernetesのネームスペース内に存在します。各クレームは単一のクラスター範囲のコンポジットリソースにリンクします。プラットフォームユーザーは、他のネームスペースの他のチームからリソースを隔離するために、独自のネームスペース内でクレームを作成します。
 
-* [**Composition Functions**]({{<ref "./composition-functions">}}) are custom
-  programs, written your programming language of choice, to apply logic and
-  loops before or after Crossplane creates resources. 
+* [**コンポジション関数**]({{<ref "./composition-functions">}})は、リソースを作成する前または後にロジックやループを適用するために、選択したプログラミング言語で書かれたカスタムプログラムです。
 
-* [**Patches and Transforms**]({{<ref "./patch-and-transform">}}) allow platform
-  engineers to use user inputs to their custom API and change how Crossplane
-  creates resources. Patches and transforms allow for flexible and
-  abstract inputs like `big` or `encrypted` to have specific meanings when
-  creating the actual managed resources.
+* [**パッチと変換**]({{<ref "./patch-and-transform">}})は、プラットフォームエンジニアがカスタムAPIへのユーザー入力を使用し、Crossplaneがリソースを作成する方法を変更できるようにします。パッチと変換は、実際の管理リソースを作成する際に、`big`や`encrypted`のような柔軟で抽象的な入力に特定の意味を持たせることを可能にします。
 
-* [**EnvironmentConfigs**]({{<ref "./environment-configs">}}) are an in-memory
-  data store, like a Kubernetes ConfigMap. EnvironmentConfigs are useful for
-  custom resource mapping or storing and retrieving data across Claims and
-  Composite Resources. 
+* [**環境設定**]({{<ref "./environment-configs">}})は、KubernetesのConfigMapのようなメモリ内データストアです。環境設定は、カスタムリソースのマッピングや、クレームとコンポジットリソース間でのデータの保存および取得に役立ちます。
 
-* [**Usages**]({{<ref "./usages">}}) defining critical resources or custom
-  dependency mappings. Usages can prevent Crossplane from deleting or can
-  ensure that a parent resource waits for Crossplane to delete all child 
-  resources first. 
+* [**使用法**]({{<ref "./usages">}})は、重要なリソースやカスタム依存関係のマッピングを定義します。使用法は、Crossplaneが削除を防ぐことができるか、親リソースがすべての子リソースを最初に削除するのを待つことを保証できます。
 
-* [**Packages**]({{<ref "./packages">}}) are a convenient way to package up an
-  entire custom platform and define any other Crossplane related requirements.
-  Packages define how to install Providers, custom APIs or composition functions.
+* [**パッケージ**]({{<ref "./packages">}})は、カスタムプラットフォーム全体をパッケージ化し、Crossplaneに関連する他の要件を定義する便利な方法です。パッケージは、プロバイダー、カスタムAPI、またはコンポジション関数をインストールする方法を定義します。

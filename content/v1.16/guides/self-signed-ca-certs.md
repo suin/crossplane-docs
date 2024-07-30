@@ -1,47 +1,30 @@
 ---  
-title: Self-Signed CA Certs
+title: 自己署名CA証明書  
 weight: 270   
 ---  
 
->  Using self-signed certificates is not advised in production, it is 
-recommended to only use self-signed certificates for testing.
+>  自己署名証明書を本番環境で使用することは推奨されていません。自己署名証明書はテストのみに使用することをお勧めします。
 
-When Crossplane loads Configuration and Provider Packages from private 
-registries, it must be configured to trust the CA and Intermediate certs. 
+CrossplaneがプライベートレジストリからConfigurationおよびProviderパッケージをロードする際には、CAおよび中間証明書を信頼するように設定する必要があります。
 
-Crossplane needs to be installed via the Helm chart with the 
-`registryCaBundleConfig.name` and `registryCaBundleConfig.key` parameters 
-defined. See [Install Crossplane]({{<ref "../../master/software/install" >}}).
+Crossplaneは、`registryCaBundleConfig.name`および`registryCaBundleConfig.key`パラメータが定義されたHelmチャートを介してインストールする必要があります。詳細は[Crossplaneのインストール]({{<ref "../../master/software/install" >}})を参照してください。
 
-## Configure
+## 設定
 
-1. Create a CA Bundle (A file containing your Root and Intermediate 
-certificates in a specific order). This can be done with any text editor or 
-from the command line, so long as the resulting file contains all required crt 
-files in the proper order. In many cases, this will be either a single 
-self-signed Root CA crt file, or an Intermediate crt and Root crt file. The 
-order of the crt files should be from lowest to highest in signing order. 
-For example, if you have a chain of two certificates below your Root 
-certificate, you place the bottom level Intermediate cert at the beginning of 
-the file, then the Intermediate cert that singed that cert, then the Root cert 
-that signed that cert.
+1. CAバンドルを作成します（特定の順序でルートおよび中間証明書を含むファイル）。これは、結果のファイルが必要なcrtファイルを正しい順序で含む限り、任意のテキストエディタまたはコマンドラインから行うことができます。多くの場合、これは単一の自己署名ルートCA crtファイル、または中間crtとルートcrtファイルのいずれかになります。crtファイルの順序は、署名順に最も低いものから最も高いものへと並べる必要があります。たとえば、ルート証明書の下に2つの証明書のチェーンがある場合、最下層の中間証明書をファイルの先頭に配置し、その証明書に署名した中間証明書、次にその証明書に署名したルート証明書を配置します。
 
-2. Save the files as `[yourdomain].ca-bundle`.
+2. ファイルを`[yourdomain].ca-bundle`として保存します。
 
-3. Create a Kubernetes ConfigMap in your Crossplane system namespace:
+3. CrossplaneシステムネームスペースにKubernetes ConfigMapを作成します：
 
 ```
 kubectl -n [Crossplane system namespace] create cm ca-bundle-config \
 --from-file=ca-bundle=./[yourdomain].ca-bundle
 ```
 
-4. Set the `registryCaBundleConfig.name` Helm chart parameter to 
-`ca-bundle-config` and the `registryCaBundleConfig.key` parameter to 
-`ca-bundle`.
+4. `registryCaBundleConfig.name` Helmチャートパラメータを`ca-bundle-config`に、`registryCaBundleConfig.key`パラメータを`ca-bundle`に設定します。
 
-> Providing Helm with parameter values is convered in the Helm docs, 
-[Helm install](https://helm.sh/docs/helm/helm_install/). An example block  
-in an `override.yaml` file would look like this:
+> Helmにパラメータ値を提供する方法は、Helmのドキュメント[Helm install](https://helm.sh/docs/helm/helm_install/)で説明されています。`override.yaml`ファイルの例のブロックは次のようになります：
 ```
   registryCaBundleConfig:
     name: ca-bundle-config

@@ -1,30 +1,27 @@
 ---
-title: Import Existing Resources
+title: 既存リソースのインポート
 weight: 200
 ---
 
-If you have resources that are already provisioned in a Provider,
-you can import them as managed resources and let Crossplane manage them.
-A managed resource's [`managementPolicies`]({{<ref "/v1.16/concepts/managed-resources#managementpolicies">}})
-field enables importing external resources into Crossplane.
+プロバイダーにすでにプロビジョニングされたリソースがある場合、
+それらを管理リソースとしてインポートし、Crossplaneに管理させることができます。
+管理リソースの [`managementPolicies`]({{<ref "/v1.16/concepts/managed-resources#managementpolicies">}})
+フィールドは、外部リソースをCrossplaneにインポートすることを可能にします。
 
-Crossplane can import resources either [manually]({{<ref "#import-resources-manually">}})
-or [automatically]({{<ref "#import-resources-automatically">}}).
+Crossplaneはリソースを [手動で]({{<ref "#import-resources-manually">}})
+または [自動で]({{<ref "#import-resources-automatically">}}) インポートできます。
 
-## Import resources manually
+## リソースを手動でインポートする
 
-Crossplane can discover and import existing Provider resources by matching the
-`crossplane.io/external-name` annotation in a managed resource.
+Crossplaneは、管理リソース内の `crossplane.io/external-name` アノテーションを
+一致させることで、既存のプロバイダーリソースを発見し、インポートできます。
 
-To import an existing external resource in a Provider, create a new managed
-resource with the `crossplane.io/external-name` annotation. Set the annotation
-value to the name of the resource in the Provider.
+プロバイダー内の既存の外部リソースをインポートするには、`crossplane.io/external-name` アノテーションを持つ新しい管理リソースを作成します。
+アノテーションの値をプロバイダー内のリソースの名前に設定します。
 
-For example, to import an existing GCP Network named
-{{<hover label="annotation" line="5">}}my-existing-network{{</hover>}},
-create a new managed resource and use the
-{{<hover label="annotation" line="5">}}my-existing-network{{</hover>}} in the
-annotation.
+たとえば、{{<hover label="annotation" line="5">}}my-existing-network{{</hover>}}という名前の
+既存のGCPネットワークをインポートするには、新しい管理リソースを作成し、
+アノテーションに{{<hover label="annotation" line="5">}}my-existing-network{{</hover>}}を使用します。
 
 ```yaml {label="annotation",copy-lines="none"}
 apiVersion: compute.gcp.crossplane.io/v1beta1
@@ -34,14 +31,12 @@ metadata:
     crossplane.io/external-name: my-existing-network
 ```
 
-The {{<hover label="name" line="5">}}metadata.name{{</hover>}}
-field can be anything you want. For example,
-{{<hover label="name" line="5">}}imported-network{{</hover>}}.
+{{<hover label="name" line="5">}}metadata.name{{</hover>}} フィールドは
+任意の名前にすることができます。たとえば、{{<hover label="name" line="5">}}imported-network{{</hover>}}です。
 
 {{< hint "note" >}}
-This name is the
-name of the Kubernetes object. It's not related to the resource name inside the
-Provider.
+この名前はKubernetesオブジェクトの名前です。
+プロバイダー内のリソース名とは関係ありません。
 {{< /hint >}}
 
 ```yaml {label="name",copy-lines="none"}
@@ -53,18 +48,15 @@ metadata:
     crossplane.io/external-name: my-existing-network
 ```
 
-Leave the
-{{<hover label="fp" line="8">}}spec.forProvider{{</hover>}} field empty.
-Crossplane imports the settings and automatically applies them to the managed
-resource.
+{{<hover label="fp" line="8">}}spec.forProvider{{</hover>}} フィールドは空のままにします。
+Crossplaneは設定をインポートし、それを管理リソースに自動的に適用します。
 
 {{< hint "important" >}}
-If the managed resource has _required_ fields in the
-{{<hover label="fp" line="8">}}spec.forProvider{{</hover>}} you must add it to
-the `forProvider` field.
+管理リソースに{{<hover label="fp" line="8">}}spec.forProvider{{</hover>}}内の
+_必須_ フィールドがある場合、それを `forProvider` フィールドに追加する必要があります。
 
-The values of those fields must match what's inside the Provider or Crossplane
-overwrites the existing values.
+それらのフィールドの値は、プロバイダー内の値と一致する必要があります。
+さもなければ、Crossplaneは既存の値を上書きします。
 {{< /hint >}}
 
 ```yaml {label="fp",copy-lines="all"}
@@ -79,38 +71,34 @@ spec:
 ```
 
 
-Crossplane now controls and manages this imported resource. Any changes to the
-managed resource `spec` changes the external resource.
+Crossplaneは、インポートされたリソースを制御および管理します。管理されたリソースの`spec`に対する変更は、外部リソースに影響を与えます。
 
-## Import resources automatically
+## リソースを自動的にインポートする
 
-Automatically import external resources with an `Observe` [management policy]({{<ref "/v1.16/concepts/managed-resources#managementpolicies">}}).
+`Observe` [管理ポリシー]({{<ref "/v1.16/concepts/managed-resources#managementpolicies">}})を使用して、外部リソースを自動的にインポートします。
 
-Crossplane imports observe only resources but never changes or deletes the
-resources.
+Crossplaneは、リソースを観察するだけで、リソースを変更または削除することはありません。
 
-{{<hint "important" >}}
-The managed resource `managementPolicies` option is a beta feature.
+{{<hint "重要" >}}
+管理されたリソースの`managementPolicies`オプションはベータ機能です。
 
-The Provider determines support for management policies.
-Refer to the Provider's documentation to see if the Provider supports
-management policies.
+プロバイダーが管理ポリシーのサポートを決定します。
+プロバイダーが管理ポリシーをサポートしているかどうかは、プロバイダーのドキュメントを参照してください。
 {{< /hint >}}
 
 <!-- vale off -->
-### Apply the Observe management policy
+### Observe管理ポリシーを適用する
 <!-- vale on -->
 
-Create a new managed resource matching the
-{{<hover label="oo-policy" line="1">}}apiVersion{{</hover>}} and
-{{<hover label="oo-policy" line="2">}}kind{{</hover>}} of the resource
-to import and add
-{{<hover label="oo-policy" line="4">}}managementPolicies: ["Observe"]{{</hover>}} to the
-{{<hover label="oo-policy" line="3">}}spec{{</hover>}}
+インポートするリソースの
+{{<hover label="oo-policy" line="1">}}apiVersion{{</hover>}}と
+{{<hover label="oo-policy" line="2">}}kind{{</hover>}}に一致する新しい管理リソースを作成し、
+{{<hover label="oo-policy" line="4">}}managementPolicies: ["Observe"]{{</hover>}}を
+{{<hover label="oo-policy" line="3">}}spec{{</hover>}}に追加します。
 
-For example, to import a GCP SQL DatabaseInstance, create a new resource with
-the {{<hover label="oo-policy" line="4">}}managementPolicies: ["Observe"]{{</hover>}}
-set.
+例えば、GCP SQL DatabaseInstanceをインポートするには、
+{{<hover label="oo-policy" line="4">}}managementPolicies: ["Observe"]{{</hover>}}
+を設定した新しいリソースを作成します。
 ```yaml {label="oo-policy",copy-lines="none"}
 apiVersion: sql.gcp.upbound.io/v1beta1
 kind: DatabaseInstance
@@ -118,16 +106,15 @@ spec:
   managementPolicies: ["Observe"]
 ```
 
-### Add the external-name annotation
-Add the {{<hover label="oo-ex-name" line="5">}}crossplane.io/external-name{{</hover>}}
-annotation for the resource. This name must match the name inside the Provider.
+### 外部名アノテーションを追加する
+リソースのために{{<hover label="oo-ex-name" line="5">}}crossplane.io/external-name{{</hover>}}
+アノテーションを追加します。この名前は、プロバイダー内の名前と一致する必要があります。
 
-For example, for a GCP database named
-{{<hover label="oo-ex-name" line="5">}}my-external-database{{</hover>}}, apply
-the
-{{<hover label="oo-ex-name" line="5">}}crossplane.io/external-name{{</hover>}}
-annotation with the value
-{{<hover label="oo-ex-name" line="5">}}my-external-database{{</hover>}}.
+例えば、GCPデータベースの名前が
+{{<hover label="oo-ex-name" line="5">}}my-external-database{{</hover>}}の場合、
+値が
+{{<hover label="oo-ex-name" line="5">}}my-external-database{{</hover>}}である
+{{<hover label="oo-ex-name" line="5">}}crossplane.io/external-name{{</hover>}}アノテーションを適用します。
 
 ```yaml {label="oo-ex-name",copy-lines="none"}
 apiVersion: sql.gcp.upbound.io/v1beta1
@@ -139,12 +126,11 @@ spec:
   managementPolicies: ["Observe"]
 ```
 
-### Create a Kubernetes object name
-Create a {{<hover label="oo-name" line="4">}}name{{</hover>}} to use for the
-Kubernetes object.
+### Kubernetesオブジェクト名を作成する
+Kubernetesオブジェクトに使用する{{<hover label="oo-name" line="4">}}name{{</hover>}}を作成します。
 
-For example, name the Kubernetes object
-{{<hover label="oo-name" line="4">}}my-imported-database{{</hover>}}.
+例えば、Kubernetesオブジェクトに名前を付けます
+{{<hover label="oo-name" line="4">}}my-imported-database{{</hover>}}。
 
 ```yaml {label="oo-name",copy-lines="none"}
 apiVersion: sql.gcp.upbound.io/v1beta1
@@ -157,13 +143,11 @@ spec:
   managementPolicies: ["Observe"]
 ```
 
-### Identify a specific external resource
-If more than one resource inside the Provider shares the same name, identify the
-specific resource with a unique
-{{<hover line="9" label="oo-region">}}spec.forProvider{{</hover>}} field.
+### 特定の外部リソースを特定する
+プロバイダー内に同じ名前のリソースが複数ある場合は、ユニークな
+{{<hover line="9" label="oo-region">}}spec.forProvider{{</hover>}} フィールドで特定のリソースを識別します。
 
-For example, only import the GCP SQL database in the
-{{<hover line="10" label="oo-region">}}us-central1{{</hover>}} region.
+例えば、{{<hover line="10" label="oo-region">}}us-central1{{</hover>}} リージョンのGCP SQLデータベースのみをインポートします。
 
 ```yaml {label="oo-region"}
 apiVersion: sql.gcp.upbound.io/v1beta1
@@ -178,15 +162,14 @@ spec:
     region: "us-central1"
 ```
 
-### Apply the managed resource
+### 管理リソースを適用する
 
-Apply the new managed resource. Crossplane syncs the status of the external
-resource in the cloud with the newly created managed resource.
+新しい管理リソースを適用します。Crossplaneは、クラウド内の外部リソースのステータスを新しく作成された管理リソースと同期します。
 
-### View the discovered resource
-Crossplane discovers the managed resource and populates the
+### 発見されたリソースを表示する
+Crossplaneは管理リソースを発見し、外部リソースからの値で
 {{<hover label="ooPopulated" line="12">}}status.atProvider{{</hover>}}
-fields with the values from the external resource.
+フィールドを埋めます。
 
 ```yaml {label="ooPopulated",copy-lines="none"}
 apiVersion: sql.gcp.upbound.io/v1beta1
@@ -228,22 +211,19 @@ status:
     type: Synced
 ```
 <!-- vale off -->
-## Control imported ObserveOnly resources
+## インポートされたObserveOnlyリソースを制御する
 <!-- vale on -->
 
-Crossplane can take active control of observe only imported resources by
-changing the `managementPolicies` after import.
+Crossplaneは、インポート後に`managementPolicies`を変更することで、observe onlyインポートリソースのアクティブな制御を行うことができます。
 
-Change the {{<hover label="fc" line="8">}}managementPolicies{{</hover>}} field
-of the managed resource to
-{{<hover label="fc" line="8">}}["*"]{{</hover>}}.
+管理リソースの{{<hover label="fc" line="8">}}managementPolicies{{</hover>}}フィールドを
+{{<hover label="fc" line="8">}}["*"]{{</hover>}}に変更します。
 
-Copy any required parameter values from
-{{<hover label="fc" line="16">}}status.atProvider{{</hover>}} and provide them
-in {{<hover label="fc" line="9">}}spec.forProvider{{</hover>}}.
+{{<hover label="fc" line="16">}}status.atProvider{{</hover>}}から必要なパラメータ値をコピーし、
+{{<hover label="fc" line="9">}}spec.forProvider{{</hover>}}に提供します。
 
 {{< hint "tip" >}}
-Manually copy the important `spec.atProvider` values to `spec.forProvider`.
+重要な`spec.atProvider`の値を手動で`spec.forProvider`にコピーします。
 {{< /hint >}}
 
 ```yaml {label="fc"}
@@ -281,5 +261,4 @@ status:
       type: Synced
 ```
 
-Crossplane now fully manages the imported resource. Crossplane applies any
-changes to the managed resource in the Provider's external resource.
+Crossplaneは現在、インポートされたリソースを完全に管理しています。Crossplaneは、プロバイダーの外部リソースに対して管理リソースへの変更を適用します。

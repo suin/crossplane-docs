@@ -1,51 +1,38 @@
 ---
-title: "Overview"
+title: "概要"
 weight: -1
 cascade:
     version: "1.16"
 ---
 
-{{< img src="/media/banner.png" alt="Crossplane Popsicle Truck" size="large" >}}
+{{< img src="/media/banner.png" alt="Crossplane ポプシクルトラック" size="large" >}}
 
 <br />
 
-Crossplane is an open source Kubernetes extension that transforms your Kubernetes
-cluster into a **universal control plane**.
+Crossplaneは、Kubernetesクラスターを**ユニバーサルコントロールプレーン**に変えるオープンソースのKubernetes拡張機能です。
 
-Crossplane lets you manage anything, anywhere, all through standard Kubernetes
-APIs. Crossplane can even let you
-[order a pizza](https://blog.crossplane.io/providers-101-ordering-pizza-with-kubernetes-and-crossplane/)
-directly from Kubernetes. If it has an API, Crossplane can connect to it.
+Crossplaneを使用すると、標準のKubernetes APIを通じて、どこでも何でも管理できます。Crossplaneは、Kubernetesから直接
+[ピザを注文する](https://blog.crossplane.io/providers-101-ordering-pizza-with-kubernetes-and-crossplane/)
+ことさえ可能です。APIがあれば、Crossplaneはそれに接続できます。
 
-With Crossplane, platform teams can create new abstractions and custom
-APIs with the full power of Kubernetes policies, namespaces, role based access
-controls and more. Crossplane brings all your non-Kubernetes resources under
-one roof.
+Crossplaneを使用することで、プラットフォームチームはKubernetesポリシー、ネームスペース、ロールベースのアクセス制御などの完全な機能を活用して、新しい抽象化とカスタムAPIを作成できます。Crossplaneは、すべての非Kubernetesリソースを一つの屋根の下に集約します。
 
-Custom APIs, created by platform teams, allow security and compliance
-enforcement across resources or clouds, without exposing any complexity to the
-developers. A single API call can create multiple resources, in multiple clouds
-and use Kubernetes as the control plane for everything.
+プラットフォームチームによって作成されたカスタムAPIは、リソースやクラウド全体でのセキュリティとコンプライアンスの強制を可能にし、開発者に複雑さを露呈することなく実現します。単一のAPI呼び出しで、複数のリソースを複数のクラウドで作成し、すべての制御プレーンとしてKubernetesを使用できます。
 
 {{< hint "tip" >}}
-**What's a control plane?**
+**コントロールプレーンとは何ですか？**
 <!-- vale Google.WordList = NO -->
-Control planes create and manage the lifecycle of resources. Control planes
-constantly _check_ that the intended resources exist, _report_ when the intended
-state doesn't match reality and _act_ to make things right.
+コントロールプレーンは、リソースのライフサイクルを作成および管理します。コントロールプレーンは、意図したリソースが存在することを常に_確認_し、意図した状態が現実と一致しない場合に_報告_し、物事を正すために_行動_します。
 
-Crossplane extends the Kubernetes control plane to be a **universal control
-plane** to check, report and act on any resource, anywhere.
+Crossplaneは、Kubernetesコントロールプレーンを拡張して、どこでも任意のリソースを確認、報告、行動する**ユニバーサルコントロールプレーン**にします。
 <!-- vale Google.WordList = YES -->
 {{< /hint >}}
 
 
-# Get started
-* [Install Crossplane]({{<ref "software/install">}}) in your Kubernetes cluster
-* Learn more about how Crossplane works in the
-[Crossplane introduction]({{<ref "getting-started/introduction" >}})
-* Join the [Crossplane Slack](https://slack.crossplane.io/) and start a
-conversation with a community of over 7,000 operators.
+# 始める
+* [KubernetesクラスターにCrossplaneをインストール]({{<ref "software/install">}})する
+* [Crossplaneの紹介]({{<ref "getting-started/introduction" >}})でCrossplaneの動作について詳しく学ぶ
+* [Crossplane Slack](https://slack.crossplane.io/)に参加し、7,000人以上のオペレーターのコミュニティと会話を始めましょう。
 
 
-Crossplane is a [Cloud Native Compute Foundation](https://www.cncf.io/) project.
+Crossplaneは、[Cloud Native Compute Foundation](https://www.cncf.io/)プロジェクトです。

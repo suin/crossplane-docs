@@ -1,29 +1,29 @@
 ---
-title: AWS Quickstart Part 2
+title: AWS クイックスタート パート 2
 weight: 120
 tocHidden: true
 aliases:
   - /master/getting-started/provider-aws-part-3
 ---
 
-{{< hint "important" >}}
-This guide is part 2 of a series.  
+{{< hint "重要" >}}
+このガイドはシリーズのパート 2 です。  
 
-[**Part 1**]({{<ref "provider-aws" >}}) covers
-to installing Crossplane and connect your Kubernetes cluster to AWS.
+[**パート 1**]({{<ref "provider-aws" >}}) では
+Crossplane のインストールと Kubernetes クラスターを AWS に接続する方法について説明しています。
 
 {{< /hint >}}
 
-This guide walks you through building and accessing a custom API with Crossplane.
+このガイドでは、Crossplane を使用してカスタム API を構築し、アクセスする方法を説明します。
 
-## Prerequisites
-* Complete [quickstart part 1]({{<ref "provider-aws" >}}) connecting Kubernetes
-  to AWS.
-* an AWS account with permissions to create an AWS S3 storage bucket and a
-  DynamoDB instance
+## 前提条件
+* [クイックスタート パート 1]({{<ref "provider-aws" >}}) を完了し、Kubernetes を
+  AWS に接続します。
+* AWS S3 ストレージバケットと DynamoDB インスタンスを作成する権限を持つ
+  AWS アカウント
 
-{{<expand "Skip part 1 and just get started" >}}
-1. Add the Crossplane Helm repository and install Crossplane
+{{<expand "パート 1 をスキップしてすぐに始める" >}}
+1. Crossplane Helm リポジトリを追加し、Crossplane をインストールします
 ```shell
 helm repo add \
 crossplane-stable https://charts.crossplane.io/stable
@@ -35,7 +35,7 @@ crossplane-stable/crossplane \
 --create-namespace
 ```
 
-2. When the Crossplane pods finish installing and are ready, apply the AWS Provider
+2. Crossplane ポッドのインストールが完了し、準備が整ったら、AWS プロバイダーを適用します
    
 ```yaml {label="provider",copy-lines="all"}
 cat <<EOF | kubectl apply -f -
@@ -48,14 +48,14 @@ spec:
 EOF
 ```
 
-3. Create a file with your AWS keys
+3. AWS キーを含むファイルを作成します
 ```ini
 [default]
 aws_access_key_id = <aws_access_key>
 aws_secret_access_key = <aws_secret_key>
 ```
 
-4. Create a Kubernetes secret from the AWS keys
+4. AWS キーから Kubernetes シークレットを作成します
 ```shell {label="kube-create-secret",copy-lines="all"}
 kubectl create secret \
 generic aws-secret \
@@ -63,7 +63,7 @@ generic aws-secret \
 --from-file=creds=./aws-credentials.txt
 ```
 
-5. Create a _ProviderConfig_
+5. _ProviderConfig_ を作成します
 ```yaml {label="providerconfig",copy-lines="all"}
 cat <<EOF | kubectl apply -f -
 apiVersion: aws.upbound.io/v1beta1
@@ -81,13 +81,12 @@ EOF
 ```
 {{</expand >}}
 
-## Install the DynamoDB Provider
+## DynamoDB プロバイダーをインストールする
 
-Part 1 only installed the AWS S3 Provider. This section deploys an S3 bucket 
-along with a DynamoDB Table.  
-Deploying a DynamoDB Table requires the DynamoDB Provider as well. 
+パート 1 では AWS S3 プロバイダーのみがインストールされました。このセクションでは、DynamoDB テーブルとともに S3 バケットをデプロイします。  
+DynamoDB テーブルをデプロイするには、DynamoDB プロバイダーも必要です。
 
-Add the new Provider to the cluster. 
+新しいプロバイダーをクラスターに追加します。
 
 ```yaml
 cat <<EOF | kubectl apply -f -
@@ -100,8 +99,7 @@ spec:
 EOF
 ```
 
-View the new DynamoDB provider with `kubectl get providers`.
-
+`kubectl get providers` を使用して新しい DynamoDB プロバイダーを表示します。
 
 ```shell {copy-lines="1"}
 kubectl get providers
@@ -111,16 +109,14 @@ provider-aws-s3               True        True      xpkg.upbound.io/upbound/prov
 upbound-provider-family-aws   True        True      xpkg.upbound.io/upbound/provider-family-aws:v1.1.0       13m
 ```
 
-## Create a custom API
+## カスタム API を作成する
 
 <!-- vale alex.Condescending = NO -->
-Crossplane allows you to build your own custom APIs for your users, abstracting
-away details about the cloud provider and their resources. You can make your API
-as complex or simple as you wish. 
+Crossplane を使用すると、ユーザーのために独自のカスタム API を構築でき、クラウドプロバイダーやそのリソースに関する詳細を抽象化できます。API を複雑にしたりシンプルにしたりすることができます。 
 <!-- vale alex.Condescending = YES -->
 
-The custom API is a Kubernetes object.  
-Here is an example custom API.
+カスタム API は Kubernetes オブジェクトです。  
+以下はカスタム API の例です。
 
 ```yaml {label="exAPI"}
 apiVersion: database.example.com/v1alpha1
@@ -131,74 +127,64 @@ spec:
   location: "US"
 ```
 
-Like any Kubernetes object the API has a 
-{{<hover label="exAPI" line="1">}}version{{</hover>}}, 
-{{<hover label="exAPI" line="2">}}kind{{</hover>}} and 
-{{<hover label="exAPI" line="5">}}spec{{</hover>}}.
+Kubernetesオブジェクトと同様に、APIには 
+{{<hover label="exAPI" line="1">}}version{{</hover>}}、 
+{{<hover label="exAPI" line="2">}}kind{{</hover>}}、および 
+{{<hover label="exAPI" line="5">}}spec{{</hover>}}があります。
 
-### Define a group and version
-To create your own API start by defining an 
-[API group](https://kubernetes.io/docs/reference/using-api/#api-groups) and 
-[version](https://kubernetes.io/docs/reference/using-api/#api-versioning).  
+### グループとバージョンの定義
+独自のAPIを作成するには、まず 
+[APIグループ](https://kubernetes.io/docs/reference/using-api/#api-groups) と 
+[バージョン](https://kubernetes.io/docs/reference/using-api/#api-versioning) を定義します。  
 
-The _group_ can be any value, but common convention is to map to a fully
-qualified domain name. 
+_グループ_ は任意の値を使用できますが、一般的な慣習として完全修飾ドメイン名にマッピングされます。 
 
 <!-- vale gitlab.SentenceLength = NO -->
-The version shows how mature or stable the API is and increments when changing,
-adding or removing fields in the API.
+バージョンはAPIの成熟度や安定性を示し、API内のフィールドを変更、追加、または削除する際にインクリメントされます。
 <!-- vale gitlab.SentenceLength = YES -->
 
-Crossplane doesn't require specific versions or a specific version naming 
-convention, but following 
-[Kubernetes API versioning guidelines](https://kubernetes.io/docs/reference/using-api/#api-versioning)
-is strongly recommended. 
+Crossplaneは特定のバージョンや特定のバージョン命名規則を必要としませんが、 
+[Kubernetes APIバージョン管理ガイドライン](https://kubernetes.io/docs/reference/using-api/#api-versioning) に従うことを強く推奨します。 
 
-* `v1alpha1` - A new API that may change at any time.
-* `v1beta1` - An existing API that's considered stable. Breaking changes are
-  strongly discouraged.
-* `v1` - A stable API that doesn't have breaking changes. 
+* `v1alpha1` - いつでも変更される可能性のある新しいAPI。
+* `v1beta1` - 安定と見なされる既存のAPI。破壊的変更は強く推奨されません。
+* `v1` - 破壊的変更のない安定したAPI。 
 
-This guide uses the group 
-{{<hover label="version" line="1">}}database.example.com{{</hover>}}.
+このガイドでは、グループ 
+{{<hover label="version" line="1">}}database.example.com{{</hover>}} を使用します。
 
-Because this is the first version of the API, this guide uses the version
-{{<hover label="version" line="1">}}v1alpha1{{</hover>}}.
+これはAPIの最初のバージョンであるため、このガイドではバージョン 
+{{<hover label="version" line="1">}}v1alpha1{{</hover>}} を使用します。
 
 ```yaml {label="version",copy-lines="none"}
 apiVersion: database.example.com/v1alpha1
 ```
 
-### Define a kind
+### kindの定義
 
-The API group is a logical collection of related APIs. In a group are
-individual kinds representing different resources.
+APIグループは、関連するAPIの論理的なコレクションです。グループ内には、異なるリソースを表す個々のkindがあります。
 
-For example a `database` group may have a `Relational` and `NoSQL` kinds.
+たとえば、`database`グループには`Relational`および`NoSQL`のkindがあるかもしれません。
 
-The `kind` can be anything, but it must be 
-[UpperCamelCased](https://kubernetes.io/docs/contribute/style/style-guide/#use-upper-camel-case-for-api-objects).
+`kind`は何でも可能ですが、 
+[UpperCamelCased](https://kubernetes.io/docs/contribute/style/style-guide/#use-upper-camel-case-for-api-objects) である必要があります。
 
-This API's kind is 
-{{<hover label="kind" line="2">}}NoSQL{{</hover>}}
+このAPIのkindは 
+{{<hover label="kind" line="2">}}NoSQL{{</hover>}} です。
 
 ```yaml {label="kind",copy-lines="none"}
 apiVersion: database.example.com/v1alpha1
 kind: NoSQL
 ```
 
-### Define a spec
+### スペックを定義する
 
-The most important part of an API is the schema. The schema defines the inputs
-accepted from users. 
+APIの最も重要な部分はスキーマです。スキーマはユーザーから受け入れられる入力を定義します。
 
-This API allows users to provide a 
-{{<hover label="spec" line="4">}}location{{</hover>}} of where to run their 
-cloud resources.
+このAPIでは、ユーザーがクラウドリソースを実行する場所の 
+{{<hover label="spec" line="4">}}location{{</hover>}} を提供できます。
 
-All other resource settings can't be configurable by the users. This allows
-Crossplane to enforce any policies and standards without worrying about
-user errors. 
+他のすべてのリソース設定はユーザーによって構成できません。これにより、Crossplaneはユーザーエラーを心配することなく、ポリシーや基準を強制できます。
 
 ```yaml {label="spec",copy-lines="none"}
 apiVersion: database.example.com/v1alpha1
@@ -207,34 +193,30 @@ spec:
   location: "US"
 ```
 
-### Apply the API
+### APIを適用する
 
-Crossplane uses 
+Crossplaneは 
 {{<hover label="xrd" line="3">}}Composite Resource Definitions{{</hover>}} 
-(also called an `XRD`) to install your custom API in
-Kubernetes. 
+（`XRD`とも呼ばれます）を使用して、KubernetesにカスタムAPIをインストールします。
 
-The XRD {{<hover label="xrd" line="6">}}spec{{</hover>}} contains all the
-information about the API including the 
+XRDの {{<hover label="xrd" line="6">}}spec{{</hover>}} には、APIに関するすべての情報が含まれています。これには 
 {{<hover label="xrd" line="7">}}group{{</hover>}},
 {{<hover label="xrd" line="12">}}version{{</hover>}},
-{{<hover label="xrd" line="9">}}kind{{</hover>}} and 
-{{<hover label="xrd" line="13">}}schema{{</hover>}}.
+{{<hover label="xrd" line="9">}}kind{{</hover>}} および 
+{{<hover label="xrd" line="13">}}schema{{</hover>}} が含まれます。
 
-The XRD's {{<hover label="xrd" line="5">}}name{{</hover>}} must be the
-combination of the {{<hover label="xrd" line="9">}}plural{{</hover>}} and 
-{{<hover label="xrd" line="7">}}group{{</hover>}}.
+XRDの {{<hover label="xrd" line="5">}}name{{</hover>}} は、{{<hover label="xrd" line="9">}}plural{{</hover>}} と 
+{{<hover label="xrd" line="7">}}group{{</hover>}} の組み合わせでなければなりません。
 
-The {{<hover label="xrd" line="13">}}schema{{</hover>}} uses the
-{{<hover label="xrd" line="14">}}OpenAPIv3{{</hover>}} specification to define
-the API {{<hover label="xrd" line="17">}}spec{{</hover>}}.  
+{{<hover label="xrd" line="13">}}schema{{</hover>}} は、API {{<hover label="xrd" line="17">}}spec{{</hover>}} を定義するために 
+{{<hover label="xrd" line="14">}}OpenAPIv3{{</hover>}} 仕様を使用します。
 
-The API defines a {{<hover label="xrd" line="20">}}location{{</hover>}} that
-must be {{<hover label="xrd" line="22">}}oneOf{{</hover>}} either 
-{{<hover label="xrd" line="23">}}EU{{</hover>}} or 
-{{<hover label="xrd" line="24">}}US{{</hover>}}.
+APIは、{{<hover label="xrd" line="20">}}location{{</hover>}} を定義し、これは 
+{{<hover label="xrd" line="22">}}oneOf{{</hover>}} である必要があります。すなわち、 
+{{<hover label="xrd" line="23">}}EU{{</hover>}} または 
+{{<hover label="xrd" line="24">}}US{{</hover>}} のいずれかです。
 
-Apply this XRD to create the custom API in your Kubernetes cluster. 
+このXRDを適用して、KubernetesクラスターにカスタムAPIを作成します。
 
 ```yaml {label="xrd",copy-lines="all"}
 cat <<EOF | kubectl apply -f -
@@ -271,21 +253,19 @@ spec:
 EOF
 ```
 
-Adding the {{<hover label="xrd" line="29">}}claimNames{{</hover>}} allows users
-to access this API either at the cluster level with the 
-{{<hover label="xrd" line="9">}}nosql{{</hover>}} endpoint or in a namespace
-with the 
-{{<hover label="xrd" line="29">}}nosqlclaim{{</hover>}} endpoint. 
+{{<hover label="xrd" line="29">}}claimNames{{</hover>}} を追加することで、ユーザーはこのAPIにアクセスできます。クラスター レベルでは 
+{{<hover label="xrd" line="9">}}nosql{{</hover>}} エンドポイントを使用し、名前空間では 
+{{<hover label="xrd" line="29">}}nosqlclaim{{</hover>}} エンドポイントを使用します。
 
-The namespace scoped API is a Crossplane _Claim_.
+
+名前空間スコープのAPIは、Crossplaneの_Claim_です。
 
 {{<hint "tip" >}}
-For more details on the fields and options of Composite Resource Definitions
-read the 
-[XRD documentation]({{<ref "../concepts/composite-resource-definitions">}}). 
+Composite Resource Definitionsのフィールドとオプションの詳細については、
+[XRDドキュメント]({{<ref "../concepts/composite-resource-definitions">}})をお読みください。 
 {{< /hint >}}
 
-View the installed XRD with `kubectl get xrd`.  
+インストールされたXRDを`kubectl get xrd`で表示します。  
 
 ```shell {copy-lines="1"}
 kubectl get xrd
@@ -293,7 +273,7 @@ NAME                          ESTABLISHED   OFFERED   AGE
 nosqls.database.example.com   True          True      2s
 ```
 
-View the new custom API endpoints with `kubectl api-resources | grep nosql`
+新しいカスタムAPIエンドポイントを`kubectl api-resources | grep nosql`で表示します。
 
 ```shell {copy-lines="1",label="apiRes"}
 kubectl api-resources | grep nosql
@@ -301,32 +281,31 @@ nosqlclaim                                     database.example.com/v1alpha1    
 nosqls                                         database.example.com/v1alpha1          false        NoSQL
 ```
 
-## Create a deployment template
+## デプロイメントテンプレートの作成
 
-When users access the custom API Crossplane takes their inputs and combines them
-with a template describing what infrastructure to deploy. Crossplane calls this
-template a _Composition_.
+ユーザーがカスタムAPIにアクセスすると、Crossplaneはその入力を取得し、
+デプロイするインフラストラクチャを説明するテンプレートと組み合わせます。Crossplaneはこの
+テンプレートを_Composition_と呼びます。
 
-The {{<hover label="comp" line="3">}}Composition{{</hover>}} defines all the 
-cloud resources to deploy.
-Each entry in the template
-is a full resource definitions, defining all the resource settings and metadata
-like labels and annotations. 
+{{<hover label="comp" line="3">}}Composition{{</hover>}}は、デプロイするすべての
+クラウドリソースを定義します。
+テンプレート内の各エントリは、リソース設定やメタデータ
+（ラベルやアノテーションなど）を定義する完全なリソース定義です。
 
-This template creates an AWS 
+このテンプレートは、AWSの 
 {{<hover label="comp" line="13">}}S3{{</hover>}}
-{{<hover label="comp" line="14">}}Bucket{{</hover>}} and a 
+{{<hover label="comp" line="14">}}Bucket{{</hover>}}と 
 {{<hover label="comp" line="33">}}DynamoDB{{</hover>}}
-{{<hover label="comp" line="34">}}Table{{</hover>}}.
+{{<hover label="comp" line="34">}}Table{{</hover>}}を作成します。
 
-Crossplane uses {{<hover label="comp" line="19">}}patches{{</hover>}} to apply
-the user's input to the resource template.  
-This Composition takes the user's 
-{{<hover label="comp" line="21">}}location{{</hover>}} input and uses it as the 
-{{<hover label="comp" line="16">}}region{{</hover>}} used in the individual 
-resource.
+Crossplaneは、{{<hover label="comp" line="19">}}patches{{</hover>}}を使用して
+ユーザーの入力をリソーステンプレートに適用します。  
+このCompositionは、ユーザーの
+{{<hover label="comp" line="21">}}location{{</hover>}}入力を取得し、それを
+{{<hover label="comp" line="16">}}region{{</hover>}}として使用します。
+個々のリソースで使用されます。
 
-Apply this Composition to your cluster. 
+このCompositionをクラスターに適用します。 
 
 ```yaml {label="comp",copy-lines="all"}
 cat <<EOF | kubectl apply -f -
@@ -386,20 +365,18 @@ spec:
 EOF
 ```
 
-The {{<hover label="comp" line="52">}}compositeTypeRef{{</hover >}} defines
-which custom APIs can use this template to create resources.
+{{<hover label="comp" line="52">}}compositeTypeRef{{</hover >}}は、
+このテンプレートを使用してリソースを作成できるカスタムAPIを定義します。
 
 {{<hint "tip" >}}
-Read the [Composition documentation]({{<ref "../concepts/compositions">}}) for
-more information on configuring Compositions and all the available options.
+[Composition ドキュメント]({{<ref "../concepts/compositions">}})を読んで、 
+Composition の構成や利用可能なオプションについての詳細を確認してください。
 
-Read the 
-[Patch and Transform documentation]({{<ref "../concepts/patch-and-transform">}}) 
-for more information on how Crossplane uses patches to map user inputs to
-Composition resource templates.
+[Patch and Transform ドキュメント]({{<ref "../concepts/patch-and-transform">}})を読んで、 
+Crossplane がパッチを使用してユーザー入力を Composition リソーステンプレートにマッピングする方法についての詳細を確認してください。
 {{< /hint >}}
 
-View the Composition with `kubectl get composition`
+`kubectl get composition` で Composition を表示します。
 
 ```shell {copy-lines="1"}
 kubectl get composition
@@ -407,15 +384,12 @@ NAME                 XR-KIND   XR-APIVERSION                   AGE
 dynamo-with-bucket   NoSQL     database.example.com/v1alpha1   3s
 ```
 
+## カスタム API へのアクセス
 
+カスタム API (XRD) がインストールされ、リソーステンプレート (Composition) に関連付けられると、ユーザーはリソースを作成するために API にアクセスできます。
 
-## Access the custom API
-
-With the custom API (XRD) installed and associated to a resource template
-(Composition) users can access the API to create resources.
-
-Create a {{<hover label="xr" line="2">}}NoSQL{{</hover>}} object to create the
-cloud resources.
+{{<hover label="xr" line="2">}}NoSQL{{</hover>}} オブジェクトを作成して、 
+クラウドリソースを作成します。
 
 ```yaml {copy-lines="all",label="xr"}
 cat <<EOF | kubectl apply -f -
@@ -428,7 +402,7 @@ spec:
 EOF
 ```
 
-View the resource with `kubectl get nosql`.
+`kubectl get nosql` でリソースを表示します。
 
 ```shell {copy-lines="1"}
 kubectl get nosql
@@ -436,12 +410,10 @@ NAME                SYNCED   READY   COMPOSITION          AGE
 my-nosql-database   True     True    dynamo-with-bucket   14s
 ```
 
-This object is a Crossplane _composite resource_ (also called an `XR`).  
-It's a
-single object representing the collection of resources created from the
-Composition template. 
+このオブジェクトは Crossplane の _コンポジットリソース_ (XR とも呼ばれます) です。  
+これは、Composition テンプレートから作成されたリソースのコレクションを表す単一のオブジェクトです。
 
-View the individual resources with `kubectl get managed`
+`kubectl get managed` で個々のリソースを表示します。
 
 ```shell {copy-lines="1"}
 kubectl get managed
@@ -452,17 +424,17 @@ NAME                                               READY   SYNCED   EXTERNAL-NAM
 bucket.s3.aws.upbound.io/my-nosql-database-xtzph   True    True     my-nosql-database-xtzph   33s
 ```
 
-Delete the resources with `kubectl delete nosql`.
+`kubectl delete nosql` でリソースを削除します。
 
 ```shell {copy-lines="1"}
 kubectl delete nosql my-nosql-database
 nosql.database.example.com "my-nosql-database" deleted
 ```
 
-Verify Crossplane deleted the resources with `kubectl get managed`
+`kubectl get managed` で Crossplane がリソースを削除したことを確認します。
 
 {{<hint "note" >}}
-It may take up to 5 minutes to delete the resources.
+リソースを削除するのに最大で 5 分かかる場合があります。
 {{< /hint >}}
 
 ```shell {copy-lines="1"}
@@ -470,25 +442,25 @@ kubectl get managed
 No resources found
 ```
 
-## Using the API with namespaces
+## 名前空間を使用した API
 
-Accessing the API `nosql` happens at the cluster scope.  
-Most organizations
-isolate their users into namespaces.  
+API `nosql` へのアクセスはクラスターのスコープで行われます。  
+ほとんどの組織はユーザーを名前空間に隔離します。  
 
-A Crossplane _Claim_ is the custom API in a namespace.
+Crossplane の _Claim_ は名前空間内のカスタム API です。
 
-Creating a _Claim_ is just like accessing the custom API endpoint, but with the
+
+_Claim_ を作成することは、カスタム API エンドポイントにアクセスするのと同じですが、カスタム API の `claimNames` からの 
 {{<hover label="claim" line="3">}}kind{{</hover>}} 
-from the custom API's `claimNames`.
+を使用します。
 
-Create a new namespace to test create a Claim in. 
+Claim を作成するための新しい名前空間を作成します。
 
 ```shell
 kubectl create namespace crossplane-test
 ```
 
-Then create a Claim in the `crossplane-test` namespace.
+次に、`crossplane-test` 名前空間に Claim を作成します。
 
 ```yaml {label="claim",copy-lines="all"}
 cat <<EOF | kubectl apply -f -
@@ -501,7 +473,7 @@ spec:
   location: "US"
 EOF
 ```
-View the Claim with `kubectl get claim -n crossplane-test`.
+`kubectl get claim -n crossplane-test` を使用して Claim を表示します。
 
 ```shell {copy-lines="1"}
 kubectl get claim -n crossplane-test
@@ -509,10 +481,9 @@ NAME                SYNCED   READY   CONNECTION-SECRET   AGE
 my-nosql-database   True     True                        17s
 ```
 
-The Claim automatically creates a composite resource, which creates the managed
-resources. 
+Claim は自動的に複合リソースを作成し、それが管理リソースを作成します。
 
-View the Crossplane created composite resource with `kubectl get composite`.
+`kubectl get composite` を使用して Crossplane が作成した複合リソースを表示します。
 
 ```shell {copy-lines="1"}
 kubectl get composite
@@ -520,7 +491,7 @@ NAME                      SYNCED   READY   COMPOSITION          AGE
 my-nosql-database-t9qrw   True     True    dynamo-with-bucket   77s
 ```
 
-Again, view the managed resources with `kubectl get managed`.
+再度、`kubectl get managed` を使用して管理リソースを表示します。
 
 ```shell {copy-lines="1"}
 kubectl get managed
@@ -531,7 +502,7 @@ NAME                                                     READY   SYNCED   EXTERN
 bucket.s3.aws.upbound.io/my-nosql-database-t9qrw-g98lv   True    True     my-nosql-database-t9qrw-g98lv   117s
 ```
 
-Deleting the Claim deletes all the Crossplane generated resources.
+Claim を削除すると、すべての Crossplane 生成リソースが削除されます。
 
 `kubectl delete claim -n crossplane-test my-nosql-database`
 
@@ -541,27 +512,27 @@ nosqlclaim.database.example.com "my-nosql-database" deleted
 ```
 
 {{<hint "note" >}}
-It may take up to 5 minutes to delete the resources.
+リソースの削除には最大で 5 分かかる場合があります。
 {{< /hint >}}
 
-Verify Crossplane deleted the composite resource with `kubectl get composite`.
+`kubectl get composite` を使用して Crossplane が複合リソースを削除したことを確認します。
 
 ```shell {copy-lines="1"}
 kubectl get composite
 No resources found
 ```
 
-Verify Crossplane deleted the managed resources with `kubectl get managed`.
+`kubectl get managed` を使用して Crossplane が管理リソースを削除したことを確認します。
 
 ```shell {copy-lines="1"}
 kubectl get managed
 No resources found
 ```
 
-## Next steps
-* Explore AWS resources that Crossplane can configure in the 
-  [Provider CRD reference](https://marketplace.upbound.io/providers/upbound/provider-family-aws/).
-* Join the [Crossplane Slack](https://slack.crossplane.io/) and connect with 
-  Crossplane users and contributors.
-* Read more about the [Crossplane concepts]({{<ref "../concepts">}}) to find out what else you can do
-  with Crossplane. 
+## 次のステップ
+* Crossplane が構成できる AWS リソースを 
+  [Provider CRD リファレンス](https://marketplace.upbound.io/providers/upbound/provider-family-aws/) で探ります。
+* [Crossplane Slack](https://slack.crossplane.io/) に参加し、Crossplane ユーザーや貢献者とつながります。
+* [Crossplane の概念]({{<ref "../concepts">}}) についてさらに読み、Crossplane でできることを見つけます。
+
+It seems that there is no content provided for translation. Please paste the Markdown content you'd like me to translate into Japanese.

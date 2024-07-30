@@ -1,14 +1,14 @@
 ---
-title: Install, Upgrade and Uninstall
+title: インストール、アップグレード、アンインストール
 weight: 10
-description: Manage Crossplane installations
+description: Crossplaneのインストールを管理する
 ---
 
-## [Install Crossplane](install/)
-How to install and customize Crossplane in an existing Kubernetes cluster.
+## [Crossplaneをインストールする](install/)
+既存のKubernetesクラスターにCrossplaneをインストールし、カスタマイズする方法。
 
-## [Upgrade Crossplane](upgrade/)
-How to upgrade Crossplane to newer versions of the software.
+## [Crossplaneをアップグレードする](upgrade/)
+Crossplaneをソフトウェアの新しいバージョンにアップグレードする方法。
 
-## [Uninstall Crossplane](uninstall/)
-How to remove Crossplane from a Kubernetes cluster.
+## [Crossplaneをアンインストールする](uninstall/)
+KubernetesクラスターからCrossplaneを削除する方法。

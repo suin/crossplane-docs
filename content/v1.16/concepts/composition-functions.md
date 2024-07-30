@@ -1,40 +1,25 @@
 ---
-title: Composition Functions
+title: コンポジション関数
 state: beta
 alphaVersion: "1.11"
 betaVersion: "1.14"
 weight: 80
-description: "Composition Functions allow you to template resources using general-purpose programming languages"
+description: "コンポジション関数を使用すると、汎用プログラミング言語を使用してリソースをテンプレート化できます"
 aliases: 
   - /knowledge-base/guides/composition-functions
 ---
 
-Composition functions (or just functions, for short) are custom programs that
-template Crossplane resources. Crossplane calls composition functions to
-determine what resources it should create when you create a composite resource
-(XR). You can write a function to template resources using a general purpose
-programming language like Go or Python. Using a general purpose programming
-language allows a Function to use more advanced logic to template resources,
-like loops and conditionals.
+コンポジション関数（略して関数）は、Crossplaneリソースをテンプレート化するカスタムプログラムです。Crossplaneは、コンポジットリソース（XR）を作成するときに、どのリソースを作成すべきかを判断するためにコンポジション関数を呼び出します。GoやPythonのような汎用プログラミング言語を使用してリソースをテンプレート化する関数を書くことができます。汎用プログラミング言語を使用することで、ループや条件分岐など、より高度なロジックを使用してリソースをテンプレート化することができます。
 
-You can build a function using general purpose programming languages such as Go
-or Python. The Crossplane community has also built functions that let you
-template Crossplane resources using [CUE](https://cuelang.org), Helm-like
-[Go templates](https://pkg.go.dev/text/template) or
-[Patch and Transforms]({{<ref "./patch-and-transform">}}).
+GoやPythonなどの汎用プログラミング言語を使用して関数を構築できます。Crossplaneコミュニティは、[CUE](https://cuelang.org)、Helmのような[Goテンプレート](https://pkg.go.dev/text/template)、または[Patch and Transforms]({{<ref "./patch-and-transform">}})を使用してCrossplaneリソースをテンプレート化する関数も構築しています。
 
-## Install a composition function
+## コンポジション関数のインストール
 
-Installing a Function creates a function pod. Crossplane sends requests to this
-pod to ask it what resources to create when you create a composite resource.
+関数をインストールすると、関数ポッドが作成されます。Crossplaneは、このポッドにリクエストを送信して、コンポジットリソースを作成するときにどのリソースを作成するかを尋ねます。
 
-Install a Function with a Crossplane
-{{<hover label="install" line="2">}}Function{{</hover >}} object setting the
-{{<hover label="install" line="6">}}spec.package{{</hover >}} value to the
-location of the function package.
+関数ポッドをインストールするには、{{<hover label="install" line="2">}}Function{{</hover >}}オブジェクトを使用し、{{<hover label="install" line="6">}}spec.package{{</hover >}}の値を関数パッケージの場所に設定します。
 
-
-For example, to install [Function Patch and Transform](https://github.com/crossplane-contrib/function-patch-and-transform),
+例えば、[Function Patch and Transform](https://github.com/crossplane-contrib/function-patch-and-transform)をインストールするには、
 
 ```yaml {label="install"}
 apiVersion: pkg.crossplane.io/v1beta1
@@ -46,19 +31,16 @@ spec:
 ```
 
 {{< hint "tip" >}}
-Functions are Crossplane Packages. Read more about Packages in the
-[Packages documentation]({{<ref "packages" >}}).
+関数はCrossplaneパッケージです。パッケージについての詳細は、[パッケージのドキュメント]({{<ref "packages" >}})をお読みください。
 {{< /hint >}}
 
-By default, the Function pod installs in the same namespace as Crossplane
-(`crossplane-system`).
+デフォルトでは、関数ポッドはCrossplaneと同じネームスペース（`crossplane-system`）にインストールされます。
 
-## Verify a composition function
+## コンポジション関数の検証
 
-View the status of a Function with `kubectl get functions`
+`kubectl get functions`を使用して関数のステータスを表示します。
 
-During the install a Function reports `INSTALLED` as `True` and `HEALTHY` as
-`Unknown`.
+インストール中、関数は`INSTALLED`を`True`として、`HEALTHY`を`Unknown`として報告します。
 
 ```shell {copy-lines="1"}
 kubectl get functions
@@ -66,68 +48,54 @@ NAME                              INSTALLED   HEALTHY   PACKAGE                 
 function-patch-and-transform      True        Unknown   xpkg.upbound.io/crossplane-contrib/function-patch-and-transform:v0.1.4   10s
 ```
 
-After the Function install completes and it's ready for use the `HEALTHY` status
-reports `True`.
+Functionのインストールが完了し、使用可能になると、`HEALTHY`ステータスは
+`True`を報告します。
 
-## Use a function in a composition
+## コンポジションで関数を使用する
 
-Crossplane calls a Function to determine what resources it should create when
-you create a composite resource. The Function also tells Crossplane what to do
-with these resources when you update or delete a composite resource.
+Crossplaneは、コンポジットリソースを作成するときに、どのリソースを作成すべきかを判断するために関数を呼び出します。また、コンポジットリソースを更新または削除するときに、これらのリソースに対してCrossplaneが何をすべきかを関数が指示します。
 
-When Crossplane calls a Function it sends it the current state of the composite
-resource. It also sends it the current state of any managed resources the
-composite resource owns.
+Crossplaneが関数を呼び出すとき、コンポジットリソースの現在の状態を送信します。また、コンポジットリソースが所有する管理リソースの現在の状態も送信します。
 
-Crossplane knows what Function to call when a composite resource changes by
-looking at the Composition the composite resource uses.
+Crossplaneは、コンポジットリソースが変更されたときにどの関数を呼び出すべきかを、コンポジットリソースが使用するコンポジションを見て判断します。
 
-{{<expand "Confused about Composite Resources and Compositions?" >}}
-Crossplane has four core components that users commonly mix up:
+{{<expand "Composite ResourcesとCompositionsについて混乱していますか？" >}}
+Crossplaneには、ユーザーが混同しがちな4つのコアコンポーネントがあります：
 
-* [Composition]({{<ref "./compositions">}}) - A template to define how to create
-  resources.
+* [Composition]({{<ref "./compositions">}}) - リソースを作成する方法を定義するテンプレート。
 * [CompositeResourceDefinition]({{<ref "./composite-resource-definitions">}})
-  (`XRD`) - A custom API specification. 
-* [Composite Resource]({{<ref "./composite-resources">}}) (`XR`) - Created by
-  using the custom API defined in a CompositeResourceDefinition. XRs use the
-  Composition template to create new managed resources. 
-* [Claim]({{<ref "./claims" >}}) (`XRC`) - Like a Composite Resource, but with
-  namespace scoping. 
+  (`XRD`) - カスタムAPI仕様。 
+* [Composite Resource]({{<ref "./composite-resources">}}) (`XR`) - CompositeResourceDefinitionで定義されたカスタムAPIを使用して作成されます。 XRsは、Compositionテンプレートを使用して新しい管理リソースを作成します。 
+* [Claim]({{<ref "./claims" >}}) (`XRC`) - Composite Resourceのようですが、名前空間スコープがあります。 
 {{</expand >}}
 
-To use composition functions set the Composition 
-{{<hover label="single" line="6">}}mode{{</hover>}} to
-{{<hover label="single" line="6">}}Pipeline{{</hover>}}.
+コンポジション関数を使用するには、Composition 
+{{<hover label="single" line="6">}}mode{{</hover>}}を
+{{<hover label="single" line="6">}}Pipeline{{</hover>}}に設定します。
 
-Define a {{<hover label="single" line="7">}}pipeline{{</hover>}} of 
-{{<hover label="single" line="8">}}steps{{</hover>}}. Each 
-{{<hover label="single" line="8">}}step{{</hover>}} calls a Function.  
+{{<hover label="single" line="7">}}pipeline{{</hover>}}を定義します。
+各{{<hover label="single" line="8">}}step{{</hover>}}は関数を呼び出します。
 
-Each {{<hover label="single" line="8">}}step{{</hover>}} uses a 
-{{<hover label="single" line="9">}}functionRef{{</hover>}} to reference the
-{{<hover label="single" line="10">}}name{{</hover>}} of the Function to call. 
+各{{<hover label="single" line="8">}}step{{</hover>}}は、呼び出す関数の
+{{<hover label="single" line="9">}}functionRef{{</hover>}}を使用して
+{{<hover label="single" line="10">}}name{{</hover>}}を参照します。
+
 
 {{<hint "important" >}}
-Compositions using {{<hover label="single" line="6">}}mode: Pipeline{{</hover>}} 
-can't specify resource templates with a `resources` field. 
+{{<hover label="single" line="6">}}モード: パイプライン{{</hover>}}を使用するコンポジションでは、`resources`フィールドでリソーステンプレートを指定できません。
 
-Use function "Patch and Transform" to create resource templates.
+リソーステンプレートを作成するには、「パッチと変換」機能を使用してください。
 {{< /hint >}}
 
 
-Some Functions also allow you to specify an 
-{{<hover label="single" line="11">}}input{{</hover>}}.  
-The function defines the
-{{<hover label="single" line="13">}}kind{{</hover>}} of input.
+一部の関数では、{{<hover label="single" line="11">}}入力{{</hover>}}を指定することもできます。  
+その関数は{{<hover label="single" line="13">}}種類{{</hover>}}の入力を定義します。
 
-This example uses
-[Function Patch and Transform](https://github.com/crossplane-contrib/function-patch-and-transform).  
-Function Patch and Transform implements Crossplane resource
-templates.  
-The input kind is {{<hover label="single" line="13">}}Resources{{</hover>}}, 
-and it accepts [Patch and Transform]({{<ref "./patch-and-transform">}}) 
-{{<hover label="single" line="14">}}resources{{</hover>}} as input.
+この例では、
+[Function Patch and Transform](https://github.com/crossplane-contrib/function-patch-and-transform)を使用しています。  
+Function Patch and TransformはCrossplaneリソーステンプレートを実装します。  
+入力の種類は{{<hover label="single" line="13">}}Resources{{</hover>}}であり、  
+[Patch and Transform]({{<ref "./patch-and-transform">}})の{{<hover label="single" line="14">}}resources{{</hover>}}を入力として受け入れます。
 
 ```yaml {label="single",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -154,18 +122,11 @@ spec:
 ```
 
 
-## Use a pipeline of functions in a composition
+## コンポジションで関数のパイプラインを使用する
 
-Crossplane can ask more than one Function what to do when a composite resource
-changes. When a Composition has a pipeline of two or more steps, Crossplane
-calls them all. It calls them in the order they appear in the pipeline.
+Crossplaneは、合成リソースが変更されたときに、複数の関数に何をするかを尋ねることができます。コンポジションに2つ以上のステップのパイプラインがある場合、Crossplaneはそれらすべてを呼び出します。パイプラインに表示される順序で呼び出します。
 
-Crossplane passes each Function in the pipeline the result of the previous
-Function. This enables powerful combinations of Functions. In this example,
-Crossplane calls {{<hover label="double" line="10">}}function-cue{{</hover>}} to
-create an S3 bucket. Crossplane then passes the bucket to 
-{{<hover label="double" line="23">}}function-auto-ready{{</hover>}}, which marks the
-composite resource as ready when the bucket becomes ready.
+Crossplaneは、パイプライン内の各関数に前の関数の結果を渡します。これにより、関数の強力な組み合わせが可能になります。この例では、Crossplaneは{{<hover label="double" line="10">}}function-cue{{</hover>}}を呼び出してS3バケットを作成します。次に、Crossplaneはバケットを{{<hover label="double" line="23">}}function-auto-ready{{</hover>}}に渡し、バケットが準備完了になると合成リソースを準備完了としてマークします。
 
 ```yaml {label="double",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -195,32 +156,27 @@ spec:
       name: function-auto-ready
 ```
 
-## Test a composition that uses functions
+## 関数を使用するコンポジションをテストする
 
-You can preview the output of any composition that uses composition functions
-using the Crossplane CLI. You don't need a Crossplane control plane to do
-this. The Crossplane CLI uses Docker Engine to run functions.
+Crossplane CLIを使用して、コンポジション関数を使用する任意のコンポジションの出力をプレビューできます。これを行うためにCrossplaneコントロールプレーンは必要ありません。Crossplane CLIは、関数を実行するためにDocker Engineを使用します。
 
 
 {{<hint "tip">}}
-See the [Crossplane CLI docs]({{<ref "../cli">}}) to
-learn how to install and use the Crossplane CLI.
+[Crossplane CLIドキュメント]({{<ref "../cli">}})を参照して、Crossplane CLIのインストールと使用方法を学んでください。
 {{< /hint >}}
 
-{{<hint "important">}}
-Running `crossplane beta render` requires [Docker](https://www.docker.com).
+
+{{<hint "重要">}}
+`crossplane beta render`を実行するには[Docker](https://www.docker.com)が必要です。
 {{< /hint >}}
 
-Provide a composite resource, composition and composition functions to render
-the output locally. 
+出力をローカルでレンダリングするために、コンポジットリソース、コンポジション、およびコンポジション関数を提供します。
 
 ```shell
 crossplane beta render xr.yaml composition.yaml functions.yaml
 ```
 
-`crossplane beta render` prints resources as YAML to stdout. It prints the
-composite resource first, followed by the resources the composition functions
-created.
+`crossplane beta render`はリソースをYAML形式でstdoutに出力します。最初にコンポジットリソースが出力され、その後にコンポジション関数が作成したリソースが続きます。
 
 ```yaml
 ---
@@ -249,12 +205,11 @@ spec:
     region: us-east-2
 ```
 
-{{<expand "The xr.yaml, composition.yaml and function.yaml files used in the example">}}
+{{<expand "例で使用されるxr.yaml、composition.yaml、およびfunction.yamlファイル">}}
 
-You can recreate the output below using by running `crossplane beta render` with
-these files.
+これらのファイルを使用して`crossplane beta render`を実行することで、以下の出力を再現できます。
 
-The `xr.yaml` file contains the composite resource to render:
+`xr.yaml`ファイルにはレンダリングするコンポジットリソースが含まれています：
 
 ```yaml
 apiVersion: example.crossplane.io/v1
@@ -265,8 +220,7 @@ spec:
   bucketRegion: us-east-2
 ```
 
-The `composition.yaml` file contains the Composition to use to render the
-composite resource:
+`composition.yaml`ファイルにはコンポジットリソースをレンダリングするために使用するCompositionが含まれています：
 
 ```yaml
 apiVersion: apiextensions.crossplane.io/v1
@@ -296,8 +250,7 @@ spec:
           toFieldPath: spec.forProvider.region
 ```
 
-The `functions.yaml` file contains the Functions the Composition references in
-its pipeline steps:
+`functions.yaml`ファイルにはCompositionがパイプラインステップで参照するFunctionsが含まれています：
 
 ```yaml
 ---
@@ -310,24 +263,14 @@ spec:
 ```
 {{</expand>}}
 
-The Crossplane CLI uses Docker Engine to run functions. You can change how the
-Crossplane CLI run a function by adding an annotation in `functions.yaml`. Add
-the `render.crossplane.io/runtime` annotation to a Function to change how it's
-run.
+Crossplane CLIは関数を実行するためにDocker Engineを使用します。`functions.yaml`にアノテーションを追加することで、Crossplane CLIが関数を実行する方法を変更できます。関数の実行方法を変更するには、`render.crossplane.io/runtime`アノテーションを関数に追加します。
 
-`crossplane beta render` supports two `render.crossplane.io/runtime` values:
+`crossplane beta render`は2つの`render.crossplane.io/runtime`値をサポートしています：
 
-* `Docker` (the default) connects to Docker Engine. It uses Docker to pull and
-  run a function runtime.
-* `Development` connects to a function runtime you have run manually.
+* `Docker`（デフォルト）はDocker Engineに接続します。Dockerを使用して関数ランタイムをプルして実行します。
+* `Development`は手動で実行した関数ランタイムに接続します。
 
-When you use the {{<hover label="development" line="6">}}Development{{</hover>}}
-runtime the Crossplane CLI ignores the Function's {{<hover label="development"
-line="8">}}package{{</hover>}}. Instead it expects you to make sure the function
-is listening on localhost port 9443. The function must be listening without gRPC
-transport security. Most function SDKs let you run a function with the
-`--insecure` flag to disable transport security. For example you can run a Go
-function locally using `go run . --insecure`.
+{{<hover label="development" line="6">}}Development{{</hover>}}ランタイムを使用する場合、Crossplane CLIは関数の{{<hover label="development" line="8">}}package{{</hover>}}を無視します。代わりに、関数がlocalhostのポート9443でリッスンしていることを確認する必要があります。関数はgRPCトランスポートセキュリティなしでリッスンしている必要があります。ほとんどの関数SDKは、トランスポートセキュリティを無効にするために`--insecure`フラグを使用して関数を実行できるようにします。たとえば、`go run . --insecure`を使用してローカルでGo関数を実行できます。
 
 ```yaml {label="development"}
 apiVersion: pkg.crossplane.io/v1beta1
@@ -341,36 +284,21 @@ spec:
 ```
 
 {{<hint "tip">}}
-Use the `Development` runtime when you
-[write a composition function](#write-a-composition-function) to test your
-function end-to-end.
+`Development` ランタイムを使用して、[コンポジション関数を書く](#write-a-composition-function)ことで、関数をエンドツーエンドでテストしてください。
 {{</hint>}}
 
-`crossplane beta render` also supports the following Function annotations. These
-annotations affect how it runs Functions:
+`crossplane beta render` は、以下の関数アノテーションもサポートしています。これらのアノテーションは、関数の実行方法に影響を与えます：
 
-* `render.crossplane.io/runtime-docker-cleanup` - When using the `Docker`
-runtime this annotation specifies whether the CLI should stop the function
-container after it calls the function. It supports the values `Stop`, to stop
-the container, and `Orphan`, to leave it running.
-* `render.crossplane.io/runtime-docker-pull-policy` - When using the `Docker`
-  runtime this annotation specifies when the CLI should pull the Function's
-  package. It supports the values `Always`, `Never`, and `IfNotPresent`.
-* `render.crossplane.io/runtime-development-target` - When using the
-  `Development` runtime this annotation tells the CLI to connect to a Function
-  running at the specified target. It uses
-  [gRPC target syntax](https://github.com/grpc/grpc/blob/v1.59.1/doc/naming.md).
+* `render.crossplane.io/runtime-docker-cleanup` - `Docker` ランタイムを使用する際、このアノテーションは CLI が関数を呼び出した後に関数コンテナを停止すべきかどうかを指定します。`Stop` はコンテナを停止し、`Orphan` はコンテナを実行し続けることをサポートします。
+* `render.crossplane.io/runtime-docker-pull-policy` - `Docker` ランタイムを使用する際、このアノテーションは CLI が関数のパッケージをいつプルすべきかを指定します。`Always`、`Never`、および `IfNotPresent` の値をサポートします。
+* `render.crossplane.io/runtime-development-target` - `Development` ランタイムを使用する際、このアノテーションは CLI に指定されたターゲットで実行されている関数に接続するよう指示します。これは [gRPC ターゲット構文](https://github.com/grpc/grpc/blob/v1.59.1/doc/naming.md) を使用します。
 
-## Write a composition function
+## コンポジション関数を書く
 
-Composition functions let you replace complicated Compositions with code written
-in your programming language of choice. Crossplane has tools, software
-development kits (SDKs) and templates to help you write a function.
-
+コンポジション関数を使用すると、選択したプログラミング言語で書かれたコードで複雑なコンポジションを置き換えることができます。Crossplane には、関数を書くためのツール、ソフトウェア開発キット (SDK)、およびテンプレートがあります。
 
 <!-- vale write-good.Passive = NO -->
-Here's an example of a tiny, hello world function. This example is written in
-[Go](https://go.dev).
+小さな「こんにちは、世界」関数の例を示します。この例は [Go](https://go.dev) で書かれています。
 <!-- vale write-good.Passive = YES -->
 
 ```go
@@ -381,25 +309,13 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1beta1.RunFunctionRequ
 }
 ```
 
-Some people design composition functions for you to use them with any kind of
-composite resource.
-[Function Patch and Transform](https://github.com/crossplane-contrib/function-patch-and-transform)
-and
-[Function Auto Ready](https://github.com/crossplane-contrib/function-auto-ready)
-work with any kind of composite resource.
+一部の人々は、あらゆる種類の複合リソースと一緒に使用できるようにコンポジション関数を設計しています。
+[Function Patch and Transform](https://github.com/crossplane-contrib/function-patch-and-transform) と
+[Function Auto Ready](https://github.com/crossplane-contrib/function-auto-ready) は、あらゆる種類の複合リソースで機能します。
 
-Another common pattern is to write a composition function specific to one kind
-of composite resource. The function contains all the logic needed to tell
-Crossplane what resources to create when you create a composite resource. When
-you write a composition function like this, your Composition can be small. It
-just tells Crossplane what function to run when you create, update, or delete a
-composite resource.
+もう一つの一般的なパターンは、特定の種類の複合リソースに特化したコンポジション関数を書くことです。この関数には、複合リソースを作成する際に Crossplane にどのリソースを作成するかを伝えるために必要なすべてのロジックが含まれています。このようなコンポジション関数を書くと、コンポジションは小さくなります。それは、複合リソースを作成、更新、または削除する際にどの関数を実行するかを Crossplane に伝えるだけです。
 
-This Composition tells Crossplane to call {{<hover label="dedicated"
-line="13">}}function-xr-xbucket{{</hover>}} whenever you create, update, or
-delete an {{<hover label="dedicated" line="8">}}XBucket{{</hover>}} composite
-resource. `function-xr-xbucket` is hard coded to handle `XBucket` composite
-resources.
+このコンポジションは、Crossplaneに対して、{{<hover label="dedicated" line="13">}}function-xr-xbucket{{</hover>}}を呼び出すよう指示します。これは、{{<hover label="dedicated" line="8">}}XBucket{{</hover>}}コンポジットリソースを作成、更新、または削除するたびに行われます。`function-xr-xbucket`は、`XBucket`コンポジットリソースを処理するようにハードコーディングされています。
 
 ```yaml {label="dedicated"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -417,15 +333,14 @@ spec:
       name: function-xr-xbucket
 ```
 
-To write a composition function, you:
+コンポジション関数を書くには、次の手順を実行します。
 
-1. Create the function from a template.
-1. Edit the template to add the function's logic.
-1. [Test the function](#test-a-composition-that-uses-functions).
-1. Build the function, and push it to a package registry.
+1. テンプレートから関数を作成します。
+1. テンプレートを編集して関数のロジックを追加します。
+1. [関数をテストします](#test-a-composition-that-uses-functions)。
+1. 関数をビルドし、パッケージレジストリにプッシュします。
 
-You use the [Crossplane CLI]({{<ref "../cli">}}) to
-create, test, build, and push a function. For example,
+[Crossplane CLI]({{<ref "../cli">}})を使用して、関数を作成、テスト、ビルド、プッシュします。例えば、
 
 ```shell {copy-lines=none}
 # Create the function from a template.
@@ -454,27 +369,18 @@ $ crossplane xpkg push -f package/*.xpkg crossplane-contrib/function-example:v0.
 ```
 
 {{<hint "tip">}}
-Crossplane has
-[language specific guides]({{<ref "../guides">}}) to writing
-a composition function. Refer to the guide for your preferred language for a
-more detailed guide to writing a function.
+Crossplaneには、コンポジション関数を書くための
+[言語別ガイド]({{<ref "../guides">}})があります。お好みの言語のガイドを参照して、関数を書くための詳細なガイドを確認してください。
 {{</hint>}}
 
-When you're writing a composition function it's useful to know how composition
-functions work. Read the next section to learn
-[how composition functions work](#how-composition-functions-work).
+コンポジション関数を書く際には、コンポジション関数がどのように機能するかを知っておくと便利です。次のセクションを読んで、
+[コンポジション関数の動作](#how-composition-functions-work)について学びましょう。
 
-## How composition functions work
+## コンポジション関数の動作
 
-Each composition function is actually a [gRPC](https://grpc.io) server. gRPC is
-a high performance, open source remote procedure call (RPC) framework. When you
-[install a function](#install-a-composition-function) Crossplane deploys the
-function as a gRPC server. Crossplane encrypts and authenticates all gRPC
-communication.
+各コンポジション関数は実際には[gRPC](https://grpc.io)サーバーです。gRPCは、高性能でオープンソースのリモートプロシージャコール（RPC）フレームワークです。関数を[インストール](#install-a-composition-function)すると、Crossplaneはその関数をgRPCサーバーとしてデプロイします。Crossplaneは、すべてのgRPC通信を暗号化し、認証します。
 
-You don't have to be a gRPC expert to write a function. Crossplane's function
-SDKs setup gRPC for you. It's useful to understand how Crossplane calls your
-function though, and how your function should respond.
+関数を書くためにgRPCの専門家である必要はありません。Crossplaneの関数SDKがgRPCを設定します。ただし、Crossplaneがどのようにあなたの関数を呼び出すか、そしてあなたの関数がどのように応答すべきかを理解することは便利です。
 
 ```mermaid
 sequenceDiagram
@@ -490,57 +396,35 @@ sequenceDiagram
     Crossplane Pod->>+API Server: Apply desired composed resources
 ```
 
-When you create, update, or delete a composite resource that uses composition
-functions Crossplane calls each function in the order they appear in the
-Composition's pipeline. Crossplane calls each function by sending it a gRPC
-RunFunctionRequest. The function must respond with a gRPC RunFunctionResponse.
+コンポジション関数を使用するコンポジットリソースを作成、更新、または削除すると、Crossplaneはコンポジションのパイプラインに表示される順序で各関数を呼び出します。Crossplaneは、gRPC RunFunctionRequestを送信して各関数を呼び出します。関数は、gRPC RunFunctionResponseで応答する必要があります。
 
 {{<hint "tip">}}
-You can find detailed schemas for the RunFunctionRequest and RunFunctionResponse
-RPCs in the [Buf Schema Registry](https://buf.build/crossplane/crossplane/docs/main:apiextensions.fn.proto.v1beta1).
+RunFunctionRequest と RunFunctionResponse の詳細なスキーマは、[Buf Schema Registry](https://buf.build/crossplane/crossplane/docs/main:apiextensions.fn.proto.v1beta1) で確認できます。
 {{</hint>}}
 
-When Crossplane calls a function the first time it includes four important
-things in the RunFunctionRequest.
+Crossplane が関数を初めて呼び出すとき、RunFunctionRequest に含まれる重要な情報は4つです。
 
-1. The __observed state__ of the composite resource, and any composed resources.
-1. The __desired state__ of the composite resource, and any composed resources.
-1. The function's __input__.
-1. The function pipeline's __context__.
+1. 合成リソースの __観測状態__ と、すべての構成リソース。
+1. 合成リソースの __望ましい状態__ と、すべての構成リソース。
+1. 関数の __入力__。
+1. 関数パイプラインの __コンテキスト__。
 
-A function's main job is to update the __desired state__ and return it to
-Crossplane. It does this by returning a RunFunctionResponse.
+関数の主な仕事は、__望ましい状態__ を更新し、それを Crossplane に返すことです。これは RunFunctionResponse を返すことで行います。
 
-Most composition functions read the observed state of the composite resource,
-and use it to add composed resources to the desired state. This tells Crossplane
-which composed resources it should create or update.
+ほとんどの合成関数は合成リソースの観測状態を読み取り、それを使用して望ましい状態に構成リソースを追加します。これにより、Crossplane にどの構成リソースを作成または更新すべきかを指示します。
 
-If the function needs __extra resources__ to determine the desired state it can
-request any cluster-scoped resource Crossplane already has access to, either by
-by name or labels through the returned RunFunctionResponse. Crossplane then
-calls the function again including the requested __extra resources__ and the
-__context__ returned by the Function itself alongside the same __input__,
-__observed__ and __desired state__ of the previous RunFunctionRequest. Functions
-can iteratively request __extra resources__ if needed, but to avoid endlessly
-looping Crossplane limits the number of iterations to 5. Crossplane considers
-the function satisfied as soon as the __extra resources__ requests become
-stable, so the Function returns the same exact request two times in a row.
-Crossplane errors if stability isn't reached after 5 iterations.
+関数が望ましい状態を決定するために __追加リソース__ が必要な場合、Crossplane がすでにアクセスできる任意のクラスター範囲のリソースを、返された RunFunctionResponse を通じて名前またはラベルで要求できます。次に、Crossplane は要求された __追加リソース__ と、関数自体から返された __コンテキスト__ を含めて関数を再度呼び出します。同時に、前回の RunFunctionRequest の __入力__、__観測状態__ および __望ましい状態__ も含まれます。関数は必要に応じて __追加リソース__ を反復的に要求できますが、無限ループを避けるために Crossplane は反復回数を5回に制限します。__追加リソース__ の要求が安定すると、Crossplane は関数が満足したと見なします。そのため、関数は同じリクエストを2回連続で返します。5回の反復後に安定性が達成されない場合、Crossplane はエラーを返します。
 
 {{<hint "tip">}}
 <!-- vale write-good.Weasel = NO -->
 <!-- Disable Weasel to say "usually", which is correct in this context. -->
-A _composed_ resource is a resource created by a composite resource. Composed
-resources are usually Crossplane managed resources (MRs), but they can be any
-kind of Crossplane resource. For example a composite resource could also create
-a ProviderConfig, or another kind of composite resource. 
+_構成された_ リソースは、合成リソースによって作成されたリソースです。構成リソースは通常、Crossplane 管理リソース (MR) ですが、任意の種類の Crossplane リソースである可能性があります。たとえば、合成リソースは ProviderConfig や別の種類の合成リソースを作成することもできます。
 <!-- vale write-good.Weasel = YES -->
 {{</hint>}}
 
-### Observed state
+### 観測された状態
 
-When you create a composite resource like this one, Crossplane _observes_ it and
-sends it to the composition function as part of the observed state.
+このような複合リソースを作成すると、Crossplaneはそれを _観測_ し、観測された状態の一部として合成関数に送信します。
 
 ```yaml
 apiVersion: example.crossplane.io/v1
@@ -551,77 +435,50 @@ spec:
   bucketRegion: us-east-2
 ```
 
-If any composed resources already exist, Crossplane observes them and sends them
-to your function to as part of the observed state.
+もし既に構成されたリソースが存在する場合、Crossplaneはそれらを観測し、観測された状態の一部としてあなたの関数に送信します。
 
-Crossplane also observes the connection details of your composite resource and
-any composed resources. It sends them to your function as part of the observed
-state.
+Crossplaneはまた、あなたの複合リソースと任意の構成されたリソースの接続詳細を観測します。それらを観測された状態の一部としてあなたの関数に送信します。
 
-Crossplane observes the composite resource and any composed resources once,
-right before it starts calling the functions in the pipeline. This means that
-Crossplane sends every function in the pipeline the same observed state.
+Crossplaneは、パイプライン内の関数を呼び出し始める直前に、複合リソースと任意の構成されたリソースを一度だけ観測します。これは、Crossplaneがパイプライン内のすべての関数に同じ観測状態を送信することを意味します。
 
-### Desired state
+### 望ましい状態
 
-Desired state is the set of the changes the function pipeline wants to make to
-the composite resource and any composed resources. When a function adds composed
-resources to the desired state Crossplane creates them.
+望ましい状態は、関数パイプラインが複合リソースと任意の構成されたリソースに対して行いたい変更のセットです。関数が望ましい状態に構成されたリソースを追加すると、Crossplaneはそれらを作成します。
 
-A function can change:
+関数は次のことを変更できます：
 
-* The `status` of the composite resource.
-* The `metadata` and `spec` of any composed resource.
+* 複合リソースの `status`。
+* 任意の構成されたリソースの `metadata` と `spec`。
 
-A function can also change the connection details and readiness of the composite
-resource. A function indicates that the composite resource is ready by telling
-Crossplane whether its composed resources are ready. When the function pipeline
-tells Crossplane that all composed resources are ready, Crossplane marks the
-composite resource as ready.
+関数はまた、複合リソースの接続詳細と準備状況を変更することもできます。関数は、構成されたリソースが準備できているかどうかをCrossplaneに伝えることで、複合リソースが準備できていることを示します。関数パイプラインがすべての構成されたリソースが準備できているとCrossplaneに伝えると、Crossplaneは複合リソースを準備完了としてマークします。
 
-A function can't change:
+関数は次のことを変更できません：
 
-* The `metadata` or `spec` of the composite resource.
-* The `status` of any composed resource.
-* The connection details of any composed resource.
+* 複合リソースの `metadata` または `spec`。
+* 任意の構成されたリソースの `status`。
+* 任意の構成されたリソースの接続詳細。
 
-A pipeline of functions _accumulates_ desired state. This means that each
-function builds upon the desired state of previous functions in the pipeline.
-Crossplane sends a function the desired state accumulated by all previous
-functions in the pipeline. The function adds to or updates the desired state and
-then passes it on. When the last function in the pipeline has run, Crossplane
-applies the desired state it returns.
+関数のパイプラインは望ましい状態を _蓄積_ します。これは、各関数がパイプライン内の前の関数の望ましい状態に基づいて構築されることを意味します。Crossplaneは、パイプライン内のすべての前の関数によって蓄積された望ましい状態を関数に送信します。関数は望ましい状態に追加または更新を行い、その後それを渡します。パイプライン内の最後の関数が実行されると、Crossplaneはそれが返す望ましい状態を適用します。
 
 {{<hint "important">}}
-A function __must__ copy all desired state from its RunFunctionRequest to its
-RunFunctionResponse. If a function adds a resource to its desired state the next
-function must copy it to its desired state. If it doesn't, Crossplane doesn't
-apply the resource. If the resource exists, Crossplane deletes it.
+関数は __必ず__ RunFunctionRequest から RunFunctionResponse にすべての望ましい状態をコピーしなければなりません。関数が望ましい状態にリソースを追加した場合、次の関数はそれを望ましい状態にコピーしなければなりません。そうしないと、Crossplaneはリソースを適用しません。リソースが存在する場合、Crossplaneはそれを削除します。
 
-A function can _intentionally_ choose not to copy parts of the desired state.
-For example a function may choose not to copy a desired resource to prevent that
-resource from existing.
+関数は、意図的に望ましい状態の一部をコピーしないことを選択できます。
+たとえば、関数はリソースが存在しないようにするために、望ましいリソースをコピーしないことを選択する場合があります。
 
-Most function SDKs handle copying desired state automatically.
+ほとんどの関数SDKは、望ましい状態のコピーを自動的に処理します。
 {{</hint>}}
 
-A function should only add the fields it cares about to the desired state. It
-should add these fields every time Crossplane calls it. If a function adds a
-field to the desired state once, but doesn't add it the next time it's called,
-Crossplane deletes the field. The same is true for composed resources. If a
-function adds a composed resource to the desired state, but doesn't add it the
-next time it's called, Crossplane deletes the composed resource.
+関数は、関心のあるフィールドのみを望ましい状態に追加する必要があります。
+Crossplaneが関数を呼び出すたびに、これらのフィールドを追加する必要があります。関数が望ましい状態にフィールドを一度追加したが、次回呼び出されたときに追加しなかった場合、Crossplaneはそのフィールドを削除します。合成リソースについても同様です。関数が望ましい状態に合成リソースを追加したが、次回呼び出されたときに追加しなかった場合、Crossplaneは合成リソースを削除します。
 
 {{<hint "tip">}}
-Crossplane uses
-[server side apply](https://kubernetes.io/docs/reference/using-api/server-side-apply/)
-to apply the desired state returned by a function pipeline. In server side apply
-terminology, the desired state is a _fully specified intent_.
+Crossplaneは
+[サーバーサイドアプライ](https://kubernetes.io/docs/reference/using-api/server-side-apply/)
+を使用して、関数パイプラインから返された望ましい状態を適用します。サーバーサイドアプライの用語では、望ましい状態は_完全に指定された意図_です。
 {{</hint>}}
 
-For example, if all a function wants is to make sure an S3 bucket in region
-`us-east-2` exists, it should add this resource to its desired composed
-resources.
+たとえば、関数が`us-east-2`リージョンにS3バケットが存在することを確認したいだけの場合、このリソースを望ましい合成リソースに追加する必要があります。
 
 ```yaml
 apiVersion: s3.aws.upbound.io/v1beta1
@@ -631,22 +488,15 @@ spec:
     region: us-east-2
 ```
 
-Even if the Bucket already exists and has other `spec` fields, or a `status`,
-`name`, `labels`, etc the function should omit them. The function should only
-include the fields it has an opinion about. Crossplane takes care of applying
-the fields the function cares about, merging them with the existing Bucket.
+バケットがすでに存在し、他の`spec`フィールドや`status`、`name`、`labels`などがある場合でも、関数はそれらを省略する必要があります。関数は、自分が意見を持っているフィールドのみを含めるべきです。Crossplaneは、関数が関心を持っているフィールドを適用し、既存のバケットとマージすることを担当します。
 
 {{<hint "tip">}}
-Composition functions don't actually use YAML for desired and observed
-resources. This example uses YAML for illustration purposes only.
+合成関数は、実際には望ましいリソースと観測されたリソースにYAMLを使用しません。この例は説明の目的でYAMLを使用しています。
 {{</hint>}}
 
-### Function input
+### 関数入力
 
-If a Composition includes {{<hover label="input" line="14">}}input{{</hover>}}
-Crossplane sends it to the function. Input is a useful way to provide extra
-configuration to a function. Supporting input is optional. Not all functions
-support input.
+Compositionに{{<hover label="input" line="14">}}input{{</hover>}}が含まれている場合、Crossplaneはそれを関数に送信します。入力は、関数に追加の設定を提供する便利な方法です。入力をサポートすることは任意です。すべての関数が入力をサポートしているわけではありません。
 
 ```yaml {label="input",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -677,28 +527,18 @@ spec:
 ```
 
 {{<hint "important">}}
-Crossplane doesn't validate function input. It's a good idea for a function to
-validate its own input.
+Crossplaneは関数の入力を検証しません。関数が自分の入力を検証することは良いアイデアです。
 {{</hint>}}
 
-### Function pipeline context
+### ファンクションパイプラインコンテキスト
 
-Sometimes two functions in a pipeline want to share information with each other
-that isn't desired state. Functions can use context for this. Any function can
-write to the pipeline context. Crossplane passes the context to all following
-functions. When Crossplane has called all functions it discards the pipeline
-context.
+時々、パイプライン内の二つの関数は、望ましい状態ではない情報を互いに共有したいと考えます。関数はこれにコンテキストを使用できます。任意の関数がパイプラインコンテキストに書き込むことができます。Crossplaneはコンテキストをすべての後続の関数に渡します。Crossplaneがすべての関数を呼び出した後、パイプラインコンテキストは破棄されます。
 
-Crossplane can write context too. If you enable the alpha
-[composition environment]({{<ref "environment-configs">}}) feature Crossplane
-writes the environment to the top-level context field
-`apiextensions.crossplane.io/environment`.
+Crossplaneもコンテキストに書き込むことができます。アルファの[コンポジション環境]({{<ref "environment-configs">}})機能を有効にすると、Crossplaneは環境をトップレベルのコンテキストフィールド`apiextensions.crossplane.io/environment`に書き込みます。
 
-## Disable composition functions
+## コンポジション関数を無効にする
 
-Crossplane enables composition functions by default. Disable support for
-composition functions by disabling the beta feature flag in Crossplane with
-`helm install --args`.
+Crossplaneはデフォルトでコンポジション関数を有効にします。`helm install --args`を使用して、Crossplaneでベータ機能フラグを無効にすることで、コンポジション関数のサポートを無効にします。
 
 ```shell
 helm install crossplane --namespace crossplane-system crossplane-stable/crossplane \
@@ -706,24 +546,18 @@ helm install crossplane --namespace crossplane-system crossplane-stable/crosspla
     --set "args='{--enable-composition-functions=false}'"
 ```
 
-The preceding Helm command installs Crossplane with the composition functions
-feature flag disabled. Confirm you have disabled composition functions by
-looking for a log line:
+前述のHelmコマンドは、コンポジション関数機能フラグを無効にしてCrossplaneをインストールします。ログ行を探して、コンポジション関数が無効になっていることを確認してください：
 
 ```shell {copy-lines="1"}
  kubectl -n crossplane-system logs -l app=crossplane
 {"level":"info","ts":1674535093.36186,"logger":"crossplane","msg":"Beta feature enabled","flag":"EnableBetaCompositionFunctions"}
 ```
 
-If you don't see the log line emitted when Crossplane starts, you have disabled
-composition functions.
+Crossplaneが起動したときにログ行が表示されない場合、コンポジション関数が無効になっています。
 
-## Disable extra resources
+## 追加リソースを無効にする
 
-Crossplane enables __extra resources__ by default, allowing Functions to get access
-to any cluster-scoped resource Crossplane already has access to. Disable support
-for __extra resources__, while keeping composition functions enabled, by disabling
-the beta feature flag in Crossplane with `helm install --args`.
+Crossplaneはデフォルトで__追加リソース__を有効にしており、FunctionsがCrossplaneがすでにアクセスできる任意のクラスター範囲のリソースにアクセスできるようにします。コンポジション関数を有効にしたまま、__追加リソース__のサポートを無効にするには、`helm install --args`を使用してCrossplaneでベータ機能フラグを無効にします。
 
 ```shell
 helm install crossplane --namespace crossplane-system crossplane-stable/crossplane \
@@ -731,15 +565,11 @@ helm install crossplane --namespace crossplane-system crossplane-stable/crosspla
     --set "args='{--enable-composition-functions-extra-resources=false}'"
 ```
 
-The preceding Helm command installs Crossplane with the extra resources
-feature flag disabled. Confirm you have disabled composition functions by
-looking for a log line:
+前述のHelmコマンドは、追加リソース機能フラグを無効にしてCrossplaneをインストールします。コンポジション関数が無効になっていることを確認するために、ログ行を探してください：
 
 ```shell {copy-lines="1"}
  kubectl -n crossplane-system logs -l app=crossplane
 {"level":"info","ts":1674535093.36186,"logger":"crossplane","msg":"Beta feature enabled","flag":"EnableBetaCompositionFunctionsExtraResources"}
 ```
 
-If you don't see the log line emitted when Crossplane starts, you have disabled
-__extra resources__ for composition functions, which means requests by functions for __extra
-resources__ are just ignored.
+Crossplaneが起動したときに出力されるログ行が見えない場合、__追加リソース__がコンポジション関数のために無効になっていることを意味します。これは、関数による__追加リソース__の要求が無視されることを意味します。

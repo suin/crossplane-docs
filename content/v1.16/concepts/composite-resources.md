@@ -1,47 +1,47 @@
 ---
-title: Composite Resources
+title: コンポジットリソース
 weight: 50
-description: "Composite resources, an XR or XRs, represent a collection of related cloud resources."
+description: "コンポジットリソース、XRまたはXRsは、関連するクラウドリソースのコレクションを表します。"
 ---
 
-A composite resource represents a set of managed resources as a single
-Kubernetes object. Crossplane creates composite resources when users access a
-custom API, defined in the CompositeResourceDefinition. 
+コンポジットリソースは、管理されたリソースのセットを単一の
+Kubernetesオブジェクトとして表します。Crossplaneは、ユーザーが
+CompositeResourceDefinitionで定義されたカスタムAPIにアクセスするときに
+コンポジットリソースを作成します。
 
 {{<hint "tip" >}}
-Composite resources are a _composite_ of managed resources.  
-A _Composition_ defines how to _compose_ the managed resources together.
+コンポジットリソースは、管理されたリソースの_コンポジット_です。  
+_コンポジション_は、管理されたリソースをどのように_構成_するかを定義します。
 {{< /hint >}}
 
-{{<expand "Confused about Compositions, XRDs, XRs and Claims?" >}}
-Crossplane has four core components that users commonly mix up:
+{{<expand "コンポジション、XRD、XR、およびクレームについて混乱していますか？" >}}
+Crossplaneには、ユーザーが一般的に混同する4つのコアコンポーネントがあります：
 
-* [Compositions]({{<ref "./compositions">}}) - A template to define how to create resources.
-* [Composite Resource Definition]({{<ref "./composite-resource-definitions">}})
-  (`XRD`) - A custom API specification. 
-* Composite Resource (`XR`) - This page. Created by
-  using the custom API defined in a Composite Resource Definition. XRs use the
-  Composition template to create new managed resources. 
-* [Claims]({{<ref "./claims" >}}) (`XRC`) - Like a Composite Resource, but
-  with namespace scoping. 
+* [コンポジション]({{<ref "./compositions">}}) - リソースを作成する方法を定義するテンプレート。
+* [コンポジットリソース定義]({{<ref "./composite-resource-definitions">}})
+  (`XRD`) - カスタムAPI仕様。 
+* コンポジットリソース (`XR`) - このページ。 
+  コンポジットリソース定義で定義されたカスタムAPIを使用して作成されます。 
+  XRsは、コンポジションテンプレートを使用して新しい管理リソースを作成します。 
+* [クレーム]({{<ref "./claims" >}}) (`XRC`) - コンポジットリソースのようですが、
+  名前空間スコープがあります。 
 {{</expand >}}
 
-## Creating composite resources
+## コンポジットリソースの作成
 
-Creating composite resources requires a 
-[Composition]({{<ref "./compositions">}}) and a 
-[CompositeResourceDefinition]({{<ref "./composite-resource-definitions">}}) 
-(`XRD`).  
-The Composition defines the set of resources to create.  
-The XRD defines the custom API users call to request the set of resources.
+コンポジットリソースを作成するには、 
+[コンポジション]({{<ref "./compositions">}})と 
+[コンポジットリソース定義]({{<ref "./composite-resource-definitions">}}) 
+(`XRD`)が必要です。  
+コンポジションは、作成するリソースのセットを定義します。  
+XRDは、ユーザーがリソースのセットを要求するために呼び出すカスタムAPIを定義します。
 
-![Diagram of the relationship of Crossplane components](/media/composition-how-it-works.svg)
+![Crossplaneコンポーネントの関係の図](/media/composition-how-it-works.svg)
 
-XRDs define the API used to create a composite resource.  
-For example, 
-this {{<hover label="xrd1" line="2">}}CompositeResourceDefinition{{</hover>}}
-creates a custom API endpoint 
-{{<hover label="xrd1" line="4">}}xmydatabases.example.org{{</hover>}}.
+XRDは、コンポジットリソースを作成するために使用されるAPIを定義します。  
+例えば、この {{<hover label="xrd1" line="2">}}コンポジットリソース定義{{</hover>}}は、 
+カスタムAPIエンドポイント 
+{{<hover label="xrd1" line="4">}}xmydatabases.example.org{{</hover>}}を作成します。
 
 ```yaml {label="xrd1",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -56,10 +56,10 @@ spec:
   # Removed for brevity
 ```
 
-When a user calls the custom API, 
-{{<hover label="xrd1" line="4">}}xmydatabases.example.org{{</hover>}}, 
-Crossplane chooses the Composition to use based on the Composition's 
-{{<hover label="typeref" line="6">}}compositeTypeRef{{</hover>}}
+ユーザーがカスタムAPI 
+{{<hover label="xrd1" line="4">}}xmydatabases.example.org{{</hover>}}を呼び出すと、 
+Crossplaneは、コンポジションの 
+{{<hover label="typeref" line="6">}}compositeTypeRef{{</hover>}}に基づいて使用するコンポジションを選択します。
 
 ```yaml {label="typeref",copy-lines="none"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -73,13 +73,13 @@ spec:
   # Removed for brevity
 ```
 
-The Composition
-{{<hover label="typeref" line="6">}}compositeTypeRef{{</hover>}} matches the 
-XRD {{<hover label="xrd1" line="6">}}group{{</hover>}} and 
-{{<hover label="xrd1" line="9">}}kind{{</hover>}}.
+Composition
+{{<hover label="typeref" line="6">}}compositeTypeRef{{</hover>}} は 
+XRD {{<hover label="xrd1" line="6">}}group{{</hover>}} と 
+{{<hover label="xrd1" line="9">}}kind{{</hover>}} に一致します。
 
-Crossplane creates the resources defined in the matching Composition and
-represents them as a single `composite` resource. 
+Crossplane は一致する Composition で定義されたリソースを作成し、
+それらを単一の `composite` リソースとして表現します。 
 
 ```shell{copy-lines="1"}
 kubectl get composite
@@ -87,20 +87,20 @@ NAME                    SYNCED   READY   COMPOSITION         AGE
 my-composite-resource   True     True    my-composition      4s
 ```
 
-### Naming external resources
-By default, managed resources created by a composite resource have the name of
-the composite resource, followed by a random suffix.
+### 外部リソースの命名
+デフォルトでは、コンポジットリソースによって作成された管理リソースは
+コンポジットリソースの名前にランダムなサフィックスが付加された名前を持ちます。
 
 <!-- vale Google.FirstPerson = NO -->
 <!-- vale Crossplane.Spelling = NO -->
-For example, a composite resource named "my-composite-resource" creates external
-resources named "my-composite-resource-fqvkw." 
+例えば、「my-composite-resource」という名前のコンポジットリソースは
+「my-composite-resource-fqvkw」という名前の外部リソースを作成します。 
 <!-- vale Google.FirstPerson = YES -->
 <!-- vale Crossplane.Spelling = YES  -->
 
-Resource names can be deterministic by applying an 
-{{<hover label="annotation" line="5">}}annotation{{</hover>}} to the composite
-resource. 
+リソース名は、コンポジットリソースに 
+{{<hover label="annotation" line="5">}}annotation{{</hover>}} を適用することで
+決定論的にすることができます。 
 
 ```yaml {label="annotation",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -112,19 +112,18 @@ metadata:
 # Removed for brevity
 ```
 
-Inside the Composition, use a 
-{{<hover label="comp" line="10">}}patch{{</hover>}}
-to apply the external-name to the resources. 
+Composition 内では、リソースに外部名を適用するために 
+{{<hover label="comp" line="10">}}patch{{</hover>}} を使用します。 
 
-The {{<hover label="comp" line="11">}}fromFieldPath{{</hover>}} patch copies the
-{{<hover label="comp" line="11">}}metadata.annotations{{</hover>}} field from
-the composite resource to the 
-{{<hover label="comp" line="12">}}metadata.annotations{{</hover>}} inside the
-managed resource. 
+{{<hover label="comp" line="11">}}fromFieldPath{{</hover>}} パッチは、
+コンポジットリソースから 
+{{<hover label="comp" line="11">}}metadata.annotations{{</hover>}} フィールドを
+管理リソース内の 
+{{<hover label="comp" line="12">}}metadata.annotations{{</hover>}} にコピーします。 
 
 {{<hint "note" >}}
-If a managed resource has the `crossplane.io/external-name` annotation
-Crossplane uses the annotation value to name the external resource.
+管理リソースに `crossplane.io/external-name` アノテーションがある場合、
+Crossplane はアノテーションの値を使用して外部リソースの名前を付けます。
 {{</hint >}}
 
 ```yaml {label="comp",copy-lines="none"}
@@ -142,18 +141,18 @@ spec:
         toFieldPath: metadata.annotations
 ```
 
-For more information on patching resources refer to the [Patch and Transform]({{<ref "./patch-and-transform">}}) documentation. 
+リソースのパッチに関する詳細は、[Patch and Transform]({{<ref "./patch-and-transform">}}) ドキュメントを参照してください。
 
-### Composition selection
+### コンポジションの選択
 
-Select a specific Composition for a composite resource to use with 
+特定のコンポジションを選択して、コンポジットリソースで使用します 
 {{<hover label="compref" line="6">}}compositionRef{{</hover>}}
 
 {{<hint "important">}}
-The selected Composition must allow the composite resource to use it with a
-`compositeTypeRef`. Read more about the `compositeTypeRef` field in the
-[Enabling Composite Resources]({{<ref "./compositions#enabling-composite-resources">}})
-section of the Composition documentation. 
+選択したコンポジションは、コンポジットリソースが
+`compositeTypeRef`を使用できるようにする必要があります。 `compositeTypeRef`フィールドについては、コンポジションの
+[コンポジットリソースの有効化]({{<ref "./compositions#enabling-composite-resources">}})
+セクションを参照してください。 
 {{< /hint >}}
 
 ```yaml {label="compref",copy-lines="none"}
@@ -167,12 +166,11 @@ spec:
   # Removed for brevity
 ```
 
-A composite resource can also select a Composition based on labels instead of 
-the exact name with a
-{{<hover label="complabel" line="6">}}compositionSelector{{</hover>}}.
+コンポジットリソースは、正確な名前の代わりにラベルに基づいてコンポジションを選択することもできます 
+{{<hover label="complabel" line="6">}}compositionSelector{{</hover>}}を使用して。
 
-Inside the {{<hover label="complabel" line="7">}}matchLabels{{</hover>}} section
-provide one or more Composition labels to match.
+{{<hover label="complabel" line="7">}}matchLabels{{</hover>}}セクション内で
+一致させる1つ以上のコンポジションラベルを提供します。
 
 ```yaml {label="complabel",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -186,23 +184,23 @@ spec:
   # Removed for brevity
 ```
 
-### Composition revision policy
+### コンポジションのリビジョンポリシー
 
-Crossplane tracks changes to Compositions as 
-[Composition revisions]({{<ref "composition-revisions">}}) . 
+Crossplaneは、コンポジションの変更を 
+[コンポジションリビジョン]({{<ref "composition-revisions">}}) として追跡します。 
 
-A composite resource can use
-a {{<hover label="comprev" line="6">}}compositionUpdatePolicy{{</hover>}} to
-manually or automatically reference newer Composition revisions.
+コンポジットリソースは、 
+{{<hover label="comprev" line="6">}}compositionUpdatePolicy{{</hover>}}を使用して
+手動または自動で新しいコンポジションリビジョンを参照できます。
 
-The default 
-{{<hover label="comprev" line="6">}}compositionUpdatePolicy{{</hover>}} is 
-"Automatic." Composite resources automatically use the latest Composition
-revision. 
+デフォルトの 
+{{<hover label="comprev" line="6">}}compositionUpdatePolicy{{</hover>}}は 
+「自動」です。コンポジットリソースは自動的に最新のコンポジション
+リビジョンを使用します。 
 
-Change the policy to 
-{{<hover label="comprev" line="6">}}Manual{{</hover>}} to prevent composite
-resources from automatically upgrading.
+ポリシーを 
+{{<hover label="comprev" line="6">}}手動{{</hover>}}に変更すると、コンポジット
+リソースが自動的にアップグレードされるのを防ぐことができます。
 
 ```yaml {label="comprev",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -214,19 +212,18 @@ spec:
   # Removed for brevity
 ```
 
-### Composition revision selection
+### コンポジションリビジョンの選択
 
-Crossplane records changes to Compositions as 
-[Composition revisions]({{<ref "composition-revisions">}}).    
-A composite resource can
-select a specific Composition revision.
+Crossplaneは、コンポジションの変更を 
+[コンポジションリビジョン]({{<ref "composition-revisions">}}) として記録します。    
+コンポジットリソースは、特定のコンポジションリビジョンを
+選択できます。
 
+{{<hover label="comprevref" line="6">}}compositionRevisionRef{{</hover>}}を使用して
+特定のコンポジションリビジョンを名前で選択します。
 
-Use {{<hover label="comprevref" line="6">}}compositionRevisionRef{{</hover>}} to
-select a specific Composition revision by name.
-
-For example, to select a specific Composition revision use the name of the
-desired Composition revision. 
+たとえば、特定のコンポジションリビジョンを選択するには、
+希望するコンポジションリビジョンの名前を使用します。
 
 ```yaml {label="comprevref",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -241,8 +238,8 @@ spec:
 ```
 
 {{<hint "note" >}}
-Find the Composition revision name from 
-{{<hover label="getcomprev" line="1">}}kubectl get compositionrevision{{</hover>}}
+Compositionのリビジョン名を見つけるには、 
+{{<hover label="getcomprev" line="1">}}kubectl get compositionrevision{{</hover>}}を使用します。
 
 ```shell {label="getcomprev",copy-lines="1"}
 kubectl get compositionrevision
@@ -252,13 +249,11 @@ my-composition-b5aa1eb       2          xmydatabases   example.org/v1alpha1     
 ```
 {{< /hint >}}
 
-A Composite resource can also select Composition revisions based on labels
-instead of the exact name with a 
-{{<hover label="comprevsel" line="6">}}compositionRevisionSelector{{</hover>}}.
+Compositeリソースは、正確な名前の代わりにラベルに基づいてCompositionリビジョンを選択することもできます。
+{{<hover label="comprevsel" line="6">}}compositionRevisionSelector{{</hover>}}を使用します。
 
-Inside the {{<hover label="comprevsel" line="7">}}matchLabels{{</hover>}} 
-section provide one or more Composition revision labels to match.
-
+{{<hover label="comprevsel" line="7">}}matchLabels{{</hover>}} 
+セクション内で、1つ以上のCompositionリビジョンラベルを提供して一致させます。
 
 ```yaml {label="comprevsel",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -272,29 +267,24 @@ spec:
   # Removed for brevity
 ```
 
-### Manage connection secrets 
+### 接続シークレットの管理
 
-When a composite resource creates resources, Crossplane provides any
-[connection secrets]({{<ref "./managed-resources#writeconnectionsecrettoref">}})
-to the composite resource.
+Compositeリソースがリソースを作成すると、Crossplaneは
+[接続シークレット]({{<ref "./managed-resources#writeconnectionsecrettoref">}})
+をCompositeリソースに提供します。
 
 {{<hint "important" >}}
 
-A resource may only access connection secrets allowed by the XRD. By
-default XRDs provide access to all connection secrets generated by managed
-resources.  
-Read more about [managing connection secrets]({{<ref "./composite-resource-definitions#manage-connection-secrets">}})
-in the XRD documentation.
+リソースは、XRDによって許可された接続シークレットのみをアクセスできます。デフォルトでは、XRDは管理リソースによって生成されたすべての接続シークレットへのアクセスを提供します。  
+XRDドキュメントで[接続シークレットの管理]({{<ref "./composite-resource-definitions#manage-connection-secrets">}})について詳しく読むことができます。
 {{< /hint >}}
 
-Use 
 {{<hover label="writesecret" line="6">}}writeConnectionSecretToRef{{</hover>}} 
-to specify where the composite resource writes their connection secrets to. 
+を使用して、Compositeリソースが接続シークレットを書き込む場所を指定します。
 
-For example, this composite resource saves the connection secrets in a 
-Kubernetes secret object named
-{{<hover label="writesecret" line="7">}}my-secret{{</hover>}} in the namespace 
-{{<hover label="writesecret" line="8">}}crossplane-system{{</hover>}}.
+例えば、このCompositeリソースは接続シークレットを
+{{<hover label="writesecret" line="7">}}my-secret{{</hover>}}という名前のKubernetesシークレットオブジェクトに、 
+{{<hover label="writesecret" line="8">}}crossplane-system{{</hover>}}という名前空間に保存します。
 
 ```yaml {label="writesecret",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -308,18 +298,15 @@ spec:
   # Removed for brevity
 ```
 
-Composite resources can write connection secrets to an 
-[external secret store]({{<ref "../guides/vault-as-secret-store">}}),
-like HashiCorp Vault. 
+Compositeリソースは、HashiCorp Vaultのような
+[外部シークレットストア]({{<ref "../guides/vault-as-secret-store">}})に接続シークレットを書き込むことができます。
 
 {{<hint "important" >}}
-External secret stores are an alpha feature. Alpha features aren't enabled by
-default. 
+外部シークレットストアはアルファ機能です。アルファ機能はデフォルトでは有効になっていません。 
 {{< /hint >}}
 
-Use the {{<hover label="publishsecret"
-line="6">}}publishConnectionDetailsTo{{</hover>}} field to save connection
-secrets to an external secrets store.
+{{<hover label="publishsecret"
+line="6">}}publishConnectionDetailsTo{{</hover>}} フィールドを使用して、接続シークレットを外部シークレットストアに保存します。
 
 ```yaml {label="publishsecret",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -332,20 +319,18 @@ spec:
   # Removed for brevity
 ```
 
-Read the [External Secrets Store]({{<ref "../guides/vault-as-secret-store">}}) documentation for more information on using
-external secret stores. 
+外部シークレットストアの使用に関する詳細は、[External Secrets Store]({{<ref "../guides/vault-as-secret-store">}}) ドキュメントを参照してください。
 
-For more information on connection secrets read the [Connection Secrets knowledge base article]({{<ref "connection-details">}}).
+接続シークレットに関する詳細は、[Connection Secrets knowledge base article]({{<ref "connection-details">}}) を参照してください。
 
-### Pausing composite resources
+### 複合リソースの一時停止
 
 <!-- vale Google.WordList = NO -->
-Crossplane supports pausing composite resources. A paused composite resource
-doesn't check or make changes on its external resources.
+Crossplane は複合リソースの一時停止をサポートしています。一時停止された複合リソースは、その外部リソースをチェックしたり変更したりしません。
 <!-- vale Google.WordList = YES -->
 
-To pause a composite resource apply the 
-{{<hover label="pause" line="4">}}crossplane.io/paused{{</hover>}} annotation. 
+複合リソースを一時停止するには、 
+{{<hover label="pause" line="4">}}crossplane.io/paused{{</hover>}} アノテーションを適用します。
 
 ```yaml {label="pause",copy-lines="none"}
 apiVersion: example.org/v1alpha1
@@ -358,10 +343,9 @@ spec:
   # Removed for brevity
 ```
 
-## Verify composite resources
-Use 
-{{<hover label="getcomposite" line="1">}}kubectl get composite{{</hover>}}
-to view all the composite resources Crossplane created.
+## 複合リソースの確認
+すべての複合リソースを表示するには、 
+{{<hover label="getcomposite" line="1">}}kubectl get composite{{</hover>}} を使用します。
 
 ```shell{copy-lines="1",label="getcomposite"}
 kubectl get composite
@@ -369,8 +353,7 @@ NAME                    SYNCED   READY   COMPOSITION         AGE
 my-composite-resource   True     True    my-composition      4s
 ```
 
-Use `kubectl get` for the specific custom API endpoint to view
-only those resources.
+特定のカスタム API エンドポイントのリソースのみを表示するには、`kubectl get` を使用します。
 
 ```shell {copy-lines="1"}
 kubectl get xMyDatabase.example.org
@@ -378,13 +361,10 @@ NAME                    SYNCED   READY   COMPOSITION        AGE
 my-composite-resource   True     True    my-composition     12m
 ```
 
-Use 
-{{<hover label="desccomposite" line="1">}}kubectl describe composite{{</hover>}}
-to view the linked 
-{{<hover label="desccomposite" line="16">}}Composition Ref{{</hover>}},
-and unique managed resources created in the
-{{<hover label="desccomposite" line="22">}}Resource Refs{{</hover>}}.
-
+リンクされた 
+{{<hover label="desccomposite" line="16">}}Composition Ref{{</hover>}} と、 
+{{<hover label="desccomposite" line="22">}}Resource Refs{{</hover>}} に作成されたユニークな管理リソースを表示するには、 
+{{<hover label="desccomposite" line="1">}}kubectl describe composite{{</hover>}} を使用します。
 
 ```yaml {copy-lines="1",label="desccomposite"}
 kubectl describe composite my-composite-resource
@@ -407,27 +387,22 @@ Spec:
 # Removed for brevity
 ```
 
-### Composite resource conditions
+### 複合リソースの条件
 
-The conditions of composite resources match the conditions of their managed 
-resources. 
+複合リソースの条件は、その管理リソースの条件と一致します。
 
-Read the 
-[conditions section]({{<ref "./managed-resources#conditions">}}) of the
-managed resources documentation for details.
+以下の内容を参照してください。
+[条件セクション]({{<ref "./managed-resources#conditions">}})の
+管理リソースのドキュメントの詳細については。
 
-## Composite resource labels
+## 複合リソースのラベル
 
-Crossplane adds labels to composite resources to show their relationship to
-other Crossplane components.
+Crossplaneは、複合リソースにラベルを追加して、他のCrossplaneコンポーネントとの関係を示します。
 
-### Composite label
-Crossplane adds the 
-{{<hover label="complabel" line="4">}} crossplane.io/composite{{</hover>}} label
-to all composite resources. The label matches the name of the composite.
-Crossplane applies the composite label to any managed resource created by a
-composite, creating a reference between the managed resource and owning
-composite resource. 
+### 複合ラベル
+Crossplaneは、すべての複合リソースに 
+{{<hover label="complabel" line="4">}} crossplane.io/composite{{</hover>}} ラベルを追加します。このラベルは、複合の名前と一致します。
+Crossplaneは、複合によって作成された任意の管理リソースに複合ラベルを適用し、管理リソースと所有する複合リソースとの間に参照を作成します。
 
 ```shell {label="claimname",copy-lines="1"}
 kubectl describe xmydatabase.example.org/my-claimed-database-x9rx9
@@ -436,11 +411,10 @@ Namespace:
 Labels:       crossplane.io/composite=my-claimed-database-x9rx9
 ```
 
-### Claim name label
-Crossplane adds the 
-{{<hover label="claimname" line="4">}}crossplane.io/claim-name{{</hover>}}
-label to composite resources created from a Claim. The label indicates the name
-of the Claim linked to this composite resource. 
+### クレーム名ラベル
+Crossplaneは、クレームから作成された複合リソースに 
+{{<hover label="claimname" line="4">}}crossplane.io/claim-name{{</hover>}} 
+ラベルを追加します。このラベルは、この複合リソースにリンクされたクレームの名前を示します。
 
 ```shell {label="claimname",copy-lines="1"}
 kubectl describe xmydatabase.example.org/my-claimed-database-x9rx9
@@ -449,15 +423,14 @@ Namespace:
 Labels:       crossplane.io/claim-name=my-claimed-database
 ```
 
-Composite resources created directly, without using a Claim, don't have a
+クレームを使用せずに直接作成された複合リソースには、 
 {{<hover label="claimname" line="4">}}crossplane.io/claim-name{{</hover>}} 
-label. 
+ラベルはありません。
 
-### Claim namespace label
-Crossplane adds the 
-{{<hover label="claimname" line="4">}}crossplane.io/claim-namespace{{</hover>}}
-label to composite resources created from a Claim. The label indicates the 
-namespace of the Claim linked to this composite resource. 
+### クレームネームスペースラベル
+Crossplaneは、クレームから作成された複合リソースに 
+{{<hover label="claimname" line="4">}}crossplane.io/claim-namespace{{</hover>}} 
+ラベルを追加します。このラベルは、この複合リソースにリンクされたクレームのネームスペースを示します。
 
 ```shell {label="claimname",copy-lines="1"}
 kubectl describe xmydatabase.example.org/my-claimed-database-x9rx9
@@ -466,6 +439,6 @@ Namespace:
 Labels:       crossplane.io/claim-namespace=default
 ```
 
-Composite resources created directly, without using a Claim, don't have a
+クレームを使用せずに直接作成された複合リソースには、 
 {{<hover label="claimname" line="4">}}crossplane.io/claim-namespace{{</hover>}} 
-label. 
+ラベルはありません。

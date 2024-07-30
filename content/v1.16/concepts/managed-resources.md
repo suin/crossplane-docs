@@ -1,43 +1,38 @@
 ---
-title: Managed Resources
+title: 管理されたリソース
 weight: 10
-description: "Managed resources are the Crossplane representation of external provider resources"
+description: "管理されたリソースは、外部プロバイダーリソースのCrossplaneによる表現です"
 ---
 
-A _managed resource_ (`MR`) represents an external service in a Provider. When
-users create a new managed resource, the Provider reacts by creating an external 
-resource inside the Provider's environment. Every external service managed by 
-Crossplane maps to a managed resource. 
+_管理されたリソース_（`MR`）は、プロバイダー内の外部サービスを表します。ユーザーが新しい管理されたリソースを作成すると、プロバイダーはプロバイダーの環境内に外部リソースを作成することで反応します。Crossplaneによって管理されるすべての外部サービスは、管理されたリソースにマッピングされます。
 
 {{< hint "note" >}}
-Crossplane calls the object inside Kubernetes a _managed resource_ and the
-external object inside the Provider an _external resource_.
+CrossplaneはKubernetes内のオブジェクトを_管理されたリソース_と呼び、プロバイダー内の外部オブジェクトを_外部リソース_と呼びます。
 {{< /hint >}}
 
-Examples of managed resources include:
+管理されたリソースの例には以下が含まれます：
 * Amazon AWS EC2 [`Instance`](https://marketplace.upbound.io/providers/upbound/provider-aws/latest/resources/ec2.aws.upbound.io/Instance/v1beta1)
 * Google Cloud GKE [`Cluster`](https://marketplace.upbound.io/providers/upbound/provider-gcp/latest/resources/container.gcp.upbound.io/Cluster/v1beta1)
 * Microsoft Azure PostgreSQL [`Database`](https://marketplace.upbound.io/providers/upbound/provider-azure/latest/resources/dbforpostgresql.azure.upbound.io/Database/v1beta1)
 
 {{< hint "tip" >}}
 
-You can create individual managed resources, but Crossplane recommends using
-[Compositions]({{<ref "./compositions" >}}) and Claims to create
-managed resources.
+個別の管理されたリソースを作成することもできますが、Crossplaneは
+[コンポジション]({{<ref "./compositions" >}})とクレームを使用して
+管理されたリソースを作成することを推奨します。
 {{< /hint >}}
 
-## Managed resource fields
+## 管理されたリソースのフィールド
 
-The Provider defines the group, kind and version of a managed resource. The
-Provider also define the available settings of a managed resource.
+プロバイダーは、管理されたリソースのグループ、種類、およびバージョンを定義します。
+プロバイダーはまた、管理されたリソースの利用可能な設定を定義します。
 
-### Group, kind and version
-Each managed resource is a unique API endpoint with their own
-group, kind and version. 
+### グループ、種類、およびバージョン
+各管理されたリソースは、独自のグループ、種類、およびバージョンを持つユニークなAPIエンドポイントです。
 
-For example the [Upbound AWS Provider](https://marketplace.upbound.io/providers/upbound/provider-aws/latest/)
-defines the {{<hover label="gkv" line="2">}}Instance{{</hover>}} kind from the
-group {{<hover label="gkv" line="1">}}ec2.aws.upbound.io{{</hover>}}
+たとえば、[Upbound AWSプロバイダー](https://marketplace.upbound.io/providers/upbound/provider-aws/latest/)
+は、グループ{{<hover label="gkv" line="1">}}ec2.aws.upbound.io{{</hover>}}から
+種類{{<hover label="gkv" line="2">}}Instance{{</hover>}}を定義します。
 
 ```yaml {label="gkv",copy-lines="none"}
 apiVersion: ec2.aws.upbound.io/v1beta1
@@ -46,56 +41,48 @@ kind: Instance
 
 <!-- vale off -->
 ### deletionPolicy
-<!-- vale on --> 
+<!-- vale on -->
 
-A managed resource's `deletionPolicy` tells the Provider what to do after
-deleting the managed resource. If the `deletionPolicy` is `Delete` the Provider
-deletes the external resource as well. If the `deletionPolicy` is `orphan` the
-Provider deletes the managed resource but doesn't delete the external resource.
+管理されたリソースの`deletionPolicy`は、管理されたリソースを削除した後にプロバイダーが何をすべきかを示します。`deletionPolicy`が`Delete`の場合、プロバイダーは外部リソースも削除します。`deletionPolicy`が`orphan`の場合、プロバイダーは管理されたリソースを削除しますが、外部リソースは削除しません。
 
-#### Options
-* `deletionPolicy: Delete` - **Default** - Delete the external resource when deleting the managed resource.
-* `deletionPolicy: Orphan` - Leave the external resource when deleting the managed resource.
+#### オプション
+* `deletionPolicy: Delete` - **デフォルト** - 管理リソースを削除する際に外部リソースを削除します。
+* `deletionPolicy: Orphan` - 管理リソースを削除する際に外部リソースを残します。
 
-#### Interaction with management policies
+#### 管理ポリシーとの相互作用
 
-The [management policy](#managementpolicies) takes precedence over the
-`deletionPolicy` when:
+[管理ポリシー](#managementpolicies)は以下の場合に
+`deletionPolicy`よりも優先されます。
 <!-- vale write-good.Passive = NO -->
-- The related management policy alpha feature is enabled.
+- 関連する管理ポリシーのアルファ機能が有効になっている場合。
 <!-- vale write-good.Passive = YES -->
-- The resource configures a management policy other than the default value.
+- リソースがデフォルト値以外の管理ポリシーを設定している場合。
 
-See the table below for more details.
+詳細については、以下の表を参照してください。
 
 {{< table "table table-sm table-hover">}}
 | managementPolicies          | deletionPolicy   | result  |
 |-----------------------------|------------------|---------|
-| "*" (default)               | Delete (default) | Delete  |
-| "*" (default)               | Orphan           | Orphan  |
-| contains "Delete"           | Delete (default) | Delete  |
-| contains "Delete"           | Orphan           | Delete  |
-| doesn't contain "Delete"   | Delete (default) | Orphan  |
-| doesn't contain "Delete"   | Orphan           | Orphan  |
+| "*" (デフォルト)               | Delete (デフォルト) | Delete  |
+| "*" (デフォルト)               | Orphan           | Orphan  |
+| "Delete"を含む           | Delete (デフォルト) | Delete  |
+| "Delete"を含む           | Orphan           | Delete  |
+| "Delete"を含まない   | Delete (デフォルト) | Orphan  |
+| "Delete"を含まない   | Orphan           | Orphan  |
 {{< /table >}}
 
 <!-- vale off -->
 ### forProvider
 <!-- vale on -->
 
-The {{<hover label="forProvider" line="4">}}spec.forProvider{{</hover>}} of a 
-managed resource maps to the parameters of the external resource. 
+管理リソースの {{<hover label="forProvider" line="4">}}spec.forProvider{{</hover>}} は外部リソースのパラメータにマッピングされます。
 
-For example, when creating an AWS EC2 instance, the Provider supports defining 
-the AWS {{<hover label="forProvider" line="5">}}region{{</hover>}} and the VM 
-size, called the 
-{{<hover label="forProvider" line="6">}}instanceType{{</hover>}}.
+例えば、AWS EC2インスタンスを作成する際、プロバイダーはAWSの {{<hover label="forProvider" line="5">}}region{{</hover>}} とVMサイズ、すなわち {{<hover label="forProvider" line="6">}}instanceType{{</hover>}} を定義することをサポートします。
 
 {{< hint "note" >}}
-The Provider defines the settings and their valid values. Providers also define
-required and optional values in the `forProvider` definition.
+プロバイダーは設定とその有効な値を定義します。プロバイダーはまた、`forProvider` 定義における必須およびオプションの値も定義します。
 
-Refer to the documentation of your specific Provider for details. 
+詳細については、特定のプロバイダーのドキュメントを参照してください。
 {{< /hint >}}
 
 
@@ -110,37 +97,28 @@ spec:
 ```
 
 {{< hint "important">}}
-Crossplane considers the `forProvider` field of a managed resource 
-the "source of truth" for external resources. Crossplane overrides any changes 
-made to an external resource outside of Crossplane. If a user makes a change 
-inside a Provider's web console, Crossplane reverts that change back to what's
-configured in the `forProvider` setting. 
+Crossplaneは管理リソースの`forProvider`フィールドを外部リソースの「真実の源」と見なします。Crossplaneは、Crossplaneの外部で行われた外部リソースへの変更を上書きします。ユーザーがプロバイダーのウェブコンソール内で変更を行った場合、Crossplaneはその変更を`forProvider`設定で構成された内容に戻します。
 {{< /hint >}}
 
-#### Referencing other resources
+#### 他のリソースの参照
 
-Some fields in a managed resource may depend on values from other managed
-resources. For example a VM may need the name of a virtual network to use. 
+管理リソースのいくつかのフィールドは、他の管理リソースからの値に依存する場合があります。たとえば、VMは使用するための仮想ネットワークの名前が必要です。
 
-Managed resources can reference other managed resources by external name, name
-reference or selector. 
+管理リソースは、外部名、名前参照、またはセレクタによって他の管理リソースを参照できます。
 
-##### Matching by external name
+##### 外部名による一致
 
-When matching a resource by name Crossplane looks for the name of the external
-resource in the Provider. 
+リソースを名前で一致させるとき、Crossplaneはプロバイダー内の外部リソースの名前を探します。
 
-For example, a AWS VPC object named `my-test-vpc` has the external name
-`vpc-01353cfe93950a8ff`.
+たとえば、`my-test-vpc`という名前のAWS VPCオブジェクトは、外部名`vpc-01353cfe93950a8ff`を持っています。
 
-```shell {copy-lines="1"
+```shell {copy-lines="1"}
 kubectl get vpc
 NAME            READY   SYNCED   EXTERNAL-NAME           AGE
 my-test-vpc     True    True     vpc-01353cfe93950a8ff   49m
 ```
 
-To match the VPC by name, use the external name. For example, creating a Subnet
-managed resource attached to this VPC.
+VPCを名前で一致させるには、外部名を使用します。たとえば、このVPCに接続されたサブネット管理リソースを作成します。
 
 ```yaml {copy-lines="none"}
 apiVersion: ec2.aws.upbound.io/v1beta1
@@ -151,13 +129,11 @@ spec:
     vpcId: vpc-01353cfe93950a8ff
 ```      
 
-##### Matching by name reference
+##### 名前参照による一致
 
-To match a resource based on the name of the managed resource and not the
-external resource name inside the Provider, use a `nameRef`.
+管理リソースの名前に基づいてリソースを一致させるには、プロバイダー内の外部リソース名ではなく、`nameRef`を使用します。
 
-For example, a AWS VPC object named `my-test-vpc` has the external name
-`vpc-01353cfe93950a8ff`.
+たとえば、`my-test-vpc`という名前のAWS VPCオブジェクトは、外部名`vpc-01353cfe93950a8ff`を持っています。
 
 ```shell {copy-lines="1"}
 kubectl get vpc
@@ -165,8 +141,7 @@ NAME            READY   SYNCED   EXTERNAL-NAME           AGE
 my-test-vpc     True    True     vpc-01353cfe93950a8ff   49m
 ```
 
-To match the VPC by name reference, use the managed resource name. For example,
-creating a Subnet managed resource attached to this VPC.
+VPCを名前参照で一致させるには、管理リソース名を使用します。たとえば、このVPCに接続されたサブネット管理リソースを作成します。
 
 ```yaml {copy-lines="none"}
 apiVersion: ec2.aws.upbound.io/v1beta1
@@ -179,19 +154,16 @@ spec:
 ```      
 
 
-##### Matching by selector
+##### セレクタによる一致
 
-Matching by selector is the most flexible matching method. 
+セレクタによる一致は、最も柔軟な一致方法です。
 
 {{<hint "note" >}}
 
-The [Compositions]({{<ref "./compositions">}}) section covers the 
-`matchControllerRef` selector.
+[Compositions]({{<ref "./compositions">}})セクションでは、`matchControllerRef`セレクタについて説明しています。
 {{</hint >}}
 
-Use `matchLabels` to match the labels applied to a resource. For example, this
-Subnet resource only matches VPC resources with the label 
-`my-label: label-value`.
+`matchLabels`を使用して、リソースに適用されたラベルを一致させます。たとえば、このサブネットリソースは、ラベル`my-label: label-value`を持つVPCリソースのみと一致します。
 
 ```yaml {copy-lines="none"}
 apiVersion: ec2.aws.upbound.io/v1beta1
@@ -205,43 +177,25 @@ spec:
 ```
 
 
-#### Immutable fields
+#### 不変フィールド
 
-Some providers don't support changing the fields of some managed resources after
-creation. For example, you can't change the `region` of an Amazon AWS
-`RDSInstance`. These fields are _immutable fields_. Amazon requires you delete 
-and recreate the resource.
+一部のプロバイダーは、作成後に一部の管理リソースのフィールドを変更することをサポートしていません。たとえば、Amazon AWSの`RDSInstance`の`region`を変更することはできません。これらのフィールドは_不変フィールド_です。Amazonは、リソースを削除して再作成することを要求します。
 
-Crossplane allows you to edit the immutable field of a managed resource, but
-doesn't apply the change. Crossplane never deletes a resource based on a
-`forProvider` change. 
+Crossplaneは、管理リソースの不変フィールドを編集することを許可しますが、変更は適用されません。Crossplaneは、`forProvider`の変更に基づいてリソースを削除することは決してありません。
 
 {{<hint "note" >}}
 <!-- vale write-good.Passive = NO -->
-Crossplane behaves differently than other tools like Terraform. Terraform
-deletes and recreates a resource to change an immutable field. Crossplane only
-deletes an external resource if their corresponding managed 
-resource object is deleted from Kubernetes and the `deletionPolicy` is 
-`Delete`.
+Crossplaneは、Terraformのような他のツールとは異なる動作をします。Terraformは、不変フィールドを変更するためにリソースを削除して再作成します。Crossplaneは、対応する管理リソースオブジェクトがKubernetesから削除され、`deletionPolicy`が`Delete`の場合にのみ、外部リソースを削除します。
 <!-- vale write-good.Passive = YES -->
 {{< /hint >}}
 
-#### Late initialization
+#### 遅延初期化
 
-Crossplane treats the managed resource as the source of truth by default;
-it expects to have all values under `spec.forProvider` including the
-optional ones. If not provided, Crossplane populates the empty fields with
-the values assigned by the provider. For example, consider fields such as
-`region` and `availabilityZone`. You might specify only the region and let the
-cloud provider choose the availability zone. In this case, if the provider
-assigns an availability zone, Crossplane uses that value to populate the
-`spec.forProvider.availabilityZone` field.
+Crossplaneは、デフォルトで管理リソースを真実のソースとして扱います。`spec.forProvider`のすべての値（オプションのものを含む）を持つことを期待しています。提供されない場合、Crossplaneは空のフィールドをプロバイダーによって割り当てられた値で埋めます。たとえば、`region`や`availabilityZone`のようなフィールドを考えてみてください。地域のみを指定し、クラウドプロバイダーに可用性ゾーンを選択させることができます。この場合、プロバイダーが可用性ゾーンを割り当てると、Crossplaneはその値を使用して`spec.forProvider.availabilityZone`フィールドを埋めます。
 
 {{<hint "note" >}}
 <!-- vale write-good.Passive = NO -->
-With [managementPolicies]({{<ref "./managed-resources#managementpolicies" >}}),
-this behavior can be turned off by not including the `LateInitialize` policy in
-the `managementPolicies` list.
+[managementPolicies]({{<ref "./managed-resources#managementpolicies" >}})を使用すると、`managementPolicies`リストに`LateInitialize`ポリシーを含めないことで、この動作をオフにすることができます。
 <!-- vale write-good.Passive = YES -->
 {{< /hint >}}
 
@@ -250,41 +204,31 @@ the `managementPolicies` list.
 <!-- vale on -->
 
 {{<hint "important" >}}
-The managed resource `initProvider` option is a beta feature related to
-[managementPolicies]({{<ref "./managed-resources#managementpolicies" >}}).
+管理リソースの`initProvider`オプションは、[managementPolicies]({{<ref "./managed-resources#managementpolicies" >}})に関連するベータ機能です。
 
 {{< /hint >}}
 
-The
-{{<hover label="initProvider" line="7">}}initProvider{{</hover>}} defines
-settings Crossplane applies only when creating a new managed resource.  
-Crossplane ignores settings defined in the
-{{<hover label="initProvider" line="7">}}initProvider{{</hover>}}
-field that change after creation.
+{{<hover label="initProvider" line="7">}}initProvider{{</hover>}}は、新しい管理リソースを作成する際にCrossplaneが適用する設定を定義します。  
+Crossplaneは、作成後に変更された{{<hover label="initProvider" line="7">}}initProvider{{</hover>}}フィールドで定義された設定を無視します。
 
 {{<hint "note" >}}
-Settings in `forProvider` are always enforced by Crossplane. Crossplane reverts
-any changes to a `forProvider` field in the external resource.
+`forProvider`の設定は常にCrossplaneによって強制されます。Crossplaneは、外部リソースの`forProvider`フィールドへの変更を元に戻します。
 
-Settings in `initProvider` aren't enforced by Crossplane. Crossplane ignores any
-changes to a `initProvider` field in the external resource.
+
+`initProvider`の設定はCrossplaneによって強制されません。Crossplaneは外部リソースの`initProvider`フィールドへの変更を無視します。
 {{</hint >}}
 
-Using `initProvider` is useful for setting initial values that a Provider may
-automatically change, like an auto scaling group.
-
-For example, creating a
+`initProvider`を使用することは、プロバイダーが自動的に変更する可能性のある初期値を設定するのに便利です。たとえば、初期の
 {{<hover label="initProvider" line="2">}}NodeGroup{{</hover>}}
-with an initial
-{{<hover label="initProvider" line="9">}}desiredSize{{</hover>}}.  
-Crossplane doesn't change the
+を作成し、初期の
+{{<hover label="initProvider" line="9">}}desiredSize{{</hover>}}を設定します。  
+Crossplaneは、オートスケーラーがNode Group外部リソースをスケールする際に
 {{<hover label="initProvider" line="9">}}desiredSize{{</hover>}}
-setting back when an autoscaler scales the Node Group external resource.
+設定を元に戻しません。
 
 {{< hint "tip" >}}
-Crossplane recommends configuring
-{{<hover label="initProvider" line="6">}}managementPolicies{{</hover>}} without
-`LateInitialize` to avoid conflicts with `initProvider` settings.
+Crossplaneは、`initProvider`設定との競合を避けるために
+{{<hover label="initProvider" line="6">}}managementPolicies{{</hover>}}を`LateInitialize`なしで構成することを推奨します。
 {{< /hint >}}
 
 ```yaml {label="initProvider",copy-lines="none"}
@@ -309,26 +253,21 @@ spec:
 <!-- vale on --> 
 
 {{<hint "note" >}}
-The managed resource `managementPolicies` option is a beta feature. Crossplane enables
-beta features by default. 
+管理リソースの`managementPolicies`オプションはベータ機能です。Crossplaneはデフォルトでベータ機能を有効にします。
 
-The Provider determines support for management policies.  
-Refer to the Provider's documentation to see if the Provider supports
-management policies.
+プロバイダーが管理ポリシーのサポートを決定します。  
+プロバイダーが管理ポリシーをサポートしているかどうかは、プロバイダーのドキュメントを参照してください。
 {{< /hint >}}
 
-Crossplane
+Crossplaneの
 {{<hover label="managementPol1" line="4">}}managementPolicies{{</hover>}}
-determine which actions Crossplane can take on a
-managed resource and its corresponding external resource.  
-Apply one or more
+は、Crossplaneが管理リソースおよびその対応する外部リソースに対してどのアクションを実行できるかを決定します。  
+1つ以上の
 {{<hover label="managementPol1" line="4">}}managementPolicies{{</hover>}}
-to a managed resource to determine what permissions
-Crossplane has over the resource.
+を管理リソースに適用して、Crossplaneがそのリソースに対してどのような権限を持つかを決定します。
 
-For example, give Crossplane permission to create and delete an external resource,
-but not make any changes, set the policies to
-{{<hover label="managementPol1" line="4">}}["Create", "Delete", "Observe"]{{</hover>}}.
+たとえば、Crossplaneに外部リソースを作成および削除する権限を与えますが、変更は行わないようにするには、ポリシーを
+{{<hover label="managementPol1" line="4">}}["Create", "Delete", "Observe"]{{</hover>}}に設定します。
 
 ```yaml {label="managementPol1"}
 apiVersion: ec2.aws.upbound.io/v1beta1
@@ -339,63 +278,61 @@ spec:
     # Removed for brevity
 ```
 
-The default policy grants Crossplane full control over the resources.  
-Defining the `managementPolicies` field with an empty array [pauses](#paused)
-the resource.
+デフォルトのポリシーは、Crossplaneにリソースに対する完全な制御を付与します。  
+`managementPolicies`フィールドを空の配列で定義すると、リソースが[一時停止](#paused)します。
 
-{{<hint "important" >}}
-The Provider determines support for management policies.  
-Refer to the Provider's documentation to see if the Provider supports
-management policies.
+
+{{<hint "重要" >}}
+プロバイダーは管理ポリシーのサポートを決定します。  
+プロバイダーが管理ポリシーをサポートしているかどうかは、プロバイダーのドキュメントを参照してください。
 {{< /hint >}}
 
-Crossplane supports the following policies:
+Crossplaneは以下のポリシーをサポートしています：
 {{<table "table table-sm table-hover">}}
-| Policy | Description |
+| ポリシー | 説明 |
 | --- | --- |
-| `*` | _Default policy_. Crossplane has full control over a resource. |
-| `Create` | If the external resource doesn't exist, Crossplane creates it based on the managed resource settings. |
-| `Delete` | Crossplane can delete the external resource when deleting the managed resource. |
-| `LateInitialize` | Crossplane initializes some external resource settings not defined in the `spec.forProvider` of the managed resource. See [the late initialization]({{<ref "./managed-resources#late-initialization" >}}) section for more details. |
-| `Observe` | Crossplane only observes the resource and doesn't make any changes. Used for [observe only resources]({{<ref "../guides/import-existing-resources#import-resources-automatically">}}). |
-| `Update` | Crossplane changes the external resource when changing the managed resource. |
+| `*` | _デフォルトポリシー_。Crossplaneはリソースに対して完全な制御を持ちます。 |
+| `Create` | 外部リソースが存在しない場合、Crossplaneは管理リソースの設定に基づいてそれを作成します。 |
+| `Delete` | Crossplaneは管理リソースを削除する際に外部リソースを削除できます。 |
+| `LateInitialize` | Crossplaneは管理リソースの`spec.forProvider`に定義されていない外部リソースの設定を初期化します。詳細については[遅延初期化]({{<ref "./managed-resources#late-initialization" >}})セクションを参照してください。 |
+| `Observe` | Crossplaneはリソースを観察するだけで、変更を加えません。[観察専用リソース]({{<ref "../guides/import-existing-resources#import-resources-automatically">}})に使用されます。 |
+| `Update` | Crossplaneは管理リソースを変更する際に外部リソースを変更します。 |
 {{</table >}}
 
-The following is a list of common policy combinations:
+以下は一般的なポリシーの組み合わせのリストです：
 {{<table "table table-sm table-hover table-striped-columns" >}}
-| Create | Delete | LateInitialize | Observe | Update | Description |
+| Create | Delete | LateInitialize | Observe | Update | 説明 |
 | :---:  | :---:  | :---:          | :---:   | :---:  | ---         |
-| {{<check>}}      | {{<check>}}      | {{<check>}}              | {{<check>}}       | {{<check>}}      | _Default policy_. Crossplane has full control over the resource.                                                                                                     |
-| {{<check>}}      | {{<check>}}      | {{<check>}}              | {{<check>}}       |        | After creation any changes made to the managed resource aren't passed to the external resource. Useful for immutable external resources. |
-| {{<check>}}      | {{<check>}}      |                | {{<check>}}       | {{<check>}}      | Prevent Crossplane from managing any settings not defined in the managed resource. Useful for immutable fields in an external resource. |
-| {{<check>}}      | {{<check>}}      |                | {{<check>}}       |        | Crossplane doesn't import any settings from the external resource and doesn't push changes to the managed resource. Crossplane recreates the external resource if it's deleted. |
-| {{<check>}}      |        | {{<check>}}              | {{<check>}}       | {{<check>}}      | Crossplane doesn't delete the external resource when deleting the managed resource. |
-| {{<check>}}      |        | {{<check>}}              | {{<check>}}       |        | Crossplane doesn't delete the external resource when deleting the managed resource. Crossplane doesn't apply changes to the external resource after creation. |
-| {{<check>}}      |        |                | {{<check>}}       | {{<check>}}      | Crossplane doesn't delete the external resource when deleting the managed resource. Crossplane doesn't import any settings from the external resource. |
-| {{<check>}}      |        |                | {{<check>}}       |        | Crossplane creates the external resource but doesn't apply any changes to the external resource or managed resource. Crossplane can't delete the resource. |
-|        |        |                | {{<check>}}       |        | Crossplane only observes a resource. Used for [observe only resources]({{<ref "../guides/import-existing-resources#import-resources-automatically">}}). |
-|        |        |                |         |        | No policy set. An alternative method for [pausing](#paused) a resource.                                                                                              |
+| {{<check>}}      | {{<check>}}      | {{<check>}}              | {{<check>}}       | {{<check>}}      | _デフォルトポリシー_。Crossplaneはリソースに対して完全な制御を持ちます。                                                                                                     |
+| {{<check>}}      | {{<check>}}      | {{<check>}}              | {{<check>}}       |        | 作成後、管理リソースに加えられた変更は外部リソースに渡されません。変更不可能な外部リソースに便利です。 |
+| {{<check>}}      | {{<check>}}      |                | {{<check>}}       | {{<check>}}      | 管理リソースに定義されていない設定をCrossplaneが管理するのを防ぎます。外部リソースの不変フィールドに便利です。 |
+| {{<check>}}      | {{<check>}}      |                | {{<check>}}       |        | Crossplaneは外部リソースから設定をインポートせず、管理リソースに変更をプッシュしません。外部リソースが削除された場合、Crossplaneはそれを再作成します。 |
+| {{<check>}}      |        | {{<check>}}              | {{<check>}}       | {{<check>}}      | 管理リソースを削除する際にCrossplaneは外部リソースを削除しません。 |
+| {{<check>}}      |        | {{<check>}}              | {{<check>}}       |        | 管理リソースを削除する際にCrossplaneは外部リソースを削除しません。作成後、Crossplaneは外部リソースに変更を適用しません。 |
+| {{<check>}}      |        |                | {{<check>}}       | {{<check>}}      | 管理リソースを削除する際にCrossplaneは外部リソースを削除しません。Crossplaneは外部リソースから設定をインポートしません。 |
+| {{<check>}}      |        |                | {{<check>}}       |        | Crossplaneは外部リソースを作成しますが、外部リソースまたは管理リソースに変更を適用しません。Crossplaneはリソースを削除できません。 |
+|        |        |                | {{<check>}}       |        | Crossplaneはリソースを観察するだけです。[観察専用リソース]({{<ref "../guides/import-existing-resources#import-resources-automatically">}})に使用されます。 |
+|        |        |                |         |        | ポリシーが設定されていません。リソースを[一時停止](#paused)するための代替手段です。                                                                                              |
 {{< /table >}}
 
 <!-- vale off -->
 ### providerConfigRef
 <!-- vale on -->
 
-The `providerConfigRef` on a managed resource tells the Provider which
-[ProviderConfig]({{<ref "./providers#provider-configuration">}}) to
-use when creating the managed resource.  
+`providerConfigRef`は、管理リソースがどの
+[ProviderConfig]({{<ref "./providers#provider-configuration">}})を
+使用して管理リソースを作成するかをProviderに伝えます。  
 
-Use a ProviderConfig to define the authentication method to use when 
-communicating to the Provider.
+Providerと通信する際に使用する認証方法を定義するために
+ProviderConfigを使用します。
 
 {{< hint "important" >}}
-If `providerConfigRef` isn't applied, Providers use the ProviderConfig named `default`.
+`providerConfigRef`が適用されていない場合、Providersは`default`という名前のProviderConfigを使用します。
 {{< /hint >}}
 
-For example, a managed resource references a ProviderConfig named 
-{{<hover label="pcref" line="6">}}user-keys{{</hover>}}.
+例えば、管理リソースは{{<hover label="pcref" line="6">}}user-keys{{</hover>}}という名前のProviderConfigを参照します。
 
-This matches the {{<hover label="pc" line="4">}}name{{</hover>}} of a ProviderConfig.
+これはProviderConfigの{{<hover label="pc" line="4">}}name{{</hover>}}と一致します。
 
 ```yaml {label="pcref",copy-lines="none"}}
 apiVersion: ec2.aws.upbound.io/v1beta1
@@ -415,9 +352,8 @@ metadata:
 ```
 
 {{< hint "tip" >}}
-Each managed resource can reference different ProviderConfigs. This allows
-different managed resources to authenticate with different credentials to the
-same Provider. 
+各管理リソースは異なるProviderConfigsを参照できます。これにより、
+異なる管理リソースが同じProviderに対して異なる資格情報で認証できます。 
 {{< /hint >}}
 
 <!-- vale off -->
@@ -425,29 +361,26 @@ same Provider.
 <!-- vale on --> 
 
 <!-- vale Crossplane.Spelling = NO -->
-Crossplane deprecated the `providerRef` field in `crossplane-runtime` 
-[v0.10.0](https://github.com/crossplane/crossplane-runtime/releases/tag/v0.10.0). 
-Managed resources using `providerRef`must use [`providerConfigRef`](#providerconfigref).
+Crossplaneは`crossplane-runtime`の`providerRef`フィールドを
+[v0.10.0](https://github.com/crossplane/crossplane-runtime/releases/tag/v0.10.0)で非推奨にしました。 
+`providerRef`を使用している管理リソースは[`providerConfigRef`](#providerconfigref)を使用する必要があります。
 <!-- vale Crossplane.Spelling = YES -->
 
 <!-- vale off -->
 ### writeConnectionSecretToRef
 <!-- vale on --> 
 
-When a Provider creates a managed resource it may generate resource-specific
-details, like usernames, passwords or connection details like an IP address. 
+Providerが管理リソースを作成する際、ユーザー名、パスワード、IPアドレスのような接続詳細など、リソース固有の
+詳細を生成する場合があります。 
 
-Crossplane stores these details in a Kubernetes Secret object specified by the
-`writeConnectionSecretToRef` values. 
+Crossplaneは、`writeConnectionSecretToRef`の値で指定されたKubernetes Secretオブジェクトにこれらの詳細を保存します。 
 
-For example, when creating an AWS RDS database instance with the Crossplane 
-[community AWS provider](https://marketplace.upbound.io/providers/crossplane-contrib/provider-aws/v0.40.0) 
-generates an endpoint, password, port and username data. The Provider saves
-these variables in the Kubernetes secret 
-{{<hover label="secretname" line="9" >}}rds-secret{{</hover>}}, referenced by
-the 
+例えば、Crossplaneの
+[community AWS provider](https://marketplace.upbound.io/providers/crossplane-contrib/provider-aws/v0.40.0)を使用してAWS RDSデータベースインスタンスを作成する際に、エンドポイント、パスワード、ポート、ユーザー名のデータが生成されます。Providerは
+これらの変数をKubernetesシークレット
+{{<hover label="secretname" line="9" >}}rds-secret{{</hover>}}に保存し、
 {{<hover label="secretname" line="9" >}}writeConnectionSecretToRef{{</hover>}}
-field. 
+フィールドで参照します。
 
 ```yaml {label="secretname",copy-lines="none"}
 apiVersion: database.aws.crossplane.io/v1beta1
@@ -461,7 +394,7 @@ spec:
     name: rds-secret
 ```
 
-Viewing the Secret object shows the saved fields.
+Secretオブジェクトを表示すると、保存されたフィールドが表示されます。
 
 ```yaml {copy-lines="1"}
 kubectl describe secret rds-secret
@@ -475,35 +408,26 @@ endpoint:  54 bytes
 password:  27 bytes
 ```
 
-{{<hint "important" >}}
-The Provider determines the data written to the Secret object. Refer to the
-specific Provider documentation for the generated Secret data.
+{{<hint "重要" >}}
+プロバイダーはSecretオブジェクトに書き込まれるデータを決定します。生成されたSecretデータについては、特定のプロバイダーのドキュメントを参照してください。
 {{< /hint >}}
 
 <!-- vale off -->
 ### publishConnectionDetailsTo
 <!-- vale on --> 
 
-The `publishConnectionDetailsTo` field expands on 
-[`writeConnectionSecretToRef`](#writeconnectionsecrettoref) supporting storing
-managed resource information as a Kubernetes Secret object or in an external
-secrets store like [HashiCorp Vault](https://www.vaultproject.io/).
+`publishConnectionDetailsTo`フィールドは、[`writeConnectionSecretToRef`](#writeconnectionsecrettoref)を拡張し、管理リソース情報をKubernetes Secretオブジェクトとして、または[HashiCorp Vault](https://www.vaultproject.io/)のような外部シークレットストアに保存することをサポートします。
 
-Using `publishConnectionDetailsTo` requires enabling Crossplane 
-External Secrets Stores (ESS). Enable ESS inside a Provider with a
-[DeploymentRuntimeConfig]({{<ref "providers#runtime-configuration" >}}) and
-in Crossplane with the `--enable-external-secret-stores` argument.
+`publishConnectionDetailsTo`を使用するには、Crossplane External Secrets Stores (ESS)を有効にする必要があります。プロバイダー内で[DeploymentRuntimeConfig]({{<ref "providers#runtime-configuration" >}})を使用してESSを有効にし、Crossplaneでは`--enable-external-secret-stores`引数を使用します。
 
-{{< hint "note" >}}
-Not all Providers support `publishConnectionDetailsTo`. Check your Provider
-documentation for details.
+{{< hint "注意" >}}
+すべてのプロバイダーが`publishConnectionDetailsTo`をサポートしているわけではありません。詳細については、プロバイダーのドキュメントを確認してください。
 {{< /hint >}}
 
-#### Publish secrets to Kubernetes
+#### Kubernetesにシークレットを公開する
 
-To publish the data generated by a managed resource as a Kubernetes Secret
-object provide a 
-{{<hover label="k8secret" line="7">}}publishConnectionDetailsTo.name{{< /hover >}} 
+管理リソースによって生成されたデータをKubernetes Secretオブジェクトとして公開するには、 
+{{<hover label="k8secret" line="7">}}publishConnectionDetailsTo.name{{< /hover >}}を提供します。
 
 ```yaml {label="k8secret",copy-lines="none"}
 apiVersion: rds.aws.upbound.io/v1beta1
@@ -515,9 +439,8 @@ spec:
     name: rds-kubernetes-secret
 ```
 
-Crossplane can apply labels and annotations to the Kubernetes secret as well
-using 
-{{<hover label="k8label" line="8">}}publishConnectionDetailsTo.metadata{{</hover>}}.
+Crossplaneは、Kubernetesシークレットに対してラベルやアノテーションを適用することもでき、 
+{{<hover label="k8label" line="8">}}publishConnectionDetailsTo.metadata{{</hover>}}を使用します。
 
 ```yaml {label="k8label",copy-lines="none"}
 apiVersion: rds.aws.upbound.io/v1beta1
@@ -534,16 +457,13 @@ spec:
         annotation-tag: annotation-value
 ```
 
-#### Publish secrets to an external secrets store
+#### 外部シークレットストアにシークレットを公開する
 
-Publishing secrets data to an external secret store like 
-[HashiCorp Vault](https://www.vaultproject.io/) relies on a 
-{{<hover label="configref" line="8">}}publishConnectionDetailsTo.configRef{{</hover>}}. 
+[HashiCorp Vault](https://www.vaultproject.io/)のような外部シークレットストアにシークレットデータを公開するには、 
+{{<hover label="configref" line="8">}}publishConnectionDetailsTo.configRef{{</hover>}}が必要です。
 
-The 
-{{<hover label="configref" line="9">}}configRef.name{{</hover>}} references a 
-{{<hover label="storeconfig" line="4">}}StoreConfig{{</hover>}}
-object. 
+{{<hover label="configref" line="9">}}configRef.name{{</hover>}}は、 
+{{<hover label="storeconfig" line="4">}}StoreConfig{{</hover>}}オブジェクトを参照します。
 
 ```yaml {label="configref",copy-lines="none"}
 apiVersion: rds.aws.upbound.io/v1beta1
@@ -566,35 +486,28 @@ metadata:
 ```
 
 {{<hint "tip" >}}
-Read the 
-[Vault as an External Secrets Store]({{<ref "../guides/vault-as-secret-store">}})
-guide for details on using StoreConfig objects.
+ストアコンフィグオブジェクトの使用に関する詳細は、[Vault as an External Secrets Store]({{<ref "../guides/vault-as-secret-store">}})ガイドをお読みください。
 {{< /hint >}}
 
-## Annotations
+## アノテーション
 
-Crossplane applies a standard set of Kubernetes `annotations` to managed
-resources.
+Crossplaneは、管理リソースに標準のKubernetes `annotations`セットを適用します。
 
 {{<table "table table-sm">}}
-| Annotation | Definition | 
+| アノテーション | 定義 | 
 | --- | --- | 
-| `crossplane.io/external-name` | The name of the managed resource inside the Provider. |
-| `crossplane.io/external-create-pending` | The timestamp of when Crossplane began creating the managed resource. | 
-| `crossplane.io/external-create-succeeded` | The timestamp of when the Provider successfully created the managed resource. | 
-| `crossplane.io/external-create-failed` | The timestamp of when the Provider failed to create the managed resource. | 
-| `crossplane.io/paused` | Indicates Crossplane isn't reconciling this resource. Read the [Pause Annotation](#paused) for more details. |
-| `crossplane.io/composition-resource-name` | For managed resource created by a Composition, this is the Composition's `resources.name` value. | 
+| `crossplane.io/external-name` | プロバイダー内の管理リソースの名前。 |
+| `crossplane.io/external-create-pending` | Crossplaneが管理リソースの作成を開始した時刻のタイムスタンプ。 | 
+| `crossplane.io/external-create-succeeded` | プロバイダーが管理リソースを正常に作成した時刻のタイムスタンプ。 | 
+| `crossplane.io/external-create-failed` | プロバイダーが管理リソースの作成に失敗した時刻のタイムスタンプ。 | 
+| `crossplane.io/paused` | Crossplaneがこのリソースを調整していないことを示します。詳細については[Pause Annotation](#paused)をお読みください。 |
+| `crossplane.io/composition-resource-name` | コンポジションによって作成された管理リソースの場合、これはコンポジションの`resources.name`値です。 | 
 {{</table >}}
 
-### Naming external resources
-By default Providers give external resources the same name as the Kubernetes
-object.
+### 外部リソースの命名
+デフォルトでは、プロバイダーは外部リソースにKubernetesオブジェクトと同じ名前を付けます。
 
-For example, a managed resource named 
-{{<hover label="external-name" line="4">}}my-rds-instance{{</hover >}} has
-the name `my-rds-instance` as an external resource inside the Provider's
-environment. 
+たとえば、{{<hover label="external-name" line="4">}}my-rds-instance{{</hover >}}という名前の管理リソースは、プロバイダーの環境内で外部リソースとして`my-rds-instance`という名前を持ちます。 
 
 ```yaml {label="external-name",copy-lines="none"}
 apiVersion: database.aws.crossplane.io/v1beta1
@@ -609,14 +522,9 @@ NAME                 READY   SYNCED   EXTERNAL-NAME        AGE
 my-rds-instance      True    True     my-rds-instance      11m
 ```
 
-Managed resource created with a `crossplane.io/external-name` 
-annotation already provided use the annotation value as the external
-resource name.
+`crossplane.io/external-name`アノテーションがすでに提供されている管理リソースは、アノテーションの値を外部リソース名として使用します。
 
-For example, the Provider creates managed resource named 
-{{< hover label="custom-name" line="6">}}my-rds-instance{{</hover>}} but uses
-the name {{<hover label="custom-name" line="5">}}my-custom-name{{</hover >}}
-for the external resource inside AWS.
+たとえば、プロバイダーは{{< hover label="custom-name" line="6">}}my-rds-instance{{</hover>}}という名前の管理リソースを作成しますが、AWS内の外部リソースには{{<hover label="custom-name" line="5">}}my-custom-name{{</hover >}}という名前を使用します。
 
 ```yaml {label="custom-name",copy-lines="none"}
 apiVersion: database.aws.crossplane.io/v1beta1
@@ -633,28 +541,23 @@ NAME                 READY   SYNCED   EXTERNAL-NAME        AGE
 my-rds-instance      True    True     my-custom-name       11m
 ```
 
-### Creation annotations
+### 作成アノテーション
 
-When an external system like AWS generates nondeterministic resource names it's
-possible for a provider to create a resource but not record that it did. When
-this happens the provider can't manage the resource.
+AWSのような外部システムが非決定的なリソース名を生成する場合、プロバイダーがリソースを作成することは可能ですが、それを記録しないことがあります。このような場合、プロバイダーはリソースを管理できません。
 
 {{<hint "tip">}}
-Crossplane calls resources that a provider creates but doesn't manage _leaked
-resources_.
+Crossplaneは、プロバイダーが作成したが管理しないリソースを _漏れたリソース_ と呼びます。
 {{</hint>}}
 
-Providers set three creation annotations to avoid and detect leaked resources:
+プロバイダーは、漏れたリソースを回避し検出するために3つの作成アノテーションを設定します：
 
 * {{<hover label="creation" line="8">}}crossplane.io/external-create-pending{{</hover>}} -
-  The last time the provider was about to create the resource.
+  プロバイダーがリソースを作成しようとした最後の時間。
 * {{<hover label="creation" line="9">}}crossplane.io/external-create-succeeded{{</hover>}} -
-  The last time the provider successfully created the resource.
-* `crossplane.io/external-create-failed` - The last time the provider failed to
-  create the resource.
+  プロバイダーがリソースを成功裏に作成した最後の時間。
+* `crossplane.io/external-create-failed` - プロバイダーがリソースの作成に失敗した最後の時間。
 
-Use `kubectl get` to view the annotations on a managed resource. For example, an
-AWS VPC resource:
+`kubectl get`を使用して、管理されたリソースのアノテーションを表示します。例えば、AWS VPCリソース：
 
 ```yaml {label="creation" copy-lines="2-9"}
 $ kubectl get -o yaml vpc my-vpc
@@ -668,44 +571,30 @@ metadata:
     crossplane.io/external-create-succeeded: "2023-12-18T21:48:40Z"
 ```
 
-A provider uses the
+プロバイダーは
 {{<hover label="creation" line="7">}}crossplane.io/external-name{{</hover>}}
-annotation to lookup a managed resource in an external system.
+アノテーションを使用して、外部システムで管理されたリソースを検索します。
 
-The provider looks up the resource in the external system to determine if it
-exists, and if it matches the managed resource's desired state. If the provider
-can't find the resource, it creates it.
+プロバイダーは、外部システムでリソースが存在するかどうか、またそれが管理されたリソースの望ましい状態と一致するかどうかを判断するためにリソースを検索します。プロバイダーがリソースを見つけられない場合、それを作成します。
 
-Some external systems don't let a provider specify a resource's name when the
-provider creates it. Instead the external system generates an nondeterministic
-name and returns it to the provider.
+一部の外部システムでは、プロバイダーがリソースを作成する際にリソースの名前を指定することを許可していません。代わりに、外部システムが非決定的な名前を生成し、それをプロバイダーに返します。
 
-When the external system generates the resource's name, the provider attempts to
-save it to the managed resource's `crossplane.io/external-name` annotation. If
-it doesn't, it _leaks_ the resource.
+外部システムがリソースの名前を生成すると、プロバイダーはそれを管理されたリソースの `crossplane.io/external-name` アノテーションに保存しようとします。保存できない場合、それはリソースを _漏らします_。
 
-A provider can't guarantee that it can save the annotation. The provider could
-restart or lose network connectivity between creating the resource and saving
-the annotation.
+プロバイダーは、アノテーションを保存できることを保証できません。プロバイダーは、リソースを作成してアノテーションを保存する間に再起動したり、ネットワーク接続を失ったりする可能性があります。
 
-A provider can detect that it might have leaked a resource. If the provider
-thinks it might have leaked a resource, it stops reconciling it until you tell
-the provider it's safe to proceed.
+プロバイダーは、リソースが漏洩した可能性があることを検出できます。プロバイダーがリソースが漏洩した可能性があると考えると、それを再調整するのを停止し、プロバイダーに進行しても安全であることを伝えるまで待機します。
 
 {{<hint "important">}}
-Anytime an external system generates a resource's name there is a risk the
-provider could leak the resource.
+外部システムがリソースの名前を生成するたびに、プロバイダーがリソースを漏洩するリスクがあります。
 
-The safest thing for a provider to do when it detects that it might have leaked
-a resource is to stop and wait for human intervention.
+プロバイダーがリソースが漏洩した可能性があると検出した場合に最も安全なことは、停止して人間の介入を待つことです。
 
-This ensures the provider doesn't create duplicates of the leaked resource.
-Duplicate resources can be costly and dangerous.
+これにより、プロバイダーが漏洩したリソースの重複を作成しないことが保証されます。
+重複リソースはコストがかかり、危険です。
 {{</hint>}}
 
-When a provider thinks it might have leaked a resource it creates a `cannot
-determine creation result` event associated with the managed resource. Use
-`kubectl describe` to see the event.
+プロバイダーがリソースが漏洩した可能性があると考えると、管理リソースに関連付けられた `cannot determine creation result` イベントを作成します。イベントを見るには `kubectl describe` を使用します。
 
 ```shell {copy-lines="1"}
 kubectl describe queue my-sqs-queue
@@ -718,73 +607,45 @@ Events:
   Warning  CannotInitializeManagedResource  29m (x19 over 19h)  managed/queue.sqs.aws.crossplane.io  cannot determine creation result - remove the crossplane.io/external-create-pending annotation if it is safe to proceed
 ```
 
-Providers use the creation annotations to detect that they might have leaked a
-resource.
+プロバイダーは、作成アノテーションを使用してリソースが漏洩した可能性があることを検出します。
 
-Each time a provider reconciles a managed resource it checks the resource's
-creation annotations. If the provider sees a create pending time that's more
-recent than the most recent create succeeded or create failed time, it knows
-that it might have leaked a resource.
+プロバイダーが管理リソースを再調整するたびに、リソースの作成アノテーションをチェックします。プロバイダーが最も最近の作成成功または作成失敗の時間よりも新しい作成保留時間を確認すると、リソースが漏洩した可能性があることを認識します。
 
 {{<hint "note">}}
-Providers don't remove the creation annotations. They use the timestamps to
-determine which is most recent. It's normal for a managed resource to have
-several creation annotations.
+プロバイダーは作成アノテーションを削除しません。彼らはタイムスタンプを使用してどれが最も最近であるかを判断します。管理リソースが複数の作成アノテーションを持つことは正常です。
 {{</hint>}}
 
-The provider knows it might have leaked a resource because it updates all the
-resource's annotations at the same time. If the provider couldn't update the
-creation annotations after it created the resource, it also couldn't update the
-`crossplane.io/external-name` annotation.
+プロバイダーは、リソースのすべてのアノテーションを同時に更新するため、リソースが漏洩した可能性があることを知っています。プロバイダーがリソースを作成した後に作成アノテーションを更新できなかった場合、`crossplane.io/external-name` アノテーションも更新できなかったことになります。
 
 {{<hint "tip">}}
-If a resource has a `cannot determine creation result` error, inspect the
-external system.
+リソースに `cannot determine creation result` エラーがある場合は、外部システムを調査してください。
 
-Use the timestamp from the `crossplane.io/external-create-pending` annotation to
-determine when the provider might have leaked a resource. Look for resources
-created around this time.
+`crossplane.io/external-create-pending` アノテーションのタイムスタンプを使用して、プロバイダーがリソースを漏洩した可能性がある時期を特定します。この時間帯に作成されたリソースを探してください。
 
-If you find a leaked resource, and it's safe to do so, delete it from the
-external system.
+漏洩したリソースを見つけた場合、安全であれば、外部システムから削除してください。
 
-Remove the `crossplane.io/external-create-pending` annotation from the managed
-resource after you're sure no leaked resource exists. This tells the provider to
-resume reconciliation of and recreate the managed resource.
+`crossplane.io/external-create-pending` アノテーションを管理リソースから削除します。漏れたリソースが存在しないことを確認した後に行ってください。これにより、プロバイダーは管理リソースの調整を再開し、再作成することができます。
 {{</hint>}}
 
-Providers also use the creation annotations to avoid leaking resources.
+プロバイダーは、リソースの漏れを避けるために作成アノテーションを使用します。
 
-When a provider writes the `crossplane.io/external-create-pending` annotation it
-knows it's reconciling the latest version of the managed resource. The write
-would fail if the provider was reconciling an old version of the managed
-resource.
+プロバイダーが `crossplane.io/external-create-pending` アノテーションを書き込むと、管理リソースの最新バージョンを調整していることがわかります。プロバイダーが古いバージョンの管理リソースを調整している場合、書き込みは失敗します。
 
-If the provider reconciled an old version with an outdated
-`crossplane.io/external-name` annotation it could mistakenly determine that the
-resource didn't exist. The provider would create a new resource, and leak the
-existing one.
+プロバイダーが古いバージョンを古い `crossplane.io/external-name` アノテーションで調整した場合、リソースが存在しないと誤って判断する可能性があります。プロバイダーは新しいリソースを作成し、既存のリソースを漏らすことになります。
 
-Some external systems have a delay between when a provider creates a resource
-and when the system reports that it exists. The provider uses the most recent
-create succeeded time to account for this delay.
+一部の外部システムでは、プロバイダーがリソースを作成してから、そのリソースが存在すると報告されるまでに遅延があります。プロバイダーは、この遅延を考慮するために、最も最近の作成成功時刻を使用します。
 
-If the provider didn't account for the delay, it could mistakenly determine
-that the resource didn't exist. The provider would create a new resource, and
-leak the existing one.
+プロバイダーが遅延を考慮しなかった場合、リソースが存在しないと誤って判断する可能性があります。プロバイダーは新しいリソースを作成し、既存のリソースを漏らすことになります。
 
-### Paused
-Manually applying the `crossplane.io/paused` annotation causes the Provider to
-stop reconciling the managed resource. 
+### 一時停止
+`crossplane.io/paused` アノテーションを手動で適用すると、プロバイダーは管理リソースの調整を停止します。
 
-Pausing a resource is useful when modifying Providers or preventing
-race-conditions when editing Kubernetes objects.
+リソースを一時停止することは、プロバイダーを変更したり、Kubernetesオブジェクトを編集する際のレースコンディションを防ぐのに役立ちます。
 
-Apply a {{<hover label="pause" line="6">}}crossplane.io/paused: "true"{{</hover>}}
-annotation to a managed resource to pause reconciliation. 
+管理リソースに {{<hover label="pause" line="6">}}crossplane.io/paused: "true"{{</hover>}} アノテーションを適用して、調整を一時停止します。
 
 {{< hint "note" >}}
-Only the value `"true"` pauses reconciliation.
+値 `"true"` のみが調整を一時停止します。
 {{< /hint >}}
 
 ```yaml {label="pause"}
@@ -800,48 +661,38 @@ spec:
     instanceType: t2.micro
 ```
 
-Remove the annotation to resume reconciliation.
+アノテーションを削除して調整を再開します。
 
 {{<hint "important">}}
-Kubernetes and Crossplane can't delete resources with a `paused` annotation,
-even with `kubectl delete`. 
+Kubernetes と Crossplane は、`paused` アノテーションを持つリソースを削除できません。`kubectl delete` でさえもです。
 
-Read 
-[Crossplane discussion #4839](https://github.com/crossplane/crossplane/issues/4839) 
-for more details.
+詳細については、[Crossplane discussion #4839](https://github.com/crossplane/crossplane/issues/4839) をお読みください。
 {{< /hint >}}
 
-## Finalizers
-Crossplane applies a 
-[Finalizer](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/)
-on managed resources to control their deletion. 
+## ファイナライザー
+Crossplane は、管理リソースの削除を制御するために [ファイナライザー](https://kubernetes.io/docs/concepts/overview/working-with-objects/finalizers/) を適用します。
+
 
 {{< hint "note" >}}
-Kubernetes can't delete objects with Finalizers.
+Kubernetes は Finalizers を持つオブジェクトを削除できません。
 {{</hint >}}
 
-When Crossplane deletes a managed resource the Provider begins deleting the
-external resource, but the managed resource remains until the external 
-resource is fully deleted.
+Crossplane が管理リソースを削除すると、プロバイダーは外部リソースの削除を開始しますが、外部リソースが完全に削除されるまで管理リソースは残ります。
 
-When the external resource is fully deleted Crossplane removes the Finalizer and
-deletes the managed resource object.
+外部リソースが完全に削除されると、Crossplane は Finalizer を削除し、管理リソースオブジェクトを削除します。
 
-## Conditions
+## 条件
 
-Crossplane has a standard set of `Conditions` for a managed 
-resource. View the `Conditions` of a managed resource with 
-`kubectl describe <managed_resource>`
+Crossplane には管理リソースのための標準的な `Conditions` セットがあります。 `kubectl describe <managed_resource>` を使用して管理リソースの `Conditions` を表示します。
 
 
 {{<hint "note" >}}
-Providers may define their own custom `Conditions`. 
+プロバイダーは独自のカスタム `Conditions` を定義することがあります。 
 {{</hint >}}
 
 
-### Available
-`Reason: Available` indicates the Provider created the managed resource and it's
-ready for use. 
+### 利用可能
+`Reason: Available` は、プロバイダーが管理リソースを作成し、使用可能であることを示します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -849,10 +700,9 @@ Conditions:
   Status:                True
   Reason:                Available
 ```
-### Creating
+### 作成中
 
-`Reason: Creating` indicates the Provider is attempting to create the managed
-resource. 
+`Reason: Creating` は、プロバイダーが管理リソースを作成しようとしていることを示します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -861,9 +711,8 @@ Conditions:
   Reason:                Creating
 ```
 
-### Deleting
-`Reason: Deleting` indicates the Provider is attempting to delete the managed
-resource. 
+### 削除中
+`Reason: Deleting` は、プロバイダーが管理リソースを削除しようとしていることを示します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -875,8 +724,7 @@ Conditions:
 <!-- vale off -->
 ### ReconcilePaused
 <!-- vale on -->
-`Reason: ReconcilePaused` indicates the managed resource has a [Pause](#paused)
-annotation 
+`Reason: ReconcilePaused` は、管理リソースに [Pause](#paused) アノテーションがあることを示します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -888,9 +736,7 @@ Conditions:
 <!-- vale off -->
 ### ReconcileError
 <!-- vale on -->
-`Reason: ReconcileError` indicates Crossplane encountered an error while
-reconciling the managed resource. The `Message:` value of the `Condition` helps
-identify the Crossplane error. 
+`Reason: ReconcileError` は、Crossplane が管理リソースの調整中にエラーに遭遇したことを示します。 `Condition` の `Message:` 値は、Crossplane エラーを特定するのに役立ちます。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -902,8 +748,7 @@ Conditions:
 <!-- vale off -->
 ### ReconcileSuccess
 <!-- vale on -->
-`Reason: ReconcileSuccess` indicates the Provider created and is monitoring the 
-managed resource.
+`Reason: ReconcileSuccess` は、プロバイダーが管理リソースを作成し、監視していることを示します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -912,9 +757,8 @@ Conditions:
   Reason:                ReconcileSuccess
 ```
 
-### Unavailable
-`Reason: Unavailable` indicates Crossplane expects the managed resource to be 
-available, but the Provider reports the resource is unhealthy.
+### 利用不可
+`Reason: Unavailable` は、Crossplane が管理リソースが利用可能であると期待しているが、プロバイダーがリソースが不健康であると報告していることを示します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -923,10 +767,8 @@ Conditions:
   Reason:                Unavailable
 ```
 
-### Unknown
-`Reason: Unknown` indicates the Provider has an unexpected error with the
-managed resource. The `conditions.message` provides more information on what
-went wrong. 
+### 不明
+`Reason: Unknown` は、プロバイダーが管理リソースに対して予期しないエラーが発生したことを示します。 `conditions.message` は、何が問題だったのかについての詳細情報を提供します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -936,23 +778,19 @@ Conditions:
 ```
 
 
-### Upjet Provider conditions
-[Upjet](https://github.com/upbound/upjet), the open source tool to generate
-Crossplane Providers, also has a set of standard `Conditions`.
+### Upjet プロバイダーの条件
+[Upjet](https://github.com/upbound/upjet) は、Crossplane プロバイダーを生成するためのオープンソースツールで、標準の `Conditions` のセットも持っています。
 
 
 <!-- vale off -->
 #### AsyncOperation
 <!-- vale on -->
 
-Some resources may take more than a minute to create. Upjet based providers can 
-complete their Kubernetes command before creating the managed resource by using 
-an asynchronous operation. 
+一部のリソースは作成に1分以上かかる場合があります。Upjet ベースのプロバイダーは、非同期操作を使用することで、管理リソースを作成する前に Kubernetes コマンドを完了できます。
 
 
-##### Finished 
-The `Reason: Finished` indicates the asynchronous operation completed
-successfully. 
+##### 完了
+`Reason: Finished` は、非同期操作が正常に完了したことを示します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -962,9 +800,9 @@ Conditions:
 ```
 
 
-##### Ongoing
+##### 進行中
 
-`Reason: Ongoing` indicates the managed resource operation is still in progress. 
+`Reason: Ongoing` は、管理リソースの操作がまだ進行中であることを示します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -977,16 +815,13 @@ Conditions:
 #### LastAsyncOperation
 <!-- vale on -->
 
-The Upjet `Type: LastAsyncOperation` captures the previous asynchronous
-operation status as either `Success` or a failure `Reason`. 
+Upjet の `Type: LastAsyncOperation` は、前回の非同期操作の状態を `Success` または失敗の `Reason` としてキャプチャします。
 
 <!-- vale off -->
 ##### ApplyFailure
 <!-- vale on -->
 
-`Reason: ApplyFailure` indicates the Provider failed to apply a setting to the
-managed resource. The `conditions.message` provides more information on what
-went wrong. 
+`Reason: ApplyFailure` は、プロバイダーが管理リソースに設定を適用できなかったことを示します。 `conditions.message` は、何が問題だったのかについての詳細情報を提供します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -999,9 +834,7 @@ Conditions:
 ##### DestroyFailure
 <!-- vale on -->
 
-`Reason: DestroyFailure` indicates the Provider failed to delete the managed
-resource. The `conditions.message` provides more information on what
-went wrong. 
+`Reason: DestroyFailure` は、プロバイダーが管理リソースを削除できなかったことを示します。 `conditions.message` は、何が問題だったのかについての詳細情報を提供します。
 
 ```yaml {copy-lines="none"}
 Conditions:
@@ -1010,9 +843,8 @@ Conditions:
   Reason:                DestroyFailure
 ```
 
-##### Success
-`Reason: Success` indicates the Provider successfully created the managed
-resource asynchronously. 
+##### 成功
+`Reason: Success` は、プロバイダーが管理リソースを非同期に正常に作成したことを示します。
 
 ```yaml {copy-lines="none"}
 Conditions:

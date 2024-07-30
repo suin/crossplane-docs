@@ -1,30 +1,28 @@
 ---
 weight: 50
-title: Command Reference
-description: "Command reference for the Crossplane CLI"
+title: コマンドリファレンス
+description: "Crossplane CLIのコマンドリファレンス"
 ---
 
 
 <!-- vale Google.Headings = NO -->
-The `crossplane` CLI provides utilities to make using Crossplane easier. 
+`crossplane` CLIは、Crossplaneの使用を容易にするためのユーティリティを提供します。
 
-Read the [Crossplane CLI overview]({{<ref "../cli">}}) page for information on 
-installing `crossplane`.
+`crossplane`のインストールに関する情報は、[Crossplane CLIの概要]({{<ref "../cli">}})ページを参照してください。
 
-## Global flags
-The following flags are available for all commands.
+## グローバルフラグ
+以下のフラグはすべてのコマンドで使用できます。
 
 {{< table "table table-sm table-striped">}}
-| Short flag | Long flag   | Description                  |
+| 短いフラグ | 長いフラグ   | 説明                          |
 |------------|-------------|------------------------------|
-| `-h`       | `--help`    | Show context sensitive help. |
-|            | `--verbose` | Print verbose output.        |
+| `-h`       | `--help`    | コンテキストに応じたヘルプを表示します。 |
+|            | `--verbose` | 詳細な出力を表示します。        |
 {{< /table >}}
 
 ## version
 
-The `crossplane version` command returns the version of Crossplane CLI
-and the control plane.
+`crossplane version`コマンドは、Crossplane CLIとコントロールプレーンのバージョンを返します。
 
 ```shell
 crossplane version
@@ -34,373 +32,317 @@ Server Version: v1.16.0
 
 ## xpkg
 
-The `crossplane xpkg` commands create, install and update Crossplane
-[packages]({{<ref "../concepts/packages">}}) as well as enable authentication
-and publishing of Crossplane packages to a Crossplane package registry. 
+`crossplane xpkg`コマンドは、Crossplaneの[パッケージ]({{<ref "../concepts/packages">}})を作成、インストール、更新するほか、CrossplaneパッケージをCrossplaneパッケージレジストリに認証および公開する機能を提供します。
 
 ### xpkg build
 
-Using `crossplane xpkg build` provides automation and simplification to build 
-Crossplane packages.  
+`crossplane xpkg build`を使用すると、Crossplaneパッケージのビルドを自動化し、簡素化できます。
 
-The Crossplane CLI combines a directory of YAML files and packages them as 
-an [OCI container image](https://opencontainers.org/).  
+Crossplane CLIは、YAMLファイルのディレクトリを組み合わせて、[OCIコンテナイメージ](https://opencontainers.org/)としてパッケージ化します。
 
-The CLI applies the required annotations and values to meet the 
-[Crossplane XPKG specification](https://github.com/crossplane/crossplane/blob/master/contributing/specifications/xpkg.md).
+CLIは、[Crossplane XPKG仕様](https://github.com/crossplane/crossplane/blob/master/contributing/specifications/xpkg.md)を満たすために必要なアノテーションと値を適用します。
 
-The `crossplane` CLI supports building 
-[configuration]({{< ref "../concepts/packages" >}}),
-[function]({{<ref "../concepts/composition-functions">}}) and 
-[provider]({{<ref "../concepts/providers" >}}) package types. 
+`crossplane` CLIは、[構成]({{< ref "../concepts/packages" >}})、[関数]({{<ref "../concepts/composition-functions">}})、および[プロバイダー]({{<ref "../concepts/providers" >}})パッケージタイプのビルドをサポートしています。
 
-
-#### Flags
+#### フラグ
 {{< table "table table-sm table-striped">}}
-| Short flag   | Long flag                            | Description                    |
+| 短いフラグ   | 長いフラグ                            | 説明                          |
 | ------------ | -------------                        | ------------------------------ |
-|              | `--embed-runtime-image-name=NAME`    |  The image name and tag of an image to include in the package. Only for provider and function packages. |
-|              | `--embed-runtime-image-tarball=PATH` |  The filename of an image to include in the package. Only for provider and function packages.                              |
-| `-e`         | `--examples-root="./examples"`       |  The path to a directory of examples related to the package.                               |
-|              | `--ignore=PATH,...`                  |  List of files and directories to ignore.                              |
-| `-o`         | `--package-file=PATH`                |  Directory and filename of the created package.                             |
-| `-f`         | `--package-root="."`                 |  Directory to search for YAML files.                              |
+|              | `--embed-runtime-image-name=NAME`    | パッケージに含めるイメージの名前とタグ。プロバイダーおよび関数パッケージ専用。 |
+|              | `--embed-runtime-image-tarball=PATH` | パッケージに含めるイメージのファイル名。プロバイダーおよび関数パッケージ専用。                              |
+| `-e`         | `--examples-root="./examples"`       | パッケージに関連する例のディレクトリへのパス。                               |
+|              | `--ignore=PATH,...`                  | 無視するファイルおよびディレクトリのリスト。                              |
+| `-o`         | `--package-file=PATH`                | 作成されたパッケージのディレクトリとファイル名。                             |
+| `-f`         | `--package-root="."`                 | YAMLファイルを検索するディレクトリ。                              |
 {{< /table >}}
 
-The `crossplane xpkg build` command recursively looks in the directory set by 
-`--package-root` and attempts to combine any files ending in `.yml` or `.yaml` 
-into a package.
+`crossplane xpkg build` コマンドは、`--package-root` で設定されたディレクトリを再帰的に検索し、`.yml` または `.yaml` で終わるファイルをパッケージにまとめようとします。
 
-All YAML files must be valid Kubernetes manifests with `apiVersion`, `kind`, 
-`metadata` and `spec` fields. 
+すべての YAML ファイルは、`apiVersion`、`kind`、`metadata`、および `spec` フィールドを持つ有効な Kubernetes マニフェストである必要があります。
 
-#### Ignore files
+#### 無視するファイル
 
-Use `--ignore` to provide a list of files and directories to ignore.  
+`--ignore` を使用して、無視するファイルとディレクトリのリストを提供します。
 
-For example,  
+例えば、  
 `crossplane xpkg build --ignore="./test/*,kind-config.yaml"`
 
-#### Set the package name
+#### パッケージ名の設定
 
-`crossplane` automatically names the new package a combination of the 
-`metadata.name` and a hash of the package contents and saves the contents 
-in the same location as `--package-root`. Define a specific location and 
-filename with `--package-file` or `-o`.  
+`crossplane` は、新しいパッケージに `metadata.name` とパッケージ内容のハッシュの組み合わせを自動的に名前付けし、内容を `--package-root` と同じ場所に保存します。特定の場所とファイル名を `--package-file` または `-o` で定義します。
 
-For example,  
-`crossplane xpkg build -o /home/crossplane/example.xpkg`.
+例えば、  
+`crossplane xpkg build -o /home/crossplane/example.xpkg`。
 
+#### 例を含める
 
-#### Include examples
+`--examples-root` を使用して、パッケージの使用方法を示す YAML ファイルを含めます。
 
-Include YAML files demonstrating how to use the package with `--examples-root`. 
+[Upbound Marketplace](https://marketplace.upbound.io/) は、公開されたパッケージのドキュメントとして `--examples-root` で含まれるファイルを使用します。
 
-[Upbound Marketplace](https://marketplace.upbound.io/) uses files included with 
-`--examples-root` as documentation for published packages.
+#### ランタイムイメージを含める
 
-#### Include a runtime image
+Functions と Providers は、依存関係と設定を説明する YAML ファイルと、ランタイム用のコンテナイメージを必要とします。
 
-Functions and Providers require YAML files describing their dependencies and 
-settings as well as a container image for their runtime.
-
-Using `--embed-runtime-image-name` runs a specified image and 
-includes the image inside the function or provider package.
+`--embed-runtime-image-name` を使用すると、指定されたイメージが実行され、関数またはプロバイダーのパッケージ内にイメージが含まれます。
 
 {{<hint "note" >}}
-Images referenced with `--embed-runtime-image-name` must be in the local Docker 
-cache.  
+`--embed-runtime-image-name` で参照されるイメージは、ローカルの Docker キャッシュに存在する必要があります。
 
-Use `docker pull` to download a missing image.
+不足しているイメージをダウンロードするには、`docker pull` を使用します。
 {{< /hint >}}
 
-The `--embed-runtime-image-tarball` flag includes a local OCI image tarball 
-inside the function or provider package.
-
+`--embed-runtime-image-tarball` フラグは、ローカルの OCI イメージタールボールを関数またはプロバイダーのパッケージ内に含めます。
 
 ### xpkg install
 
-Download and install packages into Crossplane with  `crossplane xpkg install`.
+`crossplane xpkg install` を使用して、パッケージを Crossplane にダウンロードしてインストールします。
 
-By default the `crossplane xpkg install` command uses the Kubernetes 
-configuration defined in `~/.kube/config`.  
+デフォルトでは、`crossplane xpkg install` コマンドは `~/.kube/config` で定義された Kubernetes 構成を使用します。
 
-Define a custom Kubernetes configuration file location with the environmental 
-variable `KUBECONFIG`.
+環境変数 `KUBECONFIG` でカスタム Kubernetes 構成ファイルの場所を定義します。
 
-Specify the package kind, package file and optionally a name to give the package 
-inside Crossplane.
+パッケージの種類、パッケージファイル、およびオプションで Crossplane 内のパッケージに付ける名前を指定します。
 
+```
 `crossplane xpkg install <package-kind> <registry URL package name and tag> [<optional-name>]`
 
-The `<package-kind>` is either a `configuration`, `function` or `provider`.
+`<package-kind>` は `configuration`、`function` または `provider` のいずれかです。
 
-For example, to install version 0.42.0 of the 
-[AWS S3 provider](https://marketplace.upbound.io/providers/upbound/provider-aws-s3/v0.42.0):
+例えば、バージョン 0.42.0 の 
+[AWS S3 provider](https://marketplace.upbound.io/providers/upbound/provider-aws-s3/v0.42.0) をインストールするには:
 
 `crossplane xpkg install provider xpkg.upbound.io/upbound/provider-aws-s3:v0.42.0`
 
-#### Flags
+#### フラグ
 {{< table "table table-sm table-striped">}}
-| Short flag   | Long flag                                        | Description                                                                                     |
+| 短いフラグ   | 長いフラグ                                        | 説明                                                                                     |
 | ------------ | -------------                                    | ------------------------------                                                                  |
-|              | `--runtime-config=<runtime config name>`         | Install the package with a runtime configuration.                                               |
-| `-m`         | `--manual-activation`                            | Set the `revisionActiviationPolicy` to `Manual`.                                                |
-|              | `--package-pull-secrets=<list of secrets>`       | A comma-separated list of Kubernetes secrets to use for authenticating to the package registry. |
-| `-r`         | `--revision-history-limit=<number of revisions>` | Set the `revisionHistoryLimit`. Defaults to `1`.                                                |
-| `-w`         | `--wait=<number of seconds>`                     | Number of seconds to wait for a package to install.                                             |
+|              | `--runtime-config=<runtime config name>`         | ランタイム構成でパッケージをインストールします。                                               |
+| `-m`         | `--manual-activation`                            | `revisionActiviationPolicy` を `Manual` に設定します。                                                |
+|              | `--package-pull-secrets=<list of secrets>`       | パッケージレジストリへの認証に使用するKubernetesシークレットのカンマ区切りリストです。 |
+| `-r`         | `--revision-history-limit=<number of revisions>` | `revisionHistoryLimit` を設定します。デフォルトは `1` です。                                                |
+| `-w`         | `--wait=<number of seconds>`                     | パッケージがインストールされるまで待機する秒数です。                                             |
 
 {{< /table >}}
 
-#### Wait for package install
+#### パッケージインストールの待機
 
-When installing a package the `crossplane xpkg install` command doesn't wait for
-the package to download and install. View any download or installation problems 
-by inspecting the `configuration` with `kubectl describe configuration`.
+パッケージをインストールする際、`crossplane xpkg install` コマンドは
+パッケージのダウンロードとインストールを待機しません。ダウンロードやインストールの問題を確認するには、`kubectl describe configuration` で `configuration` を調査してください。
 
-Use `--wait` to have the `crossplane xpkg install` command to wait for a 
-package to have the condition `HEALTHY` before continuing. The command 
-returns an error if the `wait` time expires before the package is `HEALTHY`.
+`--wait` を使用すると、`crossplane xpkg install` コマンドがパッケージが `HEALTHY` の状態になるまで待機します。コマンドは、`wait` 時間が経過する前にパッケージが `HEALTHY` でない場合、エラーを返します。
+```
 
-#### Require manual package activation
+#### 手動パッケージアクティベーションが必要
 
-Set the package to require 
-[manual activation]({{<ref "../concepts/packages#revision-activation-policy" >}}), 
-preventing an automatic upgrade of a package with `--manual-activation`
+パッケージを手動アクティベーションを必要とするように設定し、 
+`--manual-activation` でパッケージの自動アップグレードを防ぎます。
 
-#### Authenticate to a private registry
+#### プライベートレジストリへの認証
 
-To authenticate to a private package registry use `--package-pull-secrets` and 
-provide a list of Kubernetes Secret objects. 
+プライベートパッケージレジストリに認証するには、`--package-pull-secrets` を使用し、 
+Kubernetes Secret オブジェクトのリストを提供します。
 
-{{<hint "important" >}}
-The secrets must be in the same namespace as the Crossplane pod. 
+{{<hint "重要" >}}
+シークレットは Crossplane ポッドと同じネームスペースに存在する必要があります。 
 {{< /hint >}}
 
-#### Customize the number of stored package versions
+#### 保存するパッケージバージョンの数をカスタマイズ
 
-By default Crossplane only stores a single inactive package in the local package
-cache. 
+デフォルトでは、Crossplane はローカルパッケージキャッシュに 
+単一の非アクティブパッケージのみを保存します。
 
-Store more inactive copies of a package with `--revision-history-limit`. 
+`--revision-history-limit` を使用して、パッケージの非アクティブコピーを 
+さらに保存します。
 
-Read more about 
-[package revisions]({{< ref "../concepts/packages#configuration-revisions" >}}) 
-in the package documentation. 
+パッケージドキュメントで 
+[パッケージリビジョン]({{< ref "../concepts/packages#configuration-revisions" >}}) 
+について詳しく読むことができます。
 
 ### xpkg login
 
-Use `xpkg login` to authenticate to `xpkg.upbound.io`, the 
-[Upbound Marketplace](https://marketplace.upbound.io/) container registry.
+`xpkg login` を使用して `xpkg.upbound.io` に認証します。 
+[Upbound Marketplace](https://marketplace.upbound.io/) コンテナレジストリです。
 
-[Register with the Upbound Marketplace](https://accounts.upbound.io/register) 
-to push packages and create private repositories. 
+[Upbound Marketplace に登録](https://accounts.upbound.io/register) 
+してパッケージをプッシュし、プライベートリポジトリを作成します。
 
-#### Flags
+#### フラグ
 
 {{< table "table table-sm table-striped">}}
-| Short flag   | Long flag                            | Description                    |
+| 短いフラグ   | 長いフラグ                            | 説明                    |
 | ------------ | -------------                        | ------------------------------ |
-| `-u` | `--username=<username>`    | Username to use for authentication. | 
-| `-p` | `--password=<password>`    | Password to use for authentication. | 
-| `-t` | `--token=<token string>`   | User token string to use for authentication. | 
-| `-a` | `--account=<organization>` | Specify an Upbound organization during authentication. |
+| `-u` | `--username=<username>`    | 認証に使用するユーザー名。 | 
+| `-p` | `--password=<password>`    | 認証に使用するパスワード。 | 
+| `-t` | `--token=<token string>`   | 認証に使用するユーザートークン文字列。 | 
+| `-a` | `--account=<organization>` | 認証中に Upbound 組織を指定します。 |
 {{< /table >}}
 
+#### 認証オプション
 
-#### Authentication options
+`crossplane xpkg login` コマンドは、ユーザー名とパスワードまたは Upbound API トークンを使用できます。
 
-The `crossplane xpkg login` command can use a username and password or Upbound API token.
+デフォルトでは、引数なしの `crossplane xpkg login` は、ユーザー名とパスワードを 
+入力するように促します。
 
-By default, `crossplane xpkg login` without arguments, prompts for a username
-and password. 
+`--username` および `--password` フラグを使用してユーザー名とパスワードを提供するか、 
+環境変数 `UP_USER` にユーザー名を、`UP_PASSWORD` にパスワードを設定します。
 
-Provide a username and password with the `--username` and `--password` flags or
-set the environmental variable `UP_USER` for a username or `UP_PASSWORD` for the
-password. 
 
-Use an Upbound user token instead of a username and password with `--token` or 
-the `UP_TOKEN` environmental variable. 
+ユーザーネームとパスワードの代わりに、`--token` または `UP_TOKEN` 環境変数を使用して、Upbound ユーザートークンを使用します。 
 
 {{< hint "important" >}}
-The `--token` or `UP_TOKEN` environmental variables take precedence over a 
-username and password.
+`--token` または `UP_TOKEN` 環境変数は、ユーザーネームとパスワードよりも優先されます。
 {{< /hint >}}
 
-Using `-` as the input for `--password` or `--token` reads the input from stdin.  
-For example, `crossplane xpkg login --password -`.
+`--password` または `--token` の入力として `-` を使用すると、stdin から入力を読み取ります。  
+例えば、`crossplane xpkg login --password -`。
 
-After logging in the Crossplane CLI creates a `profile` in 
-`.crossplane/config.json` to cache unprivileged account information. 
+Crossplane CLI にログインすると、`.crossplane/config.json` に `profile` が作成され、特権のないアカウント情報がキャッシュされます。 
 
 {{<hint "note" >}}
-The `session` field of `config.json` file is a session cookie identifier. 
+`config.json` ファイルの `session` フィールドは、セッションクッキー識別子です。 
 
-The `session` value isn't used for authentication. This isn't a `token`.
+`session` 値は認証には使用されません。これは `token` ではありません。
 {{< /hint >}}
 
-#### Authenticate with a registered Upbound organization
+#### 登録済みの Upbound 組織での認証
 
-Authenticate to a registered organization in the Upbound Marketplace with the 
-`--account` option, along with the username and password or token. 
+ユーザーネームとパスワードまたはトークンとともに、`--account` オプションを使用して、Upbound Marketplace の登録済み組織に認証します。 
 
-For example, 
-`crossplane xpkg login --account=Upbound --username=my-user --password -`.
+例えば、 
+`crossplane xpkg login --account=Upbound --username=my-user --password -`。
 
 ### xpkg logout
 
-Use `crossplane xpkg logout` to invalidate the current `crossplane xpkg login` 
-session.
+`crossplane xpkg logout` を使用して、現在の `crossplane xpkg login` 
+セッションを無効にします。
 
 {{< hint "note" >}}
-Using `crossplane xpkg logout` removes the `session` from the 
-`~/.crossplane/config.json` file, but doesn't delete the configuration file.
+`crossplane xpkg logout` を使用すると、`~/.crossplane/config.json` ファイルから `session` が削除されますが、設定ファイルは削除されません。
 {{< /hint >}}
 
 ### xpkg push
 
-Push a Crossplane package file to a package registry. 
+Crossplane パッケージファイルをパッケージレジストリにプッシュします。 
 
-The Crossplane CLI pushes images to the 
-[Upbound Marketplace](https://marketplace.upbound.io/) at `xpkg.upbound.io` by 
-default.
+Crossplane CLI は、デフォルトで `xpkg.upbound.io` の 
+[Upbound Marketplace](https://marketplace.upbound.io/) にイメージをプッシュします。
 
 {{< hint "note" >}}
-Pushing a package may require authentication with 
-[`crossplane xpkg login`](#xpkg-login)
+パッケージをプッシュするには、[`crossplane xpkg login`](#xpkg-login) での認証が必要な場合があります。
 {{< /hint >}}
 
-Specify the organization, package name and tag with  
-`crossplane xpkg push <package>`
+組織、パッケージ名、タグを指定して、  
+`crossplane xpkg push <package>` を実行します。
 
-By default the command looks in the current directory for a single `.xpkg` file 
-to push. 
+デフォルトでは、コマンドはプッシュするための単一の `.xpkg` ファイルを現在のディレクトリで探します。 
 
-To push multiple files or to specify a specific `.xpkg` file use the `-f` flag.
+複数のファイルをプッシュするか、特定の `.xpkg` ファイルを指定するには、`-f` フラグを使用します。
 
-For example, to push a local package named `my-package` to 
-`crossplane-docs/my-package:v0.14.0` use:
+例えば、`my-package` というローカルパッケージを 
+`crossplane-docs/my-package:v0.14.0` にプッシュするには、次のようにします：
 
 `crossplane xpkg push -f my-package.xpkg crossplane-docs/my-package:v0.14.0`
 
-To push to another package registry, like [DockerHub](https://hub.docker.com/) 
-provide the full URL along with the package name. 
+他のパッケージレジストリ、例えば [DockerHub](https://hub.docker.com/) にプッシュするには、パッケージ名とともに完全なURLを指定します。
 
-For example, to push a local package named `my-package` to 
-DockerHub organization `crossplane-docs/my-package:v0.14.0` use:
-`crossplane xpkg push -f my-package.xpkg index.docker.io/crossplane-docs/my-package:v0.14.0`.
+例えば、ローカルパッケージ `my-package` を DockerHub の組織 `crossplane-docs/my-package:v0.14.0` にプッシュするには、次のコマンドを使用します：
+`crossplane xpkg push -f my-package.xpkg index.docker.io/crossplane-docs/my-package:v0.14.0`。
 
 
-#### Flags
+#### フラグ
 
 {{< table "table table-sm table-striped">}}
-| Short flag   | Long flag              | Description                                   |
+| 短いフラグ   | 長いフラグ              | 説明                                   |
 | ------------ | -------------          | ------------------------------                |
-| `-f`         | `--package-files=PATH` | A comma-separated list of xpkg files to push. |
+| `-f`         | `--package-files=PATH` | プッシュするxpkgファイルのカンマ区切りリスト。 |
 {{< /table >}}
 
 ### xpkg update
 
-The `crossplane xpkg update` command downloads and updates an existing package.
+`crossplane xpkg update` コマンドは、既存のパッケージをダウンロードして更新します。
 
-By default the `crossplane xpkg update` command uses the Kubernetes 
-configuration defined in `~/.kube/config`.  
+デフォルトでは、`crossplane xpkg update` コマンドは `~/.kube/config` に定義されたKubernetes設定を使用します。
 
-Define a custom Kubernetes configuration file location with the environmental 
-variable `KUBECONFIG`.
+環境変数 `KUBECONFIG` を使用してカスタムKubernetes設定ファイルの場所を定義します。
 
-Specify the package kind, package file and optionally the name of the package 
-already installed in Crossplane.
+パッケージの種類、パッケージファイル、およびオプションでCrossplaneに既にインストールされているパッケージの名前を指定します。
 
 `crossplane xpkg update <package-kind> <registry package name and tag> [<optional-name>]`
 
-The package file must be an organization, image and tag on the `xpkg.upbound.io`
-registry on [Upbound Marketplace](https://marketplace.upbound.io/).
+パッケージファイルは、[Upbound Marketplace](https://marketplace.upbound.io/) の `xpkg.upbound.io` レジストリ上の組織、イメージ、およびタグである必要があります。
 
-For example, to update to version 0.42.0 of the 
-[AWS S3 provider](https://marketplace.upbound.io/providers/upbound/provider-aws-s3/v0.42.0):
+例えば、[AWS S3プロバイダー](https://marketplace.upbound.io/providers/upbound/provider-aws-s3/v0.42.0) のバージョン0.42.0に更新するには：
 
 `crossplane xpkg update provider xpkg.upbound.io/upbound/provider-aws-s3:v0.42.0`
 
 
-## beta
+## ベータ
 
-Crossplane `beta` commands are experimental. These commands may change the 
-flags, options or outputs in future releases. 
+Crossplaneの `beta` コマンドは実験的です。これらのコマンドは、将来のリリースでフラグ、オプション、または出力が変更される可能性があります。
 
-Crossplane maintainers may promote or remove commands under `beta` in future 
-releases.
+Crossplaneのメンテナーは、将来のリリースで `beta` の下にあるコマンドを昇格または削除することがあります。
 
 
 ### beta convert
 
-As Crossplane evolves, its APIs and resources may change. To help with the 
-migration to the new APIs and resources, the `crossplane beta convert` command
-converts a Crossplane resource to a new version or kind.
+Crossplaneが進化するにつれて、そのAPIやリソースが変更される可能性があります。新しいAPIやリソースへの移行を支援するために、`crossplane beta convert` コマンドはCrossplaneリソースを新しいバージョンまたは種類に変換します。
 
-Use the `crossplane beta convert` command to convert an existing
+`crossplane beta convert` コマンドを使用して、既存の
 [ControllerConfig]({{<ref "../concepts/providers#controller-configuration">}})
-to a [DeploymentRuntimeConfig]({{<ref "../concepts/providers#runtime-configuration">}}) 
-or a Composition using [patch and transforms]({{<ref "../concepts/patch-and-transform">}}) 
-to a 
-[Composition pipeline function]({{< ref "../concepts/compositions#use-composition-functions" >}}).
+を [DeploymentRuntimeConfig]({{<ref "../concepts/providers#runtime-configuration">}}) 
+または [patch and transforms]({{<ref "../concepts/patch-and-transform">}}) を使用して 
+[Composition pipeline function]({{< ref "../concepts/compositions#use-composition-functions" >}}) に変換します。
 
-Provide the `crossplane beta convert` command the conversion type, the input
-file and optionally, an output file. By default the command writes the output to
-standard out. 
 
-For example, to convert a ControllerConfig to a DeploymentRuntimeConfig use 
-`crossplane beta convert deployment-runtime`. For example,
+`crossplane beta convert` コマンドに変換タイプ、入力ファイル、およびオプションで出力ファイルを指定します。デフォルトでは、コマンドは出力を標準出力に書き込みます。
+
+例えば、ControllerConfigをDeploymentRuntimeConfigに変換するには、`crossplane beta convert deployment-runtime`を使用します。例えば、
 
 `crossplane beta convert deployment-runtime controllerConfig.yaml -o deploymentConfig.yaml`
 
-To convert a Composition using patch and transforms to a pipeline function, use
-`crossplane beta convert pipeline-composition`.  
+パッチと変換を使用してCompositionをパイプライン関数に変換するには、`crossplane beta convert pipeline-composition`を使用します。
 
-Optionally, use the `-f` flag to provide the name of the function.  
-By default the function name is "function-patch-and-transform."
+オプションで、`-f`フラグを使用して関数の名前を指定します。デフォルトでは、関数名は「function-patch-and-transform」です。
 
 `crossplane beta convert pipeline-composition oldComposition.yaml -o newComposition.yaml -f patchFunctionName`
 
 
-#### Flags
+#### フラグ
 {{< table "table table-sm table-striped">}}
-| Short flag   | Long flag       | Description                                                                                |
+| 短いフラグ   | 長いフラグ       | 説明                                                                                     |
 | ------------ | --------------- | ------------------------------                                                             |
-| `-o`         | `--output-file` | The output YAML file to write. Outputs to stdout by default.  |
-| `-f`         | `--function-name` | The name of the new function. Defaults to `function-patch-and-transform`. |
+| `-o`         | `--output-file` | 書き込む出力YAMLファイル。デフォルトではstdoutに出力されます。  |
+| `-f`         | `--function-name` | 新しい関数の名前。デフォルトは`function-patch-and-transform`です。 |
 <!-- vale Crossplane.Spelling = YES -->
 {{< /table >}}
 
 
 ### beta render 
 
-The `crossplane beta render` command previews the output of a 
-[composite resource]({{<ref "../concepts/composite-resources">}}) after applying 
-any [composition functions]({{<ref "../concepts/composition-functions">}}).
+`crossplane beta render` コマンドは、[合成リソース]({{<ref "../concepts/composite-resources">}})の出力をプレビューします。これは、任意の[合成関数]({{<ref "../concepts/composition-functions">}})を適用した後のものです。
 
 {{< hint "important" >}}
-The `crossplane beta render` command doesn't apply 
-[patch and transform composition patches]({{<ref "../concepts/patch-and-transform">}}).
+`crossplane beta render` コマンドは、[パッチと変換の合成パッチ]({{<ref "../concepts/patch-and-transform">}})を適用しません。
 
-The command only supports function "patch and transforms."
+このコマンドは「パッチと変換」関数のみをサポートしています。
 {{< /hint >}}
 
-The `crossplane beta render` command connects to the locally running Docker 
-Engine to pull and run composition functions. 
+`crossplane beta render` コマンドは、ローカルで実行されているDockerエンジンに接続して、合成関数をプルして実行します。
 
 {{<hint "important">}} 
-Running `crossplane beta render` requires [Docker](https://www.docker.com/).
+`crossplane beta render`を実行するには、[Docker](https://www.docker.com/)が必要です。
 {{< /hint >}}
 
-Provide a composite resource, composition and composition function YAML 
-definition with the command to render the output locally. 
 
-For example, 
+コンポジットリソース、コンポジション、およびコンポジション関数のYAML定義を提供し、出力をローカルでレンダリングするためのコマンドを示します。
+
+例えば、  
 `crossplane beta render xr.yaml composition.yaml function.yaml`
 
-The output includes the original composite resource followed by the generated 
-managed resources. 
+出力には、元のコンポジットリソースと生成された管理リソースが含まれます。
 
 {{<expand "An example render output" >}}
 ```yaml
@@ -433,64 +375,53 @@ spec:
 ```
 {{< /expand >}}
 
-#### Flags
+#### フラグ
 
 {{< table "table table-sm table-striped">}}
-| Short flag   | Long flag                             | Description                                           |
+| 短いフラグ   | 長いフラグ                             | 説明                                           |
 | ------------ | -------------                         | ------------------------------                        |
-|              | `--context-files=<key>=<file>,<key>=<file>`    | A comma separated list of files to load for function "contexts." |
-|              | `--context-values=<key>=<value>,<key>=<value>` | A comma separated list of key-value pairs to load for function "contexts."                                                    |
-| `-r`         | `--include-function-results`          | Include the "results" or events from the function.   |
+|              | `--context-files=<key>=<file>,<key>=<file>`    | 関数の「コンテキスト」に読み込むファイルのカンマ区切りリスト。 |
+|              | `--context-values=<key>=<value>,<key>=<value>` | 関数の「コンテキスト」に読み込むキーと値のペアのカンマ区切りリスト。                                                    |
+| `-r`         | `--include-function-results`          | 関数からの「結果」またはイベントを含める。   |
 | `-o`         | `--observed-resources=<directory or file>`               |
-Provide artificial managed resource data to the function.
-|
-| `-x`         | `--include-full-xr`          | Include a copy of the input Composite Resource spec and metadata fields in the rendered output.   |
-|              | `--timeout=`                          | Amount of time to wait for a function to finish.                    |
+関数に人工的な管理リソースデータを提供します。|
+| `-x`         | `--include-full-xr`          | レンダリングされた出力に入力コンポジットリソースの仕様とメタデータフィールドのコピーを含める。   |
+|              | `--timeout=`                          | 関数が終了するまでの待機時間。                    |
 {{< /table >}}
 
-The `crossplane beta render` command relies on standard 
-[Docker environmental variables](https://docs.docker.com/engine/reference/commandline/cli/#environment-variables) 
-to connect to the local Docker engine and run composition functions. 
+`crossplane beta render`コマンドは、標準の  
+[Docker環境変数](https://docs.docker.com/engine/reference/commandline/cli/#environment-variables)  
+を利用してローカルDockerエンジンに接続し、コンポジション関数を実行します。
 
+#### 関数コンテキストを提供する
 
-#### Provide function context
+`--context-files`および`--context-values`フラグは、関数の`context`にデータを提供できます。  
+コンテキストはJSON形式のデータです。
 
-The `--context-files` and `--context-values` flags can provide data 
-to a function's `context`.  
-The context is JSON formatted data.
+#### 関数の結果を含める
 
-#### Include function results
+関数がステータスを持つKubernetesイベントを生成する場合は、  
+`--include-function-results`を使用して、管理リソースの出力とともにそれらを印刷します。
 
-If a function produces Kubernetes events with statuses use the 
-`--include-function-results` to print them along with the managed resource 
-outputs. 
+#### 合成リソースを含める
 
-#### Include the composite resource 
+Composition関数は合成リソースの`status`フィールドのみを変更できます。デフォルトでは、`crossplane beta render`コマンドは`metadata.name`とともに`status`フィールドのみを出力します。
 
-Composition functions can only change the `status` field of a composite 
-resource. By default, the `crossplane beta render` command only prints the
-`status` field with `metadata.name`.  
+`--include-full-xr`を使用して、`spec`および`metadata`フィールドを含む完全な合成リソースを出力します。
 
-Use `--include-full-xr` to print the full composite resource, 
-including the `spec` and `metadata` fields.
+#### モック管理リソース
 
-#### Mock managed resources
+`--observed-resources`を使用して、管理リソースを表すモックまたは人工データを提供します。`crossplane beta render`コマンドは、提供された入力をCrossplaneクラスター内のリソースのように扱います。
 
-Provide mocked, or artificial data representing a managed resource with 
-`--observed-resources`. The `crossplane beta render` command treats the 
-provided inputs as if they were resources in a Crossplane cluster. 
+関数は、関数を実行する一部として含まれたリソースを参照および操作できます。
 
-A function can reference and manipulate the included resource as part of 
-running the function.
+`observed-resources`は、複数のリソースを含む単一のYAMLファイルまたは複数のリソースを表すYAMLファイルのディレクトリである可能性があります。
 
-The `observed-resources` may be a single YAML file with multiple resources or a 
-directory of YAML files representing multiple resources.
-
-Inside the YAML file include an 
-{{<hover label="apiVersion" line="1">}}apiVersion{{</hover>}},
-{{<hover label="apiVersion" line="2">}}kind{{</hover>}},
-{{<hover label="apiVersion" line="3">}}metadata{{</hover>}} and
-{{<hover label="apiVersion" line="7">}}spec{{</hover>}}.
+YAMLファイル内には、  
+{{<hover label="apiVersion" line="1">}}apiVersion{{</hover>}}、  
+{{<hover label="apiVersion" line="2">}}kind{{</hover>}}、  
+{{<hover label="apiVersion" line="3">}}metadata{{</hover>}}、および  
+{{<hover label="apiVersion" line="7">}}spec{{</hover>}}を含めてください。
 
 ```yaml {label="apiVersion"}
 apiVersion: example.org/v1alpha1
@@ -503,12 +434,11 @@ spec:
   coolerField: "I'm cooler!"
 ```
 
-The schema of the resource isn't validated and may contain any data.
+リソースのスキーマは検証されず、任意のデータを含むことができます。
 
 ### beta top
 
-The command `crossplane beta top` shows CPU and memory usage of Crossplane
-related pods. 
+コマンド`crossplane beta top`は、Crossplane関連のポッドのCPUおよびメモリ使用量を表示します。
 
 ```shell
 crossplane beta top 
@@ -520,80 +450,69 @@ provider     default     upbound-provider-family-aws-48b3b5ccf964-76c9686b6-bgg6
 ```
 
 {{<hint "important" >}}
-Using `crossplane beta top` requires the Kubernetes 
-[metrics server](https://github.com/kubernetes-sigs/metrics-server) enabled on 
-the cluster running Crossplane before using `crossplane beta top`. 
+`crossplane beta top`を使用するには、Kubernetes 
+[metrics server](https://github.com/kubernetes-sigs/metrics-server)がCrossplaneを実行しているクラスターで有効になっている必要があります。
 
-Follow the installation instructions on the 
-[metrics-server GitHub page](https://github.com/kubernetes-sigs/metrics-server#installation).
+[metrics-server GitHubページ](https://github.com/kubernetes-sigs/metrics-server#installation)のインストール手順に従ってください。
 {{< /hint >}}
 
-
-
-#### Flags
+#### フラグ
 {{< table "table table-sm table-striped">}}
 <!-- vale Crossplane.Spelling = NO -->
 <!-- vale flags `dot` as an error but only the trailing tick. -->
-| Short flag   | Long flag                   | Description                                                                        |
+| 短いフラグ   | 長いフラグ                   | 説明                                                                        |
 | ------------ | -------------               | ------------------------------                                                     |
-| `-n`         | `--namespace`               | The namespace where the Crossplane pod runs. Default is `crossplane-system`.                                                    |
-| `-s`         | `--summary`                 | Print a summary of all Crossplane pods along with the output.                |
-|              | `--verbose`                 | Print verbose logging information with the output.                                                     |
+| `-n`         | `--namespace`               | Crossplaneポッドが実行される名前空間。デフォルトは`crossplane-system`です。                                                    |
+| `-s`         | `--summary`                 | 出力とともにすべてのCrossplaneポッドの概要を印刷します。                |
+|              | `--verbose`                 | 出力とともに詳細なログ情報を印刷します。                                                     |
 <!-- vale Crossplane.Spelling = YES -->
 {{< /table >}}
 
-The Kubernetes metrics server may take some time to collect data for the
-`crossplane beta top` command. Before the metrics server is ready, 
-running the `top` command may produce an error, for example,
+
+Kubernetes メトリクスサーバーは、`crossplane beta top` コマンドのデータを収集するのに時間がかかる場合があります。メトリクスサーバーが準備できるまで、`top` コマンドを実行するとエラーが発生することがあります。例えば、
 
 `crossplane: error: error adding metrics to pod, check if metrics-server is running or wait until metrics are available for the pod: the server is currently unable to handle the request (get pods.metrics.k8s.io crossplane-contrib-provider-helm-b4cc4c2c8db3-6d787f9686-qzmz2)`
 
 
 ### beta trace
 
-Use the `crossplane beta trace` command to display a visual relationship of
-Crossplane objects. The `trace` command supports claims, compositions, 
-functions, managed resources or packages. 
+`crossplane beta trace` コマンドを使用して、Crossplane オブジェクトの視覚的関係を表示します。`trace` コマンドは、クレーム、構成、関数、管理リソース、またはパッケージをサポートしています。
 
-The command requires a resource type and a resource name.  
+このコマンドは、リソースタイプとリソース名を必要とします。
 
 `crossplane beta trace <resource kind> <resource name>`
 
-For example to view a resource named `my-claim` of type `example.crossplane.io`:  
+例えば、`example.crossplane.io` タイプの `my-claim` というリソースを表示するには：  
 `crossplane beta trace example.crossplane.io my-claim`
 
-The command also accepts Kubernetes CLI style `<kind>/<name>` input.  
-For example,  
+このコマンドは、Kubernetes CLI スタイルの `<kind>/<name>` 入力も受け付けます。  
+例えば、  
 `crossplane beta trace example.crossplane.io/my-claim`
 
-By default the `crossplane beta trace` command uses the Kubernetes 
-configuration defined in `~/.kube/config`.  
+デフォルトでは、`crossplane beta trace` コマンドは `~/.kube/config` に定義された Kubernetes 設定を使用します。
 
-Define a custom Kubernetes configuration file location with the environmental 
-variable `KUBECONFIG`.
+環境変数 `KUBECONFIG` を使用して、カスタム Kubernetes 設定ファイルの場所を定義します。
 
-#### Flags
+#### フラグ
 {{< table "table table-sm table-striped">}}
 <!-- vale Crossplane.Spelling = NO -->
 <!-- vale flags `dot` as an error but only the trailing tick. -->
-| Short flag   | Long flag                   | Description                                                                        |
+| 短いフラグ   | 長いフラグ                   | 説明                                                                        |
 | ------------ | -------------               | ------------------------------                                                     |
-| `-n`         | `--namespace`               | The namespace of the resource.                                                     |
-| `-o`         | `--output=`                 | Change the graph output with `wide`, `json`, or `dot` for a [Graphviz dot](https://graphviz.org/docs/layouts/dot/) output. |
-|              | `--show-connection-secrets` | Print any connection secret names. Doesn't print the secret values.                |
-|              | `--show-package-dependencies <filter>` | Show package dependencies. Options are `all` to show every dependency, `unique` to only print a package once or `none` to not print any dependencies. By default the `trace` command uses `--show-package-dependencies unique`.                |
-|              | `--show-package-revisions <output>`    | Print package revision versions. Options are `active`, showing only the active revisions, `all` showing all revisions or `none` to print not print any revisions.                 |
-|              | `--show-package-runtime-configs` | Print DeploymentRuntimeConfig dependencies.                |
+| `-n`         | `--namespace`               | リソースの名前空間。                                                     |
+| `-o`         | `--output=`                 | グラフ出力を `wide`、`json`、または [Graphviz dot](https://graphviz.org/docs/layouts/dot/) 出力のために `dot` に変更します。 |
+|              | `--show-connection-secrets` | 接続シークレット名を印刷します。シークレット値は印刷しません。                |
+|              | `--show-package-dependencies <filter>` | パッケージの依存関係を表示します。オプションは、すべての依存関係を表示する `all`、パッケージを一度だけ印刷する `unique`、または依存関係を印刷しない `none` です。デフォルトでは、`trace` コマンドは `--show-package-dependencies unique` を使用します。                |
+|              | `--show-package-revisions <output>`    | パッケージのリビジョンバージョンを印刷します。オプションは、アクティブなリビジョンのみを表示する `active`、すべてのリビジョンを表示する `all`、またはリビジョンを印刷しない `none` です。                 |
+|              | `--show-package-runtime-configs` | DeploymentRuntimeConfig の依存関係を印刷します。                |
 <!-- vale Crossplane.Spelling = YES -->
 {{< /table >}}
 
-#### Output options
+#### 出力オプション
 
-By default `crossplane beta trace` prints directly to the terminal, limiting the
-"Ready" condition and "Status" messages to 64 characters.
+デフォルトでは `crossplane beta trace` は端末に直接出力し、"Ready" 条件と "Status" メッセージを64文字に制限します。
 
-The following an example output a "cluster" claim from the AWS reference 
-platform, which includes multiple Compositions and composed resources: 
+以下は、複数のコンポジションと構成リソースを含むAWSリファレンスプラットフォームからの "cluster" クレームの出力例です：
 
 ```shell {copy-lines="1"}
 crossplane beta trace cluster.aws.platformref.upbound.io platform-ref-aws
@@ -632,11 +551,10 @@ Configuration/platform-ref-aws                                                  
    └─ ConfigurationRevision/upbound-configuration-gitops-flux-2e80ec62738d         v0.2.0    -           True      Active   HealthyPackageRevision
 ```
 
-#### Wide outputs
-Print the entire "Ready" or "Status" message if they're longer than 
-64 characters with `--output=wide`. 
+#### ワイド出力
+`--output=wide` を使用して、"Ready" または "Status" メッセージが64文字を超える場合は、全体を印刷します。
 
-For example, the output truncates the "Status" message that's too long. 
+例えば、出力は長すぎる "Status" メッセージを切り捨てます。
 
 ```shell {copy-lines="1"
 crossplane trace cluster.aws.platformref.upbound.io platform-ref-aws
@@ -644,7 +562,7 @@ NAME                                                              SYNCED   READY
 Cluster/platform-ref-aws (default)                                True     False   Waiting: ...resource claim is waiting for composite resource to become Ready
 ```
 
-Use `--output=wide` to see the full message.
+完全なメッセージを見るには `--output=wide` を使用します。
 
 ```shell {copy-lines="1"
 crossplane trace cluster.aws.platformref.upbound.io platform-ref-aws --output=wide
@@ -652,28 +570,27 @@ NAME                                                              SYNCED   READY
 Cluster/platform-ref-aws (default)                                True     False   Waiting: Composite resource claim is waiting for composite resource to become Ready
 ```
 
-#### Graphviz dot file output
+#### Graphviz dotファイル出力
 
-Use the `--output=dot` to print out a textual 
-[Graphviz dot](https://graphviz.org/docs/layouts/dot/) output. 
+`--output=dot` を使用して、テキスト形式の 
+[Graphviz dot](https://graphviz.org/docs/layouts/dot/) 出力を印刷します。
 
-Save the output and export it or the output directly to Graphviz `dot` to 
-render an image. 
+出力を保存してエクスポートするか、出力を直接Graphviz `dot` に渡して画像をレンダリングします。
 
-For example, to save the output as a `graph.png` file use 
-`dot -Tpng -o graph.png`.
+例えば、出力を `graph.png` ファイルとして保存するには 
+`dot -Tpng -o graph.png` を使用します。
 
 `crossplane beta trace cluster.aws.platformref.upbound.io platform-ref-aws -o dot | dot -Tpng -o graph.png`
 
-#### Print connection secrets
+#### 接続シークレットの印刷
 
-Use `-s` to print any connection secret names along with the other resources.
+`-s` を使用して、他のリソースとともに接続シークレット名を印刷します。
 
 {{<hint "important">}}
-The `crossplane beta trace` command doesn't print secret values.
+`crossplane beta trace` コマンドはシークレット値を印刷しません。
 {{< /hint >}}
 
-The output includes both the secret name along with the secret's namespace.
+出力には、シークレット名とシークレットのネームスペースの両方が含まれます。
 
 ```shell
 crossplane beta trace configuration platform-ref-aws -s
@@ -692,16 +609,13 @@ Cluster/platform-ref-aws (default)                                          True
    └─ Secret/9666eccd-929c-4452-8658-c8c881aee137 (upbound-system)          -        -
 ```
 
-#### Print package dependencies
+#### パッケージ依存関係の表示
 
-Use the `--show-package-dependencies` flag to include more information about
-package dependencies.
+`--show-package-dependencies` フラグを使用して、パッケージ依存関係に関する詳細情報を含めます。
 
-By default `crossplane beta trace` uses `--show-package-dependencies unique` to
-include a required package only once in the output.
+デフォルトでは `crossplane beta trace` は `--show-package-dependencies unique` を使用して、出力に必要なパッケージを一度だけ含めます。
 
-Use `--show-package-dependencies all` to see every package requiring the same
-dependency. 
+`--show-package-dependencies all` を使用して、同じ依存関係を必要とするすべてのパッケージを表示します。
 
 ```shell
 crossplane beta trace configuration platform-ref-aws --show-package-dependencies all
@@ -782,7 +696,7 @@ Configuration/platform-ref-aws                                                  
       └─ FunctionRevision/upbound-function-patch-and-transform-a2f88f8d8715        v0.2.1    -           True      Active   HealthyPackageRevision
 ```
 
-Use `--show-package-dependencies none` to hide all dependencies.
+`--show-package-dependencies none` を使用して、すべての依存関係を非表示にします。
 
 ```shell
 crossplane beta trace configuration platform-ref-aws --show-package-dependencies none
@@ -791,11 +705,9 @@ Configuration/platform-ref-aws                           v0.9.0    True        T
 └─ ConfigurationRevision/platform-ref-aws-9ad7b5db2899   v0.9.0    -           True      Active   HealthyPackageRevision
 ```
 
-#### Print package revisions
+#### パッケージリビジョンの表示
 
-By default the `crossplane beta trace` command only shows the package revisions
-actively in use. To view both active and inactive revisions use
-`--show-package-revisions all`.
+デフォルトでは `crossplane beta trace` コマンドは、現在使用中のパッケージリビジョンのみを表示します。アクティブおよび非アクティブのリビジョンの両方を表示するには、`--show-package-revisions all` を使用します。
 
 ```shell
 crossplane beta trace configuration platform-ref-aws --show-package-revisions all
@@ -812,7 +724,7 @@ Configuration/platform-ref-aws                                                  
 # Removed for brevity
 ```
 
-To hide all revisions use `--show-package-revision none`.
+すべてのリビジョンを非表示にするには、`--show-package-revision none` を使用します。
 
 ```shell
 crossplane beta trace configuration platform-ref-aws --show-package-revisions none
@@ -826,70 +738,58 @@ Configuration/platform-ref-aws                             v0.9.0    True       
 
 ### beta validate
 
-The `crossplane beta validate` command validates 
-[compositions]({{<ref "../concepts/compositions">}}) against provider or XRD 
-schemas using the Kubernetes API server's validation library.
+`crossplane beta validate` コマンドは、Kubernetes API サーバーの検証ライブラリを使用して、プロバイダーまたは XRD スキーマに対して [コンポジション]({{<ref "../concepts/compositions">}}) を検証します。
 
-The `crossplane beta validate` command supports validating the following 
-scenarios:
+`crossplane beta validate` コマンドは、以下のシナリオの検証をサポートしています：
 
-- Validate a managed resource or composite resource 
-  [against a Provider or XRD schema](#validate-resources-against-a-schema). 
-- Use the output of `crossplane beta render` as [validation input](#validate-render-command-output). 
-- Validate an [XRD against Kubernetes Common Expression Language](#validate-common-expression-language-rules) 
-  (CEL) rules.
-- Validate resources against a [directory of schemas](#validate-against-a-directory-of-schemas).
+- 管理リソースまたは複合リソースを 
+  [プロバイダーまたは XRD スキーマに対して検証](#validate-resources-against-a-schema)します。 
+- `crossplane beta render` の出力を [検証入力](#validate-render-command-output)として使用します。 
+- [XRD を Kubernetes 共通表現言語](#validate-common-expression-language-rules) 
+  (CEL) ルールに対して検証します。
+- リソースを [スキーマのディレクトリに対して検証](#validate-against-a-directory-of-schemas)します。
 
 
 {{< hint "note" >}}
-The `crossplane beta validate` command performs all validation offline. 
+`crossplane beta validate` コマンドは、すべての検証をオフラインで実行します。 
 
-A Kubernetes cluster running Crossplane isn't required. 
+Crossplane を実行している Kubernetes クラスターは必要ありません。 
 {{< /hint >}}
 
-#### Flags
+#### フラグ
 
 {{< table "table table-sm table-striped" >}}
-| Short flag   | Long flag                | Description                                           |
+| 短いフラグ   | 長いフラグ                | 説明                                           |
 | ------------ | ------------------------ | ----------------------------------------------------- |
-| `-h`         | `--help`                 | Show context sensitive help.                          |
-| `-v`         | `--version`              | Print version and quit.                               |
-|              | `--cache-dir=".crossplane/cache"` | Specify the absolute path to the cache directory to store downloaded schemas. |
-|              | `--clean-cache`          | Clean the cache directory before downloading package schemas. |
-|              | `--skip-success-results` | Skip printing success results.                        |
-|              | `--verbose`              | Print verbose logging statements.                     |
+| `-h`         | `--help`                 | コンテキストに応じたヘルプを表示します。                          |
+| `-v`         | `--version`              | バージョンを表示して終了します。                               |
+|              | `--cache-dir=".crossplane/cache"` | ダウンロードしたスキーマを保存するキャッシュディレクトリの絶対パスを指定します。 |
+|              | `--clean-cache`          | パッケージスキーマをダウンロードする前にキャッシュディレクトリをクリーンします。 |
+|              | `--skip-success-results` | 成功結果の印刷をスキップします。                        |
+|              | `--verbose`              | 詳細なログメッセージを表示します。                     |
 {{< /table >}}
 
-#### Validate resources against a schema
+#### スキーマに対するリソースの検証
 
-The `crossplane beta validate` command can validate an XR and one or more 
-managed resources against a provider's schema. 
+`crossplane beta validate` コマンドは、XR および 1 つ以上の管理リソースをプロバイダーのスキーマに対して検証できます。
 
 {{<hint "important" >}}
-When validating against a provider the `crossplane beta validate` command
-downloads the provider package to the `--cache-dir` directory. By default
-Crossplane uses `.crossplane` as the `--cache-dir` location.
+プロバイダーに対して検証する際、`crossplane beta validate` コマンドはプロバイダー パッケージを `--cache-dir` ディレクトリにダウンロードします。デフォルトでは、Crossplane は `.crossplane` を `--cache-dir` の場所として使用します。
 
-Access to a Kubernetes cluster or Crossplane pod isn't required.  
-Validation requires the ability to download the provider package.
+Kubernetes クラスターや Crossplane ポッドへのアクセスは必要ありません。  
+検証にはプロバイダー パッケージをダウンロードする能力が必要です。
 {{< /hint >}}
 
-The `crossplane beta validate` command downloads and caches the schema CRD files
-in the `--cache-dir` directory. By default the Crossplane CLI uses
-`.crossplane/cache` as the cache location.
+`crossplane beta validate` コマンドは、スキーマ CRD ファイルを `--cache-dir` ディレクトリにダウンロードしてキャッシュします。デフォルトで、Crossplane CLI は `.crossplane/cache` をキャッシュの場所として使用します。
 
-To clear the cache and download the CRD files again use the `--clean-cache` flag.
+キャッシュをクリアして CRD ファイルを再度ダウンロードするには、`--clean-cache` フラグを使用します。
 
-To validate a managed resource against a provider,
-first, create a provider manifest file. For example, to validate an IAM role
-from Provider AWS, use the 
+プロバイダーに対して管理リソースを検証するには、まずプロバイダー マニフェストファイルを作成します。たとえば、プロバイダー AWS から IAM ロールを検証するには、 
 [Provider AWS IAM](https://marketplace.upbound.io/providers/upbound/provider-aws-iam/v1.0.0) 
-manifest.
+マニフェストを使用します。
 
 {{<hint "tip" >}}
-To validate a 
-"[family provider](https://blog.upbound.io/new-provider-families)" use the
-provider manifests of the resources to validate.
+"[ファミリープロバイダー](https://blog.upbound.io/new-provider-families)" を検証するには、検証するリソースのプロバイダー マニフェストを使用してください。
 {{< /hint >}}
 
 ```yaml
@@ -901,11 +801,10 @@ spec:
   package: xpkg.upbound.io/upbound/provider-aws-iam:v1.0.0
 ```
 
-Now include the XR or managed resource to validate.
+検証する XR または管理リソースを含めます。
 
-For example, to validate an 
-{{<hover label="iamAK" line="2">}}AccessKey{{</hover>}} managed resource,
-provide a managed resource YAML file. 
+たとえば、 
+{{<hover label="iamAK" line="2">}}AccessKey{{</hover>}} 管理リソースを検証するには、管理リソース YAML ファイルを提供します。
 
 ```yaml {label="iamAK"}
 apiVersion: iam.aws.upbound.io/v1beta1
@@ -919,8 +818,7 @@ spec:
         example-name: test-user-0
 ```
 
-Run the `crossplane beta validate` command providing the provider and managed
-resource YAML files as input. 
+プロバイダーおよび管理リソース YAML ファイルを入力として提供して、`crossplane beta validate` コマンドを実行します。
 
 ```shell
 crossplane beta validate provider.yaml managedResource.yaml
@@ -929,15 +827,11 @@ Total 1 resources: 0 missing schemas, 1 success case, 0 failure cases
 ```
 
 
-#### Validate render command output
+#### レンダーコマンド出力の検証
 
-You can pipe the output of `crossplane beta render` into 
-`crossplane beta validate` to validate complete Crossplane resource pipelines,
-including XRs, compositions and composition functions. 
+`crossplane beta render` の出力を `crossplane beta validate` にパイプすることで、XR、コンポジション、コンポジション関数を含む完全な Crossplane リソースパイプラインを検証できます。
 
-Use the `--include-full-xr` command with `crossplane beta render` and the `-` 
-option with `crossplane beta validate` to pipe the output from 
-`crossplane beta render` to the input of `crossplane beta validate`. 
+`crossplane beta render` コマンドに `--include-full-xr` オプションを使用し、`crossplane beta validate` コマンドに `-` オプションを使用して、`crossplane beta render` の出力を `crossplane beta validate` の入力にパイプします。
 
 ```shell {copy-lines="1"}
 crossplane beta render xr.yaml composition.yaml function.yaml --include-full-xr | crossplane beta validate schemas.yaml -
@@ -950,15 +844,10 @@ crossplane beta render xr.yaml composition.yaml function.yaml --include-full-xr 
 Total 5 resources: 0 missing schemas, 4 success cases, 1 failure cases
 ```
 
+#### 共通式言語ルールの検証
+XRD は、共通式言語 ([CEL](https://kubernetes.io/docs/reference/using-api/cel/)) で表現された [検証ルール](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation-rules) を定義できます。
 
-#### Validate Common Expression Language rules
-XRDs can define [validation rules](https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#validation-rules) expressed in the Common Expression Language 
-([CEL](https://kubernetes.io/docs/reference/using-api/cel/)).
-
-
-Apply a CEL rule with the 
-{{<hover label="celXRD" line="12" >}}x-kubernetes-validations{{</hover>}} key
-inside the schema {{<hover label="celXRD" line="10" >}}spec{{</hover>}} object of an XRD.
+XRD のスキーマ {{<hover label="celXRD" line="10" >}}spec{{</hover>}} オブジェクト内に、{{<hover label="celXRD" line="12" >}}x-kubernetes-validations{{</hover>}} キーを使用して CEL ルールを適用します。
 
 ```yaml {label="celXRD"}
 apiVersion: apiextensions.crossplane.io/v1
@@ -985,10 +874,7 @@ spec:
 # Removed for brevity
 ```
 
-The rule in this example checks that the vale of the
-{{<hover label="celXR" line="6">}}replicas{{</hover>}} field of an XR is between
-the {{<hover label="celXR" line="7">}}minReplicas{{</hover>}} and 
-{{<hover label="celXR" line="8">}}maxReplicas{{</hover>}} values.
+この例のルールは、XR の {{<hover label="celXR" line="6">}}replicas{{</hover>}} フィールドの値が {{<hover label="celXR" line="7">}}minReplicas{{</hover>}} と {{<hover label="celXR" line="8">}}maxReplicas{{</hover>}} の間にあることを確認します。
 
 ```yaml {label="celXR"}
 apiVersion: example.crossplane.io/v1beta1
@@ -1001,8 +887,7 @@ spec:
   maxReplicas: 30
 ```
 
-Running `crossplane beta validate` with the example XRD and XR produces an
-error.
+例の XRD と XR で `crossplane beta validate` を実行すると、エラーが発生します。
 
 ```shell
 `crossplane beta validate xrd.yaml xr.yaml
@@ -1010,19 +895,15 @@ error.
 Total 1 resources: 0 missing schemas, 0 success cases, 1 failure cases
 ```
 
+#### スキーマのディレクトリに対して検証
 
-#### Validate against a directory of schemas
+`crossplane beta render` コマンドは、YAML ファイルのディレクトリを検証できます。
 
-The `crossplane beta render` command can validate a directory of YAML files. 
+このコマンドは `.yaml` および `.yml` ファイルのみを処理し、他のすべてのファイルタイプは無視します。
 
-The command only processes `.yaml` and `.yml` files, while ignoring all other
-file types.
+ファイルのディレクトリを使用して、検証するディレクトリとリソースを指定します。
 
-With a directory of files, provide the directory and resource to validate. 
-
-For example, using a directory named 
-{{<hover label="validateDir" line="2">}}schemas{{</hover>}} containing the XRD
-and Provider schemas.
+例えば、XRD と Provider スキーマを含む {{<hover label="validateDir" line="2">}}schemas{{</hover>}} という名前のディレクトリを使用します。
 
 ```shell {label="validateDir"}
 tree
@@ -1035,8 +916,7 @@ schemas
     `-- xrd.yaml
 ```
 
-Provide the directory name and a resource YAML file to the 
-`crossplane beta validate` command. 
+ディレクトリ名とリソース YAML ファイルを `crossplane beta validate` コマンドに提供します。
 
 ```shell
 crossplane beta validate schema resources.yaml
@@ -1051,49 +931,36 @@ Total 5 resources: 0 missing schemas, 4 success cases, 1 failure cases
 
 ### beta xpkg init
 
-The `crossplane beta xpkg init` command populates the current directory with 
-files to build a package. 
+`crossplane beta xpkg init` コマンドは、パッケージを構築するためのファイルで現在のディレクトリを埋めます。
 
-Provide a name to use for the package and the package template to start from 
-with the command  
+パッケージに使用する名前と、開始するパッケージテンプレートをコマンドで指定します  
 `crossplane beta xpkg init <name> <template>`
 
-The `<name>` input isn't used. Crossplane reserves the `<name>` for future releases.
+`<name>` の入力は使用されません。Crossplane は将来のリリースのために `<name>` を予約しています。
 
-The `<template>` value may be one of four well known templates:
-* `configuration-template` - A template to build a Crossplane [Configuration]({{<ref "../concepts/packages">}}) from the [crossplane/configuration-template](https://github.com/crossplane/configuration-template) repository.
-* `function-template-go` - A template to build Crossplane Go [composition functions]({{<ref "../concepts/composition-functions">}}) from the [crossplane/function-template-go](https://github.com/crossplane/function-template-go) repository.
-* `function-template-python` - A template to build Crossplane Python [composition functions]({{<ref "../concepts/composition-functions">}}) from the [crossplane/function-template-python](https://github.com/crossplane/function-template-go) repository.
-* `provider-template` - A template to build a basic Crossplane provider from the [Crossplane/provider-template](https://github.com/crossplane/provider-template) repository.
-* `provider-template-upjet` - A template for building [Upjet](https://github.com/crossplane/upjet) based Crossplane providers from existing Terraform providers. Copies from the [upbound/upjet-provider-template](https://github.com/upbound/upjet-provider-template) repository.
+`<template>` の値は、次の4つのよく知られたテンプレートのいずれかである必要があります：
+* `configuration-template` - [crossplane/configuration-template](https://github.com/crossplane/configuration-template) リポジトリから Crossplane [Configuration]({{<ref "../concepts/packages">}}) を構築するためのテンプレート。
+* `function-template-go` - [crossplane/function-template-go](https://github.com/crossplane/function-template-go) リポジトリから Crossplane Go [composition functions]({{<ref "../concepts/composition-functions">}}) を構築するためのテンプレート。
+* `function-template-python` - [crossplane/function-template-python](https://github.com/crossplane/function-template-go) リポジトリから Crossplane Python [composition functions]({{<ref "../concepts/composition-functions">}}) を構築するためのテンプレート。
+* `provider-template` - [Crossplane/provider-template](https://github.com/crossplane/provider-template) リポジトリから基本的な Crossplane プロバイダーを構築するためのテンプレート。
+* `provider-template-upjet` - 既存の Terraform プロバイダーから [Upjet](https://github.com/crossplane/upjet) ベースの Crossplane プロバイダーを構築するためのテンプレート。 [upbound/upjet-provider-template](https://github.com/upbound/upjet-provider-template) リポジトリからコピーします。
 
-Instead of a well known template the `<template>` value can be a git repository 
-URL.
+よく知られたテンプレートの代わりに、`<template>` の値は git リポジトリの URL であることもできます。
 
 #### NOTES.txt
 
-If the template repository contains a `NOTES.txt` file in its root directory,
-the `crossplane beta xpkg init` command prints the contents of the file to the
-terminal after populating the directory with the template files. This can be
-useful for providing information about the template.
+テンプレートリポジトリのルートディレクトリに `NOTES.txt` ファイルが含まれている場合、`crossplane beta xpkg init` コマンドは、テンプレートファイルでディレクトリを埋めた後にファイルの内容をターミナルに出力します。これは、テンプレートに関する情報を提供するのに役立ちます。
 
 #### init.sh
 
-If the template repository contains an `init.sh` file in its root directory, the
-`crossplane beta xpkg init` command starts a dialog after populating the
-directory with the template files. The dialog prompts the user if they want
-to view or run the script. Use the initialization script to automatically
-personalize the template.
+テンプレートリポジトリのルートディレクトリに `init.sh` ファイルが含まれている場合、`crossplane beta xpkg init` コマンドは、テンプレートファイルでディレクトリを埋めた後にダイアログを開始します。ダイアログは、ユーザーにスクリプトを表示または実行するかどうかを促します。初期化スクリプトを使用して、テンプレートを自動的にパーソナライズします。
 
-#### Flags
+#### フラグ
 {{< table "table table-sm table-striped">}}
-| Short flag   | Long flag               | Description                                                                                      |
+| 短いフラグ   | 長いフラグ               | 説明                                                                                      |
 | ------------ | ----------------------- | ------------------------------                                                                   |
-| `-b`         | `--ref-name`            | The branch or tag to clone from the template repository.                                         |
-| `-d`         | `--directory`           | The directory to create and load the template files into. Uses the current directory by default. |
-| `-r`         | `--run-init-script`     | Run the init.sh script without prompting, if it exists.                                                        |
+| `-b`         | `--ref-name`            | テンプレートリポジトリからクローンするブランチまたはタグ。                                         |
+| `-d`         | `--directory`           | テンプレートファイルを作成して読み込むディレクトリ。デフォルトでは現在のディレクトリを使用します。 |
+| `-r`         | `--run-init-script`     | 存在する場合、プロンプトなしでinit.shスクリプトを実行します。                                                        |
 <!-- vale Crossplane.Spelling = YES -->
 {{< /table >}}
-
-
-

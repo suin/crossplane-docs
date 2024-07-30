@@ -1,49 +1,47 @@
 ---
-title: Configuration Packages
-description: "Packages combine multiple Crossplane resources into a single, portable, OCI image."
-altTitle: "Crossplane Packages"
+title: 設定パッケージ
+description: "パッケージは複数のCrossplaneリソースを単一のポータブルOCIイメージにまとめます。"
+altTitle: "Crossplaneパッケージ"
 weight: 200
 ---
 
-A _Configuration_ package is an 
-[OCI container images](https://opencontainers.org/) containing a collection of
-[Compositions]({{<ref "./compositions" >}}), 
-[Composite Resource Definitions]({{<ref "./composite-resource-definitions" >}})
-and any required [Providers]({{<ref "./providers">}}) or 
-[Functions]({{<ref "./composition-functions" >}}).
+_設定_ パッケージは、 
+[OCIコンテナイメージ](https://opencontainers.org/)であり、 
+[コンポジション]({{<ref "./compositions" >}})、 
+[複合リソース定義]({{<ref "./composite-resource-definitions" >}}) 
+および必要な[プロバイダー]({{<ref "./providers">}})または 
+[関数]({{<ref "./composition-functions" >}})のコレクションを含んでいます。
 
-Configuration packages make your Crossplane configuration fully portable. 
+設定パッケージは、あなたのCrossplane設定を完全にポータブルにします。
 
 {{<hint "important" >}}
-Crossplane [Providers]({{<ref "./providers">}}) and 
-[Functions]({{<ref "./composition-functions">}}) are also Crossplane packages.  
+Crossplane [プロバイダー]({{<ref "./providers">}})および 
+[関数]({{<ref "./composition-functions">}})もCrossplaneパッケージです。  
 
-This document describes how to install and manage configuration packages.  
+この文書では、設定パッケージのインストールと管理方法について説明します。  
 
-Refer to the 
-[Provider]({{<ref "./providers">}}) and 
-[Composition Functions]({{<ref "./composition-functions">}}) chapters for
-details on their usage of packages. 
+パッケージの使用に関する詳細は、 
+[プロバイダー]({{<ref "./providers">}})および 
+[コンポジション関数]({{<ref "./composition-functions">}})の章を参照してください。 
 {{< /hint >}}
 
-## Install a Configuration
+## 設定のインストール
 
-Install a Configuration with a Crossplane 
-{{<hover line="2" label="install">}}Configuration{{</hover>}} object by setting 
-the {{<hover line="6" label="install">}}spec.package{{</hover>}} value to the
-location of the configuration package.
+Crossplane 
+{{<hover line="2" label="install">}}設定{{</hover>}}オブジェクトを使用して設定をインストールするには、 
+{{<hover line="6" label="install">}}spec.package{{</hover>}}の値を
+設定パッケージの場所に設定します。
 
 {{< hint "important" >}}
-Beginning with Crossplane version 1.15.0 Crossplane uses the Upbound Marketplace
-Crossplane package registry at `xpkg.upbound.io` by default for downloading and
-installing packages. 
+Crossplaneバージョン1.15.0以降、Crossplaneはデフォルトで`xpkg.upbound.io`のUpbound Marketplace
+Crossplaneパッケージレジストリを使用してパッケージをダウンロードおよびインストールします。 
 
-Specify the full domain name with the `package` or change the default Crossplane
-registry with the `--registry` flag on the [Crossplane pod]({{<ref "./pods">}})
+`package`で完全なドメイン名を指定するか、[Crossplaneポッド]({{<ref "./pods">}})
+で`--registry`フラグを使用してデフォルトのCrossplaneレジストリを変更します。 
 {{< /hint >}}
 
-For example to install the 
-[Upbound AWS reference platform](https://marketplace.upbound.io/configurations/upbound/platform-ref-aws/v0.6.0), 
+例えば、 
+[Upbound AWSリファレンスプラットフォーム](https://marketplace.upbound.io/configurations/upbound/platform-ref-aws/v0.6.0)をインストールするには、 
 
 ```yaml {label="install"}
 apiVersion: pkg.crossplane.io/v1
@@ -54,19 +52,20 @@ spec:
   package: xpkg.upbound.io/upbound/platform-ref-aws:v0.6.0
 ```
 
-Crossplane installs the Compositions, Composite Resource Definitions and
-Providers listed in the Configuration. 
+Crossplaneは、設定にリストされたコンポジション、複合リソース定義、および
+プロバイダーをインストールします。
 
-### Install with Helm
+### Helmを使用したインストール
 
-Crossplane supports installing Configurations during an initial Crossplane
-installation with the Crossplane Helm chart.
+Crossplaneは、Crossplane Helmチャートを使用して初期のCrossplane
+インストール中に設定をインストールすることをサポートしています。
 
-Use the
-{{<hover label="helm" line="5" >}}--set configuration.packages{{</hover >}}
-argument with `helm install`.
 
-For example, to install the Upbound AWS reference platform,
+`helm install` に対して 
+{{<hover label="helm" line="5" >}}--set configuration.packages{{</hover >}} 
+引数を使用します。
+
+たとえば、Upbound AWS リファレンスプラットフォームをインストールするには、
 
 ```shell {label="helm"}
 helm install crossplane \
@@ -76,28 +75,23 @@ crossplane-stable/crossplane \
 --set configuration.packages='{xpkg.upbound.io/upbound/platform-ref-aws:v0.6.0}'
 ```
 
-### Install offline
+### オフラインインストール
 
-Installing Crossplane packages offline requires a local container registry like 
-[Harbor](https://goharbor.io/) to host the packages. Crossplane only
-supports installing packages from a container registry. 
+Crossplane パッケージをオフラインでインストールするには、パッケージをホストするための 
+[Harbor](https://goharbor.io/) のようなローカルコンテナレジストリが必要です。Crossplane はコンテナレジストリからのパッケージのインストールのみをサポートしています。
 
-Crossplane doesn't support installing packages directly from Kubernetes
-volumes.
+Crossplane は Kubernetes ボリュームから直接パッケージをインストールすることをサポートしていません。
 
-### Installation options
+### インストールオプション
 
-Configurations support multiple options to change configuration package related
-settings. 
+構成は、構成パッケージに関連する設定を変更するための複数のオプションをサポートしています。
 
+#### 構成のリビジョン
 
-#### Configuration revisions
+既存の構成の新しいバージョンをインストールする際、Crossplane は新しい構成リビジョンを作成します。
 
-When installing a newer version of an existing Configuration Crossplane creates
-a new configuration revision. 
-
-View the configuration revisions with 
-{{<hover label="rev" line="1">}}kubectl get configurationrevisions{{</hover>}}.
+構成リビジョンを表示するには 
+{{<hover label="rev" line="1">}}kubectl get configurationrevisions{{</hover>}} を使用します。
 
 ```shell {label="rev",copy-lines="1"}
 kubectl get configurationrevisions
@@ -106,22 +100,20 @@ platform-ref-aws-1735d56cd88d   True      2          xpkg.upbound.io/upbound/pla
 platform-ref-aws-3ac761211893   True      1          xpkg.upbound.io/upbound/platform-ref-aws:v0.4.1   Inactive                               5m13s
 ```
 
-Only a single revision is active at a time. The active revision determines the
-available resources, including Compositions and Composite Resource Definitions. 
+同時にアクティブなリビジョンは1つだけです。アクティブなリビジョンは、Composition や Composite Resource Definition を含む利用可能なリソースを決定します。
 
-By default Crossplane keeps only a single _Inactive_ revision.
+デフォルトでは、Crossplane は単一の _Inactive_ リビジョンのみを保持します。
 
-Change the number of revisions Crossplane maintains with a Configuration package 
-{{<hover label="revHistory" line="6">}}revisionHistoryLimit{{</hover>}}. 
+Crossplane が保持するリビジョンの数を構成パッケージ 
+{{<hover label="revHistory" line="6">}}revisionHistoryLimit{{</hover>}} で変更します。
 
-The {{<hover label="revHistory" line="6">}}revisionHistoryLimit{{</hover>}}
-field is an integer.  
-The default value is `1`.  
-Disable storing revisions by setting 
-{{<hover label="revHistory" line="6">}}revisionHistoryLimit{{</hover>}} to `0`.
+{{<hover label="revHistory" line="6">}}revisionHistoryLimit{{</hover>}} 
+フィールドは整数です。  
+デフォルト値は `1` です。  
+{{<hover label="revHistory" line="6">}}revisionHistoryLimit{{</hover>}} を `0` に設定することで、リビジョンの保存を無効にします。
 
-For example, to change the default setting and store 10 revisions use 
-{{<hover label="revHistory" line="6">}}revisionHistoryLimit: 10{{</hover>}}.
+たとえば、デフォルト設定を変更して10のリビジョンを保存するには 
+{{<hover label="revHistory" line="6">}}revisionHistoryLimit: 10{{</hover>}} を使用します。
 
 ```yaml {label="revHistory"}
 apiVersion: pkg.crossplane.io/v1
@@ -133,32 +125,26 @@ spec:
 # Removed for brevity
 ```
 
-#### Configuration package pull policy
+#### 構成パッケージのプルポリシー
 
-Use a {{<hover label="pullpolicy" line="6">}}packagePullPolicy{{</hover>}} to
-define when Crossplane should download the Configuration package to the local
-Crossplane package cache.
+{{<hover label="pullpolicy" line="6">}}packagePullPolicy{{</hover>}} を使用して、Crossplane が構成パッケージをローカルの Crossplane パッケージキャッシュにダウンロードするタイミングを定義します。
 
-The `packagePullPolicy` options are: 
-* `IfNotPresent` - (**default**) Only download the package if it isn't in the cache.
-* `Always` - Check for new packages every minute and download any matching
-  package that isn't in the cache.
-* `Never` - Never download the package. Packages are only installed from the
-  local package cache. 
+`packagePullPolicy` オプションは次のとおりです：
+* `IfNotPresent` - (**デフォルト**) キャッシュにパッケージがない場合のみ、パッケージをダウンロードします。
+* `Always` - 毎分新しいパッケージをチェックし、キャッシュにない一致するパッケージをダウンロードします。
+* `Never` - パッケージを決してダウンロードしません。パッケージはローカルのパッケージキャッシュからのみインストールされます。
 
 {{<hint "tip" >}}
-The Crossplane 
-{{<hover label="pullpolicy" line="6">}}packagePullPolicy{{</hover>}} works
-like the Kubernetes container image 
-[image pull policy](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy).  
+Crossplane 
+{{<hover label="pullpolicy" line="6">}}packagePullPolicy{{</hover>}} は Kubernetes コンテナイメージの 
+[image pull policy](https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy) のように機能します。
 
-Crossplane supports the use of tags and package digest hashes like
-Kubernetes images. 
+Crossplane は Kubernetes イメージのようにタグとパッケージダイジェストハッシュの使用をサポートしています。
 {{< /hint >}}
 
-For example, to `Always` download a given Configuration package use the 
-{{<hover label="pullpolicy" line="6">}}packagePullPolicy: Always{{</hover>}}
-configuration. 
+たとえば、特定の構成パッケージを `Always` ダウンロードするには、 
+{{<hover label="pullpolicy" line="6">}}packagePullPolicy: Always{{</hover>}} 
+構成を使用します。
 
 ```yaml {label="pullpolicy",copy-lines="6"}
 apiVersion: pkg.crossplane.io/v1
@@ -170,24 +156,22 @@ spec:
 # Removed for brevity
 ```
 
-#### Revision activation policy
+#### リビジョンアクティベーションポリシー
 
-The `Active` package revision
-is the package controller actively reconciling resources. 
+`Active` パッケージリビジョンは、パッケージコントローラーがリソースを積極的に調整している状態です。
 
-By default Crossplane sets the most recently installed package revision as 
-`Active`.
+デフォルトでは、Crossplane は最も最近インストールされたパッケージリビジョンを `Active` として設定します。
 
-Control the Configuration upgrade behavior with a
-{{<hover label="revision" line="6">}}revisionActivationPolicy{{</hover>}}.
+構成のアップグレード動作を制御するには、 
+{{<hover label="revision" line="6">}}revisionActivationPolicy{{</hover>}} を使用します。
 
-The {{<hover label="revision" line="6">}}revisionActivationPolicy{{</hover>}} 
-options are:
-* `Automatic` - (**default**) Automatically activate the last installed configuration.
-* `Manual` - Don't automatically activate a configuration. 
+{{<hover label="revision" line="6">}}revisionActivationPolicy{{</hover>}} 
+オプションは次のとおりです：
+* `Automatic` - (**デフォルト**) 最後にインストールされた構成を自動的にアクティブ化します。
+* `Manual` - 構成を自動的にアクティブ化しません。
 
-For example, to change the upgrade behavior to require manual upgrades, set 
-{{<hover label="revision" line="6">}}revisionActivationPolicy: Manual{{</hover>}}.
+たとえば、アップグレード動作を手動アップグレードを必要とするように変更するには、 
+{{<hover label="revision" line="6">}}revisionActivationPolicy: Manual{{</hover>}} を設定します。
 
 ```yaml {label="revision"}
 apiVersion: pkg.crossplane.io/v1
@@ -199,28 +183,24 @@ spec:
 # Removed for brevity
 ```
 
+#### プライベートレジストリからの構成のインストール
 
-#### Install a Configuration from a private registry
+Kubernetes が `imagePullSecrets` を使用して 
+[プライベートレジストリからイメージをインストールする](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/) のとおり、 
+Crossplane は `packagePullSecrets` を使用してプライベートレジストリから構成パッケージをインストールします。
 
-Like Kubernetes uses `imagePullSecrets` to 
-[install images from private registries](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/), 
-Crossplane uses `packagePullSecrets` to install Configuration packages from a 
-private registry. 
+{{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}} を使用して、 
+構成パッケージをダウンロードする際の認証に使用する Kubernetes シークレットを提供します。
 
-Use {{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}} to provide a
-Kubernetes secret to use for authentication when downloading a Configuration 
-package. 
 
 {{<hint "important" >}}
-The Kubernetes secret must be in the same namespace as Crossplane.
+KubernetesのシークレットはCrossplaneと同じ名前空間に存在する必要があります。
 {{</hint >}}
 
-The {{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}} is a list of
-secrets.
+{{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}}はシークレットのリストです。
 
-For example, to use the secret named
-{{<hover label="pps" line="6">}}example-secret{{</hover>}} configure a 
-{{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}}.
+例えば、{{<hover label="pps" line="6">}}example-secret{{</hover>}}という名前のシークレットを使用するには、 
+{{<hover label="pps" line="6">}}packagePullSecrets{{</hover>}}を設定します。
 
 ```yaml {label="pps"}
 apiVersion: pkg.crossplane.io/v1
@@ -233,23 +213,20 @@ spec:
 # Removed for brevity
 ```
 
-#### Ignore dependencies
+#### 依存関係を無視する
 
-By default Crossplane installs any [dependencies](#manage-dependencies) listed
-in a Configuration package. 
+デフォルトでは、CrossplaneはConfigurationパッケージにリストされているすべての[依存関係](#manage-dependencies)をインストールします。
 
-Crossplane can ignore a Configuration package's dependencies with 
-{{<hover label="pkgDep" line="6" >}}skipDependencyResolution{{</hover>}}.
+Crossplaneは、{{<hover label="pkgDep" line="6" >}}skipDependencyResolution{{</hover>}}を使用してConfigurationパッケージの依存関係を無視できます。
 
 {{< hint "warning" >}}
-Most Configurations include dependencies for the required Providers. 
+ほとんどのConfigurationには、必要なプロバイダーの依存関係が含まれています。
 
-If a Configuration ignores dependencies, the required Providers must be 
-manually installed.
+Configurationが依存関係を無視する場合、必要なプロバイダーは手動でインストールする必要があります。
 {{< /hint >}}
 
-For example, to disable dependency resolution configure 
-{{<hover label="pkgDep" line="6" >}}skipDependencyResolution: true{{</hover>}}.
+例えば、依存関係の解決を無効にするには、 
+{{<hover label="pkgDep" line="6" >}}skipDependencyResolution: true{{</hover>}}を設定します。
 
 ```yaml {label="pkgDep"}
 apiVersion: pkg.crossplane.io/v1
@@ -261,18 +238,14 @@ spec:
 # Removed for brevity
 ```
 
-#### Ignore Crossplane version requirements
+#### Crossplaneのバージョン要件を無視する
 
-A Configuration package may require a specific or minimum Crossplane version 
-before installing. By default, Crossplane doesn't install a Configuration if 
-the Crossplane version doesn't meet the required version. 
+Configurationパッケージは、インストール前に特定のCrossplaneバージョンまたは最小バージョンを要求する場合があります。デフォルトでは、Crossplaneは要求されたバージョンを満たさない場合、Configurationをインストールしません。
 
-Crossplane can ignore the required version with 
-{{<hover label="xpVer" line="6">}}ignoreCrossplaneConstraints{{</hover>}}.
+Crossplaneは、{{<hover label="xpVer" line="6">}}ignoreCrossplaneConstraints{{</hover>}}を使用して要求されたバージョンを無視できます。
 
-For example, to install a Configuration package into an unsupported Crossplane
-version, configure 
-{{<hover label="xpVer" line="6">}}ignoreCrossplaneConstraints: true{{</hover>}}.
+例えば、サポートされていないCrossplaneバージョンにConfigurationパッケージをインストールするには、 
+{{<hover label="xpVer" line="6">}}ignoreCrossplaneConstraints: true{{</hover>}}を設定します。
 
 ```yaml {label="xpVer"}
 apiVersion: pkg.crossplane.io/v1
@@ -285,12 +258,11 @@ spec:
 ```
 
 
-### Verify a Configuration
+### Configurationの検証
 
-Verify a Configuration with 
-{{<hover label="verify" line="1">}}kubectl get configuration{{</hover >}}.
+{{<hover label="verify" line="1">}}kubectl get configuration{{</hover >}}を使用してConfigurationを検証します。
 
-A working configuration reports `Installed` and `Healthy` as `True`.
+動作しているConfigurationは、`Installed`と`Healthy`が`True`として報告されます。
 
 ```shell {label="verify",copy-lines="1"}
 kubectl get configuration
@@ -298,16 +270,13 @@ NAME               INSTALLED   HEALTHY   PACKAGE                                
 platform-ref-aws   True        True      xpkg.upbound.io/upbound/platform-ref-aws:v0.6.0   54s
 ```
 
-### Manage dependencies
+### 依存関係の管理
 
-Configuration packages may include dependencies on other packages including
-Functions, Providers or other Configurations. 
+構成パッケージには、Functions、Providers、または他の構成を含む他のパッケージへの依存関係が含まれる場合があります。
 
-If Crossplane can't meet the dependencies of a Configuration the Configuration
-reports `HEALTHY` as `False`. 
+Crossplaneが構成の依存関係を満たせない場合、構成は `HEALTHY` を `False` として報告します。
 
-For example, this installation of the Upbound AWS reference platform is
-`HEALTHY: False`.
+例えば、この Upbound AWS リファレンスプラットフォームのインストールは `HEALTHY: False` です。
 
 ```shell {copy-lines="1"}
 kubectl get configuration
@@ -315,8 +284,8 @@ NAME               INSTALLED   HEALTHY   PACKAGE                                
 platform-ref-aws   True        False     xpkg.upbound.io/upbound/platform-ref-aws:v0.6.0   71s
 ```
 
-To see more information on why the Configuration isn't `HEALTHY` use 
-{{<hover label="depend" line="1">}}kubectl describe configurationrevisions{{</hover>}}.
+構成が `HEALTHY` でない理由の詳細を確認するには、 
+{{<hover label="depend" line="1">}}kubectl describe configurationrevisions{{</hover>}} を使用します。
 
 ```yaml {copy-lines="1",label="depend"}
 kubectl describe configurationrevision
@@ -342,64 +311,53 @@ Events:
   Warning  LintPackage  29s (x2 over 29s)  packages/configurationrevision.pkg.crossplane.io  incompatible Crossplane version: package is not compatible with Crossplane version (v1.12.0)
 ```
 
-The {{<hover label="depend" line="18">}}Events{{</hover>}} show a 
-{{<hover label="depend" line="21">}}Warning{{</hover>}} with a message that the
-current version of Crossplane doesn't meet the Configuration package 
-requirements.
+{{<hover label="depend" line="18">}}イベント{{</hover>}}は、 
+{{<hover label="depend" line="21">}}警告{{</hover>}}を示し、現在の Crossplane のバージョンが構成パッケージの要件を満たしていないというメッセージを表示します。
 
-## Create a Configuration
+## 構成の作成
 
-Crossplane Configuration packages are 
-[OCI container images](https://opencontainers.org/) containing one or more YAML
-files. 
+Crossplane 構成パッケージは、1つ以上の YAML ファイルを含む 
+[OCI コンテナイメージ](https://opencontainers.org/) です。
 
 {{<hint "important" >}}
-Configuration packages are fully OCI compliant. Any tool that builds OCI images
-can build Configuration packages.  
+構成パッケージは完全に OCI 準拠です。OCI イメージを構築するツールは、構成パッケージを構築できます。
 
-It's strongly recommended to use the Crossplane command-line tool to
-provide error checking and formatting to Crossplane package builds. 
+Crossplane コマンドラインツールを使用して、Crossplane パッケージビルドにエラーチェックとフォーマットを提供することを強く推奨します。
 
-Read the 
-[Crossplane package specification](https://github.com/crossplane/crossplane/blob/master/contributing/specifications/xpkg.md) 
-for package requirements when building packages with third-party tools.
+サードパーティツールを使用してパッケージを構築する際のパッケージ要件については、 
+[Crossplane パッケージ仕様](https://github.com/crossplane/crossplane/blob/master/contributing/specifications/xpkg.md) をお読みください。
 {{</hint >}}
 
-A Configuration package requires a `crossplane.yaml` file and may include
-Composition and CompositeResourceDefinition files. 
+構成パッケージには `crossplane.yaml` ファイルが必要で、Composition および CompositeResourceDefinition ファイルを含むことができます。
 
 <!-- vale Google.Headings = NO -->
-### The crossplane.yaml file
+### crossplane.yaml ファイル
 <!-- vale Google.Headings = YES -->
 
-To build a Configuration package using the Crossplane CLI, create a file
-named 
-{{<hover label="cfgMeta" line="1">}}crossplane.yaml{{</hover>}}.  
-The 
-{{<hover label="cfgMeta" line="1">}}crossplane.yaml{{</hover>}}
-file defines the requirements and name of the 
-Configuration.
+Crossplane CLI を使用して構成パッケージを構築するには、 
+{{<hover label="cfgMeta" line="1">}}crossplane.yaml{{</hover>}} という名前のファイルを作成します。  
+{{<hover label="cfgMeta" line="1">}}crossplane.yaml{{</hover>}} 
+ファイルは、構成の要件と名前を定義します。
+
 
 {{<hint "important" >}}
-The Crossplane CLI only supports a file named `crossplane.yaml`.
+Crossplane CLIは`crossplane.yaml`という名前のファイルのみをサポートしています。
 {{< /hint >}}
 
-Configuration package uses the 
+構成パッケージは
 {{<hover label="cfgMeta" line="2">}}meta.pkg.crossplane.io{{</hover>}}
-Crossplane API group.
+Crossplane APIグループを使用します。
 
-Specify any other Configurations, Functions or Providers in the 
-{{<hover label="cfgMeta" line="7">}}dependsOn{{</hover>}} list.  
-Optionally, you can require a specific or minimum package version with the 
-{{<hover label="cfgMeta" line="9">}}version{{</hover>}} option.
+他の構成、関数、またはプロバイダーを
+{{<hover label="cfgMeta" line="7">}}dependsOn{{</hover>}}リストに指定します。  
+オプションとして、 
+{{<hover label="cfgMeta" line="9">}}version{{</hover>}}オプションで特定のパッケージバージョンまたは最小バージョンを要求できます。
 
-You can also define a specific or minimum version of Crossplane for this
-Configuration with the 
-{{<hover label="cfgMeta" line="11">}}crossplane.version{{</hover>}} option. 
+この構成に対して特定のCrossplaneのバージョンまたは最小バージョンを
+{{<hover label="cfgMeta" line="11">}}crossplane.version{{</hover>}}オプションで定義することもできます。
 
 {{<hint "note" >}}
-Defining the {{<hover label="cfgMeta" line="10">}}crossplane{{</hover>}} object 
-or required versions is optional. 
+{{<hover label="cfgMeta" line="10">}}crossplane{{</hover>}}オブジェクトや必要なバージョンの定義はオプションです。 
 {{< /hint >}}
 
 ```yaml {label="cfgMeta",copy-lines="all"}
@@ -416,34 +374,31 @@ spec:
     version: ">=v1.12.1-0"
 ```
 
-### Build the package
+### パッケージをビルドする
 
-Create the package using the 
-[Crossplane CLI]({{<ref "../cli">}}) command 
-`crossplane xpkg build --package-root=<directory>`.
+[Crossplane CLI]({{<ref "../cli">}})コマンドを使用して、 
+`crossplane xpkg build --package-root=<directory>`でパッケージを作成します。
 
-Where the `<directory>` is the directory containing the `crossplane.yaml` file
-and any Composition or CompositeResourceDefinition YAML files.
+ここで、`<directory>`は`crossplane.yaml`ファイルと
+任意のCompositionまたはCompositeResourceDefinition YAMLファイルを含むディレクトリです。
 
-The CLI recursively searches for `.yml` or `.yaml` files in the directory to
-include in the package.
+CLIはディレクトリ内の`.yml`または`.yaml`ファイルを再帰的に検索して
+パッケージに含めます。
 
 {{<hint "important" >}}
-You must ignore any other YAML files with `--ignore=<file_list>`.  
-For
-example, `crossplane xpkg build --package-root=test-directory --ignore=".tmp/*"`.
+`--ignore=<file_list>`で他のYAMLファイルを無視する必要があります。  
+例えば、`crossplane xpkg build --package-root=test-directory --ignore=".tmp/*"`のように。
 
-Including YAML files that aren't Compositions or CompositeResourceDefinitions, 
-including Claims isn't supported.
+CompositionやCompositeResourceDefinitionsでないYAMLファイルを含めることは、
+Claimsを含めてサポートされていません。
 {{</hint >}}
 
-By default, Crossplane creates an `.xpkg` file of the Configuration name and 
-a SHA-256 hash of the package contents.
+デフォルトでは、Crossplaneは構成名と
+パッケージ内容のSHA-256ハッシュの`.xpkg`ファイルを作成します。
 
-For example, a {{<hover label="xpkgName" line="2">}}Configuration{{</hover>}}
-named {{<hover label="xpkgName" line="4">}}test-configuration{{</hover>}}.  
-The
-Crossplane CLI builds a package named `test-configuration-e8c244f6bf21.xpkg`.
+例えば、{{<hover label="xpkgName" line="2">}}Configuration{{</hover>}}という名前の
+{{<hover label="xpkgName" line="4">}}test-configuration{{</hover>}}。  
+Crossplane CLIは`test-configuration-e8c244f6bf21.xpkg`という名前のパッケージをビルドします。
 
 ```yaml {label="xpkgName"}
 apiVersion: meta.pkg.crossplane.io/v1alpha1
@@ -453,11 +408,9 @@ metadata:
 # Removed for brevity
 ```
 
-Specify the output file with `--package-file=<filename>.xpkg` option.
+出力ファイルは`--package-file=<filename>.xpkg`オプションで指定します。
 
-For example, to build a package from a directory named `test-directory` and
-generate a package named `test-package.xpkg` in the current working directory,
-use the command:
+例えば、`test-directory`という名前のディレクトリからパッケージをビルドし、現在の作業ディレクトリに`test-package.xpkg`という名前のパッケージを生成するには、次のコマンドを使用します：
 
 ```shell
 crossplane xpkg build --package-root=test-directory --package-file=test-package.xpkg

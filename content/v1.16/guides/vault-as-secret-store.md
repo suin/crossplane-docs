@@ -1,66 +1,57 @@
 ---
-title: Vault as an External Secret Store
+title: Vaultを外部シークレットストアとして使用する
 weight: 230
 ---
 
-This guide walks through the steps required to configure Crossplane and
-its Providers to use [Vault] as an [External Secret Store] (`ESS`) with [ESS Plugin Vault].
+このガイドでは、Crossplaneとそのプロバイダーを[Vault]を[外部シークレットストア]（`ESS`）として使用するために必要な手順を説明します。[ESSプラグインVault]を使用します。
 
 {{<hint "warning" >}}
-External Secret Stores are an alpha feature.
+外部シークレットストアはアルファ機能です。
 
-They're not recommended for production use. Crossplane disables External Secret
-Stores by default.
+本番環境での使用は推奨されません。Crossplaneはデフォルトで外部シークレットストアを無効にしています。
 {{< /hint >}}
 
-Crossplane uses sensitive information including Provider credentials, inputs to
-managed resources and connection details.
+Crossplaneは、プロバイダーの資格情報、管理リソースへの入力、接続詳細などの機密情報を使用します。
 
-The [Vault credential injection guide]({{<ref "vault-injection" >}}) details
-using Vault and Crossplane for Provider credentials.
+[Vault資格情報注入ガイド]({{<ref "vault-injection" >}})では、プロバイダーの資格情報にVaultとCrossplaneを使用する方法について詳しく説明しています。
 
-Crossplane doesn't support for using Vault for managed resources input.
-[Crossplane issue #2985](https://github.com/crossplane/crossplane/issues/2985)
-tracks support for this feature.
+Crossplaneは、管理リソースの入力にVaultを使用することをサポートしていません。
+[Crossplane issue #2985](https://github.com/crossplane/crossplane/issues/2985)では、この機能のサポートを追跡しています。
 
-Supporting connection details with Vault requires a Crossplane external secret
-store.
+Vaultを使用した接続詳細のサポートには、Crossplane外部シークレットストアが必要です。
 
-## Prerequisites
-This guide requires [Helm](https://helm.sh) version 3.11 or later.
+## 前提条件
+このガイドでは、[Helm](https://helm.sh)のバージョン3.11以降が必要です。
 
-## Install Vault
+## Vaultのインストール
 
 {{<hint "note" >}}
-Detailed instructions on [installing
-Vault](https://developer.hashicorp.com/vault/docs/platform/k8s/helm)
-are available from the Vault documentation.
+[Vaultのインストール](https://developer.hashicorp.com/vault/docs/platform/k8s/helm)に関する詳細な手順は、Vaultのドキュメントにあります。
 {{< /hint >}}
 
-### Add the Vault Helm chart
+### Vault Helmチャートの追加
 
-Add the Helm repository for `hashicorp`.
+`hashicorp`のHelmリポジトリを追加します。
 ```shell
 helm repo add hashicorp https://helm.releases.hashicorp.com --force-update 
 ```
 
-Install Vault using Helm.
+Helmを使用してVaultをインストールします。
 ```shell
 helm -n vault-system upgrade --install vault hashicorp/vault --create-namespace
 ```
 
-### Unseal Vault
+### Vaultのアンシール
 
-If Vault is [sealed](https://developer.hashicorp.com/vault/docs/concepts/seal)
-unseal Vault using the unseal keys.
+Vaultが[シールされている](https://developer.hashicorp.com/vault/docs/concepts/seal)場合は、アンシールキーを使用してVaultをアンシールします。
 
-Get the Vault keys.
+Vaultキーを取得します。
 ```shell
 kubectl -n vault-system exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json
 VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]")
 ```
 
-Unseal the vault using the keys.
+キーを使用してVaultをアンシールします。
 ```shell {copy-lines="1"}
 kubectl -n vault-system exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY
 Key             Value
@@ -78,30 +69,28 @@ Cluster ID      b3145d26-2c1a-a7f2-a364-81753033c0d9
 HA Enabled      false
 ```
 
-## Configure Vault Kubernetes authentication
+## Vault Kubernetes認証の構成
 
-Enable the [Kubernetes auth method] for Vault to authenticate requests based on
-Kubernetes service accounts.
+VaultがKubernetesサービスアカウントに基づいてリクエストを認証できるように、[Kubernetes認証メソッド]を有効にします。
 
-### Get the Vault root token
+### Vaultのルートトークンを取得する
 
-The Vault root token is inside the JSON file created when
-[unsealing Vault](#unseal-vault).
+Vaultのルートトークンは、[Vaultのアンシール](#unseal-vault)時に作成されるJSONファイルの中にあります。
 
 ```shell
 cat cluster-keys.json | jq -r ".root_token"
 ```
 
-### Enable Kubernetes authentication
+### Kubernetes認証を有効にする
 
-Connect to a shell in the Vault pod.
+Vaultポッドのシェルに接続します。
 
 ```shell {copy-lines="1"}
 kubectl -n vault-system exec -it vault-0 -- /bin/sh
 / $
 ```
 
-From the Vault shell, login to Vault using the _root token_.
+Vaultシェルから、_ルートトークン_を使用してVaultにログインします。
 ```shell {copy-lines="1"}
 vault login # use the root token from above
 Token (will be hidden):
@@ -120,13 +109,13 @@ identity_policies    []
 policies             ["root"]
 ```
 
-Enable the Kubernetes authentication method in Vault.
+VaultでKubernetes認証メソッドを有効にします。
 ```shell {copy-lines="1"}
 vault auth enable kubernetes
 Success! Enabled kubernetes auth method at: kubernetes/
 ```
 
-Configure Vault to communicate with Kubernetes and exit the Vault shell
+Kubernetesと通信するようにVaultを設定し、Vaultシェルを終了します。
 
 ```shell {copy-lines="1-4"}
 vault write auth/kubernetes/config \
@@ -137,22 +126,21 @@ Success! Data written to: auth/kubernetes/config
 / $ exit
 ```
 
-## Configure Vault for Crossplane integration
+## Crossplane統合のためのVaultの設定
 
-Crossplane relies on the Vault key-value secrets engine to store information and
-Vault requires a permissions policy for the Crossplane service account.
+Crossplaneは、情報を保存するためにVaultのキー・バリューシークレットエンジンに依存しており、VaultはCrossplaneサービスアカウントのための権限ポリシーを必要とします。
 
 <!-- vale Crossplane.Spelling = NO -->
 <!-- allow "kv" -->
-### Enable the Vault kv secrets engine
+### Vault kvシークレットエンジンを有効にする
 <!-- vale Crossplane.Spelling = YES -->
 
-Enable the [Vault KV Secrets Engine].
+[Vault KVシークレットエンジン]を有効にします。
 
 {{< hint "important" >}}
-Vault has two versions of the
-[KV Secrets Engine](https://developer.hashicorp.com/vault/docs/secrets/kv).
-This example uses version 2.
+Vaultには2つのバージョンの
+[KVシークレットエンジン](https://developer.hashicorp.com/vault/docs/secrets/kv)があります。
+この例ではバージョン2を使用します。
 {{</hint >}}
 
 ```shell {copy-lines="1"}
@@ -160,9 +148,9 @@ kubectl -n vault-system exec -it vault-0 -- vault secrets enable -path=secret kv
 Success! Enabled the kv-v2 secrets engine at: secret/
 ```
 
-### Create a Vault policy for Crossplane
+### CrossplaneのためのVaultポリシーを作成する
 
-Create the Vault policy to allow Crossplane to read and write data from Vault.
+CrossplaneがVaultからデータを読み書きできるようにするためのVaultポリシーを作成します。
 ```shell {copy-lines="1-8"}
 kubectl -n vault-system exec -i vault-0 -- vault policy write crossplane - <<EOF
 path "secret/data/*" {
@@ -175,7 +163,7 @@ EOF
 Success! Uploaded policy: crossplane
 ```
 
-Apply the policy to Vault.
+ポリシーをVaultに適用します。
 ```shell {copy-lines="1-5"}
 kubectl -n vault-system exec -it vault-0 -- vault write auth/kubernetes/role/crossplane \
     bound_service_account_names="*" \
@@ -185,25 +173,24 @@ kubectl -n vault-system exec -it vault-0 -- vault write auth/kubernetes/role/cro
 Success! Data written to: auth/kubernetes/role/crossplane
 ```
 
-## Install Crossplane
+## Crossplaneをインストールする
 
 {{<hint "important" >}}
-Crossplane v1.12 introduced the plugin support. Make sure your version of Crossplane supports plugins.
+Crossplane v1.12ではプラグインサポートが導入されました。お使いのCrossplaneのバージョンがプラグインをサポートしていることを確認してください。
 {{< /hint >}}
 
-Install the Crossplane with the External Secrets Stores feature enabled.
+External Secrets Stores機能を有効にしてCrossplaneをインストールします。
 
 ```shell 
 helm upgrade --install crossplane crossplane-stable/crossplane --namespace crossplane-system --create-namespace --set args='{--enable-external-secret-stores}'
 ```
 
-## Install the Crossplane Vault plugin
+## Crossplane Vaultプラグインのインストール
 
-The Crossplane Vault plugin isn't part of the default Crossplane install.
-The plugin installs as a unique Pod that uses the [Vault Agent Sidecar
-Injection] to connect the Vault secret store to Crossplane.
+Crossplane Vaultプラグインは、デフォルトのCrossplaneインストールの一部ではありません。
+このプラグインは、[Vault Agent Sidecar Injection]を使用してVaultシークレットストアをCrossplaneに接続するユニークなPodとしてインストールされます。
 
-First, configure annotations for the Vault plugin pod.
+まず、VaultプラグインPodのアノテーションを設定します。
 
 ```yaml
 cat > values.yaml <<EOF
@@ -214,30 +201,27 @@ podAnnotations:
   vault.hashicorp.com/agent-run-as-user: "65532"
 EOF
 ```
-Next, install the Crossplane ESS Plugin pod to the `crossplane-system` namespace
-and apply the Vault annotations.
+次に、Crossplane ESSプラグインPodを`crossplane-system`ネームスペースにインストールし、Vaultアノテーションを適用します。
 
 ```shell
 helm upgrade --install ess-plugin-vault oci://xpkg.upbound.io/crossplane-contrib/ess-plugin-vault --namespace crossplane-system -f values.yaml
 ```
 
-## Configure Crossplane
+## Crossplaneの設定
 
-Using the Vault plugin requires configuration to connect to the Vault
-service. The plugin also requires Providers to enable external secret stores.
+Vaultプラグインを使用するには、Vaultサービスに接続するための設定が必要です。
+プラグインは、外部シークレットストアを有効にするためにプロバイダーも必要とします。
 
-With the plugin and providers configured, Crossplane requires two `StoreConfig`
-objects to describe how Crossplane and the Providers communicate with vault.
+プラグインとプロバイダーが設定されたら、CrossplaneはVaultとの通信方法を説明するために2つの`StoreConfig`オブジェクトを必要とします。
 
-### Enable external secret stores in the Provider
+### プロバイダーで外部シークレットストアを有効にする
 
 {{<hint "note">}}
-This example uses Provider GCP, but the
-{{<hover label="ControllerConfig" line="2">}}ControllerConfig{{</hover>}} is the
-same for all Providers.
+この例ではプロバイダーGCPを使用していますが、
+{{<hover label="ControllerConfig" line="2">}}ControllerConfig{{</hover>}}はすべてのプロバイダーで同じです。
 {{</hint >}}
 
-Create a `ControllerConfig` object to enable external secret stores.
+外部シークレットストアを有効にするための`ControllerConfig`オブジェクトを作成します。
 
 ```yaml {label="ControllerConfig"}
 echo "apiVersion: pkg.crossplane.io/v1alpha1
@@ -249,7 +233,7 @@ spec:
     - --enable-external-secret-stores" | kubectl apply -f -
 ```
 
-Install the Provider and apply the ControllerConfig.
+プロバイダーをインストールし、ControllerConfigを適用します。
 ```yaml
 echo "apiVersion: pkg.crossplane.io/v1
 kind: Provider
@@ -261,9 +245,8 @@ spec:
     name: vault-config" | kubectl apply -f -
 ```
 
-### Connect the Crossplane plugin to Vault
-Create a {{<hover label="VaultConfig" line="2">}}VaultConfig{{</hover>}}
-resource for the plugin to connect to the Vault service:
+### CrossplaneプラグインをVaultに接続する
+プラグインがVaultサービスに接続するための{{<hover label="VaultConfig" line="2">}}VaultConfig{{</hover>}}リソースを作成します：
 
 ```yaml {label="VaultConfig"}
 echo "apiVersion: secrets.crossplane.io/v1alpha1
@@ -282,15 +265,14 @@ spec:
         path: /vault/secrets/token" | kubectl apply -f -
 ```
 
-### Create a Crossplane StoreConfig
+### Crossplane StoreConfigの作成
 
-Create a {{<hover label="xp-storeconfig" line="2">}}StoreConfig{{</hover >}}
-object from the
-{{<hover label="xp-storeconfig" line="1">}}secrets.crossplane.io{{</hover >}}
-group. Crossplane uses the StoreConfig to connect to the Vault plugin service.
+{{<hover label="xp-storeconfig" line="2">}}StoreConfig{{</hover >}}オブジェクトを
+{{<hover label="xp-storeconfig" line="1">}}secrets.crossplane.io{{</hover >}}グループから作成します。
+CrossplaneはStoreConfigを使用してVaultプラグインサービスに接続します。
 
-The {{<hover label="xp-storeconfig" line="10">}}configRef{{</hover >}} connects
-the StoreConfig to the specific Vault plugin configuration.
+{{<hover label="xp-storeconfig" line="10">}}configRef{{</hover >}}は
+StoreConfigを特定のVaultプラグイン設定に接続します。
 
 ```yaml {label="xp-storeconfig"}
 echo "apiVersion: secrets.crossplane.io/v1alpha1
@@ -309,15 +291,13 @@ spec:
 ```
 
 
-### Create a Provider StoreConfig
-Create a {{<hover label="gcp-storeconfig" line="2">}}StoreConfig{{</hover >}}
-object from the Provider's API group,
-{{<hover label="gcp-storeconfig" line="1">}}gcp.crossplane.io{{</hover >}}.
-The Provider uses this StoreConfig to communicate with Vault for
-Managed Resources.
+### プロバイダー StoreConfig の作成
+プロバイダーの API グループから {{<hover label="gcp-storeconfig" line="2">}}StoreConfig{{</hover >}} オブジェクトを作成します。
+{{<hover label="gcp-storeconfig" line="1">}}gcp.crossplane.io{{</hover >}}。
+プロバイダーは、この StoreConfig を使用して、Managed Resources のために Vault と通信します。
 
-The {{<hover label="gcp-storeconfig" line="10">}}configRef{{</hover >}} connects
-the StoreConfig to the specific Vault plugin configuration.
+{{<hover label="gcp-storeconfig" line="10">}}configRef{{</hover >}} は
+StoreConfig を特定の Vault プラグイン構成に接続します。
 
 ```yaml {label="gcp-storeconfig"}
 echo "apiVersion: gcp.crossplane.io/v1alpha1
@@ -335,9 +315,9 @@ spec:
       name: vault-internal" | kubectl apply -f -
 ```
 
-## Create Provider resources
+## プロバイダーリソースの作成
 
-Check that Crossplane installed the Provider and the Provider is healthy.
+Crossplane がプロバイダーをインストールし、プロバイダーが正常であることを確認します。
 
 ```shell {copy-lines="1"}
 kubectl get providers
@@ -345,9 +325,9 @@ NAME           INSTALLED   HEALTHY   PACKAGE                                    
 provider-gcp   True        True      xpkg.upbound.io/crossplane-contrib/provider-gcp:v0.23.0-rc.0.19.ge9b75ee5   10m
 ```
 
-### Create a CompositeResourceDefinition
+### CompositeResourceDefinition の作成
 
-Create a `CompositeResourceDefinition` to define a custom API endpoint.
+カスタム API エンドポイントを定義するために `CompositeResourceDefinition` を作成します。
 
 ```yaml
 echo "apiVersion: apiextensions.crossplane.io/v1
@@ -389,14 +369,13 @@ spec:
               - parameters" | kubectl apply -f -
 ```
 
-### Create a Composition
-Create a `Composition` to create a Service Account and Service Account Key
-inside GCP.
+### Composition の作成
+GCP 内にサービスアカウントとサービスアカウントキーを作成するために `Composition` を作成します。
 
-Creating a Service Account Key generates
-{{<hover label="comp" line="39" >}}connectionDetails{{</hover>}} that the
-Provider stores in Vault using the
-{{<hover label="comp" line="31">}}publishConnectionDetailsTo{{</hover>}} details.
+サービスアカウントキーを作成すると、
+{{<hover label="comp" line="39" >}}connectionDetails{{</hover>}} が生成され、
+プロバイダーはそれを Vault に保存します。
+{{<hover label="comp" line="31">}}publishConnectionDetailsTo{{</hover>}} の詳細を使用します。
 
 ```yaml {label="comp"}
 echo "apiVersion: apiextensions.crossplane.io/v1
@@ -442,13 +421,12 @@ spec:
         - fromConnectionSecretKey: publicKeyType" | kubectl apply -f -
 ```
 
-### Create a Claim
-Now create a `Claim` to have Crossplane create the GCP resources and associated
-secrets.
+### クレームの作成
+次に、Crossplane に GCP リソースと関連するシークレットを作成させるために `Claim` を作成します。
 
-Like the Composition, the Claim uses
-{{<hover label="claim" line="12">}}publishConnectionDetailsTo{{</hover>}} to
-connect to Vault and store the secrets.
+Composition と同様に、Claim は
+{{<hover label="claim" line="12">}}publishConnectionDetailsTo{{</hover>}} を使用して
+Vault に接続し、シークレットを保存します。
 
 ```yaml {label="claim"}
 echo "apiVersion: ess.example.org/v1alpha1
@@ -472,9 +450,9 @@ spec:
       name: vault" | kubectl apply -f -
 ```
 
-## Verify the resources
+## リソースの確認
 
-Verify all resources are `READY` and `SYNCED`:
+すべてのリソースが `READY` で `SYNCED` であることを確認します：
 
 ```shell {copy-lines="1"}
 kubectl get managed
@@ -485,23 +463,24 @@ NAME                                                         READY   SYNCED   KE
 serviceaccountkey.iam.gcp.crossplane.io/my-ess-zvmkz-bq8pz   True    True     5cda49b7c32393254b5abb121b4adc07e140502c   2022-03-23T10:54:50Z
 ```
 
-View the claims
+クレームを表示
 ```shell {copy-lines="1"}
 kubectl -n default get claim
 NAME     READY   CONNECTION-SECRET   AGE
 my-ess   True                        19s
 ```
 
-View the composite resources.
+
+複合リソースを表示します。
 ```shell {copy-lines="1"}
 kubectl get composite
 NAME           READY   COMPOSITION                    AGE
 my-ess-zvmkz   True    essinstances.ess.example.org   32s
 ```
 
-## Verify Vault secrets
+## Vault シークレットの確認
 
-Look inside Vault to view the secrets from the managed resources.
+Vault 内を見て、管理リソースからのシークレットを表示します。
 
 ```shell {copy-lines="1",label="vault-key"}
 kubectl -n vault-system exec -i vault-0 -- vault kv list /secret/default
@@ -510,12 +489,12 @@ Keys
 ess-claim-conn
 ```
 
-The key {{<hover label="vault-key" line="4">}}ess-claim-conn{{</hover>}}
-is the name of the Claim's
+キー {{<hover label="vault-key" line="4">}}ess-claim-conn{{</hover>}}
+は、Claim の
 {{<hover label="claim" line="12">}}publishConnectionDetailsTo{{</hover>}}
-configuration.
+設定の名前です。
 
-Check connection secrets in the "crossplane-system" Vault scope.
+"crossplane-system" Vault スコープ内の接続シークレットを確認します。
 ```shell {copy-lines="1",label="scope-key"}
 kubectl -n vault-system exec -i vault-0 -- vault kv list /secret/crossplane-system
 Keys
@@ -524,21 +503,20 @@ d2408335-eb88-4146-927b-8025f405da86
 ess-mr-conn
 ```
 
-The key
+キー
 {{<hover label="scope-key"line="4">}}d2408335-eb88-4146-927b-8025f405da86{{</hover>}}
-comes from
+は以下から来ています。
 
-<!-- ## WHERE DOES IT COME FROM? -->
+<!-- ## どこから来るのか？ -->
 
-and the key
+そしてキー
 {{<hover label="scope-key"line="5">}}ess-mr-conn{{</hover>}}
-comes from the Composition's
+は Composition の
 {{<hover label="comp" line="31">}}publishConnectionDetailsTo{{</hover>}}
-configuration.
+設定から来ています。
 
 
-Check contents of Claim's connection secret `ess-claim-conn` to see the key
-created by the managed resource.
+Claim の接続シークレット `ess-claim-conn` の内容を確認して、管理リソースによって作成されたキーを見ます。
 ```shell {copy-lines="1"}
 kubectl -n vault-system exec -i vault-0 -- vault kv get /secret/default/ess-claim-conn
 ======= Metadata =======
@@ -565,9 +543,7 @@ vwIDAQAB
 publicKeyType    TYPE_RAW_PUBLIC_KEY
 ```
 
-Check contents of managed resource connection secret `ess-mr-conn`. The public
-key is identical to the public key in the Claim since the Claim is using this
-managed resource.
+管理リソース接続シークレット `ess-mr-conn` の内容を確認します。公開キーは Claim で使用されているこの管理リソースの公開キーと同一です。
 ```shell {copy-lines="1"}
 kubectl -n vault-system exec -i vault-0 -- vault kv get /secret/crossplane-system/ess-mr-conn
 ======= Metadata =======
@@ -607,15 +583,15 @@ vwIDAQAB
 publicKeyType     TYPE_RAW_PUBLIC_KEY
 ```
 
-### Remove the resources
+### リソースの削除
 
-Deleting the Claim removes the managed resources and associated keys from Vault.
+Claim を削除すると、管理リソースと Vault からの関連キーが削除されます。
 
 ```shell
 kubectl delete claim my-ess
 ```
 
-<!-- named links -->
+<!-- 名前付きリンク -->
 
 [Vault]: https://www.vaultproject.io/
 [External Secret Store]: https://github.com/crossplane/crossplane/blob/master/design/design-doc-external-secret-stores.md

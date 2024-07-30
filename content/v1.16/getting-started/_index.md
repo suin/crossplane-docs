@@ -1,16 +1,16 @@
 ---
-title: Getting Started
+title: はじめに
 weight: 4
-description: An introduction to Crossplane and Crossplane quickstart guides.
+description: Crossplaneの紹介とCrossplaneクイックスタートガイド。
 ---
 
 {{<img src="/media/banner.png" alt="Crossplane Popsicle Truck" size="large" >}}
 
-## Hands-on
-Want a hands-on example? Follow a Crossplane Quickstart for your cloud provider.
-* [AWS quickstart]({{<ref "provider-aws" >}})
-* [Azure quickstart]({{<ref "provider-azure" >}})
-* [GCP quickstart]({{<ref "provider-gcp" >}})
+## ハンズオン
+ハンズオンの例が必要ですか？あなたのクラウドプロバイダーのためのCrossplaneクイックスタートに従ってください。
+* [AWSクイックスタート]({{<ref "provider-aws" >}})
+* [Azureクイックスタート]({{<ref "provider-azure" >}})
+* [GCPクイックスタート]({{<ref "provider-gcp" >}})
 
-## Install
-Ready to get started? [Install Crossplane]({{<ref "../software/install" >}}) in a Kubernetes cluster.
+## インストール
+始める準備はできましたか？[Crossplaneをインストール]({{<ref "../software/install" >}})してKubernetesクラスターで使用してください。
